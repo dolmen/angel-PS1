@@ -1,0 +1,126 @@
+#!/usr/bin/perl
+
+use 5.008003;  # 5.010 is the sane minimum
+use strict;
+use warnings;
+
+use Getopt::Long;
+use File::Temp 'tmpnam';
+use POSIX qw(mkfifo);
+
+my $SHELL;
+my $SHELL_PPID = getppid();
+my $TERM = $ENV{TERM};
+
+my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
+
+GetOptions(
+    shell => \$SHELL,
+);
+
+
+unless ($SHELL) {
+    $SHELL = $ENV{SHELL};
+    $SHELL =~ s{^.*/}{};
+} else {
+    $SHELL =~ s/^-//;
+}
+
+my $FIFO_PATH = tmpnam().".$$";
+my $FIFO_IN = "$FIFO_PATH.in";
+my $FIFO_OUT = "$FIFO_PATH.out";
+
+if (-t STDOUT) {
+    print "TODO: diagnostics output\n";
+    print "$FIFO_IN\n";
+    print "$FIFO_OUT\n";
+    print "SHELL=$SHELL\n";
+    print STDERR "usage: eval `angel-prompt --shell=\$0`\n";
+} else {
+    print STDERR "Create in\n";
+    mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
+    print STDERR "Create out\n";
+    mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
+    print STDERR "Create done.\n";
+
+# The shell code will be evaluated with eval
+# so statements must be properly terminated with ';'
+print <<EOF;
+echo OK;
+APS1_IN='$FIFO_IN';
+APS1_OUT='$FIFO_OUT';
+APS1_PS1="\$PS1";
+angel-prompt-client()
+{
+    [[ -e '$FIFO_IN' ]] || { aps1-reset ; return ; };
+    echo -nE "\$? a=b PWD=\$PWD" > '$FIFO_IN' || { aps1-reset ; return ; };
+    read PS1 < '$FIFO_OUT' ;
+    printf 'DEBUG> PS1=%q\\n' "\$PS1" ;
+} ;
+APS1_PROMPT_COMMAND="\$PROMPT_COMMAND" ;
+PROMPT_COMMAND=angel-prompt-client ;
+aps1-reset()
+{
+    PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
+    PS1="\$APS1_PS1" ;
+    rm -f -- '\$APS1_IN' '\$APS1_OUT'
+    unset -f aps1-reset angel-prompt-client ;
+} ;
+sleep 1 ;
+echo Done. ;
+EOF
+# TODO: exit trap to kill the daemon
+
+close STDIN;
+close STDOUT;
+
+my $child = fork();
+die if $child == -1;
+if ($child) {
+    # We don't want the fifos to be removed by the END block
+    undef $FIFO_IN;
+    undef $FIFO_OUT;
+    print STDERR "angel-prompt $child installed.\n";
+    exit 0;
+}
+
+# We are now in the angel
+
+# Ignore ^C sent to the terminal
+$SIG{INT} = sub {
+    print STDERR "Ctrl+C !\n";
+    #exit 0;
+};
+# Clean exits that will call our END block
+$SIG{HUP} = $SIG{TERM} = sub { exit 0 };
+
+
+open STDIN, '+<', '/dev/null';
+open STDOUT, '>', '/dev/null';
+
+print STDERR "Angel loop\n";
+
+    # Main loop
+    while (1) {
+	open my $FIFO, '<', $FIFO_IN or redo;
+	$_ = do { undef $/; <$FIFO> };
+	close $FIFO;
+	print STDERR "DEBUG< [$_]\n";
+	# FIXME handle $PWD with '\n'
+	my ($err, $opts, $PWD) = /^(\d+) (.*?) PWD=(.*)$/;
+	# FIXME rewrite parsing to support quoting
+	my %opt;
+	%opt = map { ( m/^(.*?)=(.*)/ ) } split / /, $opts if defined $opts;
+	open $FIFO, '>', $FIFO_OUT;
+	print $FIFO ((scalar localtime) . " $err \\\\w\\\\\$_\n");
+	close $FIFO;
+    }
+}
+
+END {
+    close STDIN;
+    close STDOUT;
+    unlink $FIFO_IN if defined $FIFO_IN;
+    unlink $FIFO_OUT if defined $FIFO_OUT;
+}
+
