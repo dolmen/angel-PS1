@@ -37,12 +37,17 @@ if (-t STDOUT) {
     print "SHELL=$SHELL\n";
     print STDERR "usage: eval `angel-prompt --shell=\$0`\n";
     exit 1;
-} else {
-    mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
-    mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
+}
 
-# The shell code will be evaluated with eval
+# *****************************************************************************
+# Angel startup
+# *****************************************************************************
+mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
+mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
+
+# The shell code will be evaluated with eval as a single line
 # so statements must be properly terminated with ';'
+# No shell comments allowed
 print <<EOF;
 [[ -n "\$APS1_PID" ]] && angel leave;
 APS1_PS1="\$PS1";
@@ -87,7 +92,10 @@ if ($child) {
     exit 0;
 }
 
-# We are now in the angel
+# *****************************************************************************
+# Angel forked
+# *****************************************************************************
+
 close STDOUT;
 
 # Ignore ^C sent to the terminal
@@ -102,9 +110,9 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 open STDIN, '+<', '/dev/null';
 open STDOUT, '>', '/dev/null';
 
-    # print STDERR "Angel loop\n";
-
-    # Main loop
+# *****************************************************************************
+# Angel main loop
+# *****************************************************************************
     for (;;) {
         my $FIFO;
         unless (open $FIFO, '<', $FIFO_IN) {
@@ -134,7 +142,7 @@ open STDOUT, '>', '/dev/null';
         print $FIFO "$out\n";
         close $FIFO;
     }
-}
+
 
 END {
     no warnings 'uninitialized';
