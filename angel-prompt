@@ -72,7 +72,6 @@ EOF
 # TODO: exit trap to kill the daemon
 
 close STDIN;
-close STDOUT;
 
 my $child = fork();
 die if $child == -1;
@@ -80,11 +79,13 @@ if ($child) {
     # We don't want the fifos to be removed by the END block
     undef $FIFO_IN;
     undef $FIFO_OUT;
+    print "APS1_PID=$child\n";
     print STDERR "angel-prompt $child installed.\n";
     exit 0;
 }
 
 # We are now in the angel
+close STDOUT;
 
 # Ignore ^C sent to the terminal
 $SIG{INT} = sub {
