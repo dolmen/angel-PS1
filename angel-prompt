@@ -61,7 +61,9 @@ angel()
     leave)
 	PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
 	PS1="\$APS1_PS1" ;
+	kill \$APS1_PID 2>/dev/null ;
 	rm -f -- '\$APS1_IN' '\$APS1_OUT' ;
+	unset APS1_PS1 APS1_PID ;
 	unset -f angel angel-PS1 ;;
     *)
 	echo 'What?' >&2 ;
