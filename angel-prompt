@@ -106,13 +106,19 @@ print STDERR "Angel loop\n";
 	$_ = do { undef $/; <$FIFO> };
 	close $FIFO;
 	print STDERR "DEBUG< [$_]\n";
+
 	# FIXME handle $PWD with '\n'
 	my ($err, $opts, $PWD) = /^(\d+) (.*?) PWD=(.*)$/;
 	# FIXME rewrite parsing to support quoting
 	my %opt;
 	%opt = map { ( m/^(.*?)=(.*)/ ) } split / /, $opts if defined $opts;
+
+	my $PS1 = (scalar localtime) . " $err \\w\\\$_";
+
 	open $FIFO, '>', $FIFO_OUT;
-	print $FIFO ((scalar localtime) . " $err \\\\w\\\\\$_\n");
+	(my $out = $PS1) =~ s/\\/\\\\/g;
+	$out =~ s/\n/\\\n/g;
+	print $FIFO "$out\n";
 	close $FIFO;
     }
 }
