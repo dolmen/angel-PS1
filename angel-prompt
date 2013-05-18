@@ -54,7 +54,7 @@ angel-prompt-client()
 {
     [[ -e '$FIFO_IN' ]] || { aps1-reset ; return ; };
     echo -nE "\$? a=b PWD=\$PWD" > '$FIFO_IN' || { aps1-reset ; return ; };
-    read PS1 < '$FIFO_OUT' ;
+    read PS1 < '$FIFO_OUT' || aps1-reset ;
     printf 'DEBUG> PS1=%q\\n' "\$PS1" ;
 } ;
 APS1_PROMPT_COMMAND="\$PROMPT_COMMAND" ;
