@@ -36,6 +36,7 @@ if (-t STDOUT) {
     print "$FIFO_OUT\n";
     print "SHELL=$SHELL\n";
     print STDERR "usage: eval `angel-prompt --shell=\$0`\n";
+    exit 1;
 } else {
     mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
     mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
