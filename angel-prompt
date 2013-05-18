@@ -113,7 +113,7 @@ print STDERR "Angel loop\n";
 	my %opt;
 	%opt = map { ( m/^(.*?)=(.*)/ ) } split / /, $opts if defined $opts;
 
-	my $PS1 = (scalar localtime) . " $err \\w\\\$_";
+	my $PS1 = (scalar localtime) . " $err \\w\\\$\\040";
 
 	open $FIFO, '>', $FIFO_OUT;
 	(my $out = $PS1) =~ s/\\/\\\\/g;
