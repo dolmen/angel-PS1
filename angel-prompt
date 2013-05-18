@@ -96,7 +96,10 @@ if ($child) {
 # Angel forked
 # *****************************************************************************
 
+open STDIN, '+<', '/dev/null';
 close STDOUT;
+open STDOUT, '>', '/dev/null';
+
 
 # Ignore ^C sent to the terminal
 $SIG{INT} = sub {
@@ -106,9 +109,6 @@ $SIG{INT} = sub {
 # Clean exits that will call our END block
 $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
-
-open STDIN, '+<', '/dev/null';
-open STDOUT, '>', '/dev/null';
 
 # *****************************************************************************
 # Angel main loop
