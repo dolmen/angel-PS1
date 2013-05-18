@@ -57,15 +57,15 @@ angel()
 {
     case "\$1" in
     leave)
-	PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
-	PS1="\$APS1_PS1" ;
-	kill \$APS1_PID 2>/dev/null ;
-	rm -f -- '$FIFO_IN' '$FIFO_OUT' ;
-	unset APS1_PS1 APS1_PID ;
-	unset -f angel angel-PS1 ;;
+        PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
+        PS1="\$APS1_PS1" ;
+        kill \$APS1_PID 2>/dev/null ;
+        rm -f -- '$FIFO_IN' '$FIFO_OUT' ;
+        unset APS1_PS1 APS1_PID ;
+        unset -f angel angel-PS1 ;;
     *)
-	echo 'What?' >&2 ;
-	return 1 ;;
+        echo 'What?' >&2 ;
+        return 1 ;;
     esac ;
 } ;
 EOF
@@ -103,33 +103,33 @@ open STDOUT, '>', '/dev/null';
 
     # Main loop
     for (;;) {
-	my $FIFO;
-	unless (open $FIFO, '<', $FIFO_IN) {
-	    redo if -e $FIFO_IN && -p _;
-	    last;
-	}
-	$_ = do { undef $/; <$FIFO> };
-	close $FIFO;
-	print STDERR "DEBUG< [$_]\n";
+        my $FIFO;
+        unless (open $FIFO, '<', $FIFO_IN) {
+            redo if -e $FIFO_IN && -p _;
+            last;
+        }
+        $_ = do { undef $/; <$FIFO> };
+        close $FIFO;
+        print STDERR "DEBUG< [$_]\n";
 
-	# FIXME handle $PWD with '\n'
-	my ($err, $opts, $PWD) = /^(\d+) (.*?) PWD=(.*)$/;
-	# FIXME rewrite parsing to support quoting
-	my %opt;
-	%opt = map { ( m/^(.*?)=(.*)/ ) } split / /, $opts if defined $opts;
+        # FIXME handle $PWD with '\n'
+        my ($err, $opts, $PWD) = /^(\d+) (.*?) PWD=(.*)$/;
+        # FIXME rewrite parsing to support quoting
+        my %opt;
+        %opt = map { ( m/^(.*?)=(.*)/ ) } split / /, $opts if defined $opts;
 
-	my $PS1 = (scalar localtime) . " $err \\w\\\$ ";
+        my $PS1 = (scalar localtime) . " $err \\w\\\$ ";
 
-	open $FIFO, '>', $FIFO_OUT;
-	# Escape the last space using bash PS1 encoding as 'read' removes spaces
-	# at beginning and end of line
-	(my $out = $PS1) =~ s/^ | $/\\040/g;
-	# Escape \ as 'read' expands them
-	$out =~ s/\\/\\\\/g;
-	# Escape newlines
-	$out =~ s/\n/\\\n/g;
-	print $FIFO "$out\n";
-	close $FIFO;
+        open $FIFO, '>', $FIFO_OUT;
+        # Escape the last space using bash PS1 encoding as 'read' removes spaces
+        # at beginning and end of line
+        (my $out = $PS1) =~ s/^ | $/\\040/g;
+        # Escape \ as 'read' expands them
+        $out =~ s/\\/\\\\/g;
+        # Escape newlines
+        $out =~ s/\n/\\\n/g;
+        print $FIFO "$out\n";
+        close $FIFO;
     }
 }
 
@@ -140,3 +140,4 @@ END {
     unlink $FIFO_OUT if defined $FIFO_OUT;
 }
 
+# vim:set et ts=8 sw=4 sts=4:
