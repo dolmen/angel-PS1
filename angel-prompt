@@ -63,7 +63,7 @@ aps1-reset()
 {
     PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
     PS1="\$APS1_PS1" ;
-    rm -f -- '\$APS1_IN' '\$APS1_OUT'
+    rm -f -- '\$APS1_IN' '\$APS1_OUT' ;
     unset -f aps1-reset angel-prompt-client ;
 } ;
 sleep 1 ;
