@@ -43,9 +43,8 @@ if (-t STDOUT) {
 # The shell code will be evaluated with eval
 # so statements must be properly terminated with ';'
 print <<EOF;
-APS1_IN='$FIFO_IN';
-APS1_OUT='$FIFO_OUT';
 APS1_PS1="\$PS1";
+APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
 angel-PS1()
 {
     [[ -e '$FIFO_IN' ]] || { angel leave ; return ; };
@@ -53,7 +52,6 @@ angel-PS1()
     read PS1 < '$FIFO_OUT' || angel leave ;
     printf 'DEBUG> PS1=%q\\n' "\$PS1" ;
 } ;
-APS1_PROMPT_COMMAND="\$PROMPT_COMMAND" ;
 PROMPT_COMMAND=angel-PS1 ;
 angel()
 {
@@ -62,7 +60,7 @@ angel()
 	PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
 	PS1="\$APS1_PS1" ;
 	kill \$APS1_PID 2>/dev/null ;
-	rm -f -- '\$APS1_IN' '\$APS1_OUT' ;
+	rm -f -- '$FIFO_IN' '$FIFO_OUT' ;
 	unset APS1_PS1 APS1_PID ;
 	unset -f angel angel-PS1 ;;
     *)
