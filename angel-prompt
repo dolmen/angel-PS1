@@ -101,8 +101,12 @@ open STDOUT, '>', '/dev/null';
 print STDERR "Angel loop\n";
 
     # Main loop
-    while (1) {
-	open my $FIFO, '<', $FIFO_IN or redo;
+    for (;;) {
+	my $FIFO;
+	unless (open $FIFO, '<', $FIFO_IN) {
+	    redo if -e $FIFO_IN && -p _;
+	    last;
+	}
 	$_ = do { undef $/; <$FIFO> };
 	close $FIFO;
 	print STDERR "DEBUG< [$_]\n";
