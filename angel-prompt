@@ -37,16 +37,12 @@ if (-t STDOUT) {
     print "SHELL=$SHELL\n";
     print STDERR "usage: eval `angel-prompt --shell=\$0`\n";
 } else {
-    print STDERR "Create in\n";
     mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
-    print STDERR "Create out\n";
     mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
-    print STDERR "Create done.\n";
 
 # The shell code will be evaluated with eval
 # so statements must be properly terminated with ';'
 print <<EOF;
-echo OK;
 APS1_IN='$FIFO_IN';
 APS1_OUT='$FIFO_OUT';
 APS1_PS1="\$PS1";
@@ -72,8 +68,6 @@ angel()
 	return 1 ;;
     esac ;
 } ;
-sleep 1 ;
-echo Done. ;
 EOF
 # TODO: exit trap to kill the daemon
 
@@ -104,7 +98,7 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 open STDIN, '+<', '/dev/null';
 open STDOUT, '>', '/dev/null';
 
-print STDERR "Angel loop\n";
+    # print STDERR "Angel loop\n";
 
     # Main loop
     for (;;) {
