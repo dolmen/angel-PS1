@@ -89,7 +89,7 @@ POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
 # so statements must be properly terminated with ';'
 # No shell comments allowed
 print <<EOF;
-[[ -n "\$APS1_NAME" ]] && $NAME leave;
+[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
 APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
 angel-PS1()
