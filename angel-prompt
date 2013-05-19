@@ -80,13 +80,18 @@ APS1_NAME=$NAME ;
 $NAME()
 {
     case "\$1" in
-    leave)
+    leave|quit|go-away)
         PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
         PS1="\$APS1_PS1" ;
         kill \$APS1_PID 2>/dev/null ;
         rm -f -- '$FIFO_IN' '$FIFO_OUT' ;
         unset APS1_PS1 APS1_PID APS1_NAME ;
         unset -f $NAME angel-PS1 ;;
+    mute|off)
+        PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
+        PS1="\$APS1_PS1" ;;
+    unmute|on)
+        PROMPT_COMMAND=angel-PS1 ;;
     *)
         echo 'What?' >&2 ;
         return 1 ;;
