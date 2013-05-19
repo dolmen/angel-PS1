@@ -14,7 +14,7 @@ my $TERM = $ENV{TERM};
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
 GetOptions(
-    shell => \$SHELL,
+    'shell=s' => \$SHELL,
 );
 
 
