@@ -27,6 +27,9 @@ use warnings;
 use Getopt::Long;
 use File::Temp 'tmpnam';
 
+binmode(STDOUT, ':encoding(utf8)');
+binmode(STDERR, ':encoding(utf8)');
+
 my $SHELL;
 my $NAME = 'angel';
 my $VERBOSE = 0;
