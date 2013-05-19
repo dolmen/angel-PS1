@@ -8,6 +8,7 @@ use Getopt::Long;
 use File::Temp 'tmpnam';
 
 my $SHELL;
+my $NAME = 'angel';
 my $SHELL_PPID = getppid();
 my $TERM = $ENV{TERM};
 
@@ -15,6 +16,7 @@ my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
 GetOptions(
     'shell=s' => \$SHELL,
+    'name=s' => \$NAME,
 );
 
 
@@ -24,6 +26,11 @@ unless ($SHELL) {
 } else {
     $SHELL =~ s/^-//;
 }
+
+# The angel name must be a valid shell function identifier
+# Note that '-' is allowed, even as a first char
+$NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
+
 
 my $FIFO_PATH = tmpnam().".$$";
 my $FIFO_IN = "$FIFO_PATH.in";
@@ -49,19 +56,20 @@ POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
 # so statements must be properly terminated with ';'
 # No shell comments allowed
 print <<EOF;
-[[ -n "\$APS1_PID" ]] && angel leave;
+[[ -n "\$APS1_NAME" ]] && $NAME leave;
 APS1_PS1="\$PS1";
 APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
 angel-PS1()
 {
     local err=\$?;
-    [[ -e '$FIFO_IN' ]] || { angel leave ; return ; };
-    printf '%s\\0%s\\0%s' "?=\$err" "PWD=\$PWD" > '$FIFO_IN' || { angel leave ; return ; };
-    read PS1 < '$FIFO_OUT' || angel leave ;
+    [[ -e '$FIFO_IN' ]] || { $NAME leave ; return ; };
+    printf '%s\\0%s\\0%s' "?=\$err" "PWD=\$PWD" > '$FIFO_IN' || { $NAME leave ; return ; };
+    read PS1 < '$FIFO_OUT' || $NAME leave ;
     printf 'DEBUG> PS1=%q\\n' "\$PS1" ;
 } ;
 PROMPT_COMMAND=angel-PS1 ;
-angel()
+APS1_NAME=$NAME ;
+$NAME()
 {
     case "\$1" in
     leave)
@@ -69,8 +77,8 @@ angel()
         PS1="\$APS1_PS1" ;
         kill \$APS1_PID 2>/dev/null ;
         rm -f -- '$FIFO_IN' '$FIFO_OUT' ;
-        unset APS1_PS1 APS1_PID ;
-        unset -f angel angel-PS1 ;;
+        unset APS1_PS1 APS1_PID APS1_NAME ;
+        unset -f $NAME angel-PS1 ;;
     *)
         echo 'What?' >&2 ;
         return 1 ;;
