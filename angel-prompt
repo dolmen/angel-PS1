@@ -56,7 +56,7 @@ angel-PS1()
 {
     local err=\$?;
     [[ -e '$FIFO_IN' ]] || { angel leave ; return ; };
-    echo -nE "\$err a=b PWD=\$PWD" > '$FIFO_IN' || { angel leave ; return ; };
+    printf '%s\\0%s\\0%s' "?=\$err" "PWD=\$PWD" > '$FIFO_IN' || { angel leave ; return ; };
     read PS1 < '$FIFO_OUT' || angel leave ;
     printf 'DEBUG> PS1=%q\\n' "\$PS1" ;
 } ;
@@ -121,15 +121,12 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
         }
         $_ = do { undef $/; <$FIFO> };
         close $FIFO;
-        print STDERR "DEBUG< [$_]\n";
+        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp };
 
-        # FIXME handle $PWD with '\n'
-        my ($err, $opts, $PWD) = /^(\d+) (.*?) PWD=(.*)$/;
-        # FIXME rewrite parsing to support quoting
-        my %opt;
-        %opt = map { ( m/^(.*?)=(.*)/ ) } split / /, $opts if defined $opts;
+        my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
+        my $PWD = $opts{'PWD'};
 
-        my $PS1 = (scalar localtime) . " $err \\w\\\$ ";
+        my $PS1 = (scalar localtime) . " $opts{'?'} \\w\\\$ ";
 
         open $FIFO, '>', $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
