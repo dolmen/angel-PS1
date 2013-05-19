@@ -9,6 +9,7 @@ use File::Temp 'tmpnam';
 
 my $SHELL;
 my $NAME = 'angel';
+my $VERBOSE = 0;
 my $SHELL_PPID = getppid();
 my $TERM = $ENV{TERM};
 
@@ -17,6 +18,7 @@ my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 GetOptions(
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
+    'v|verbose' => \$VERBOSE,
 );
 
 
