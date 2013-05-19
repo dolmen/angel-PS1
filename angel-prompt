@@ -63,10 +63,12 @@ my $FIFO_OUT = "$FIFO_PATH.out";
 
 if (-t STDOUT) {
     die "TERM is not set\n" unless exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
-    print "TODO: diagnostics output\n";
-    print "$FIFO_IN\n";
-    print "$FIFO_OUT\n";
-    print "SHELL=$SHELL\n";
+
+    print "Copyright (C) 2013  Olivier Mengué\n",
+          "This program comes with ABSOLUTELY NO WARRANTY;\n",
+          "This is free software, and you are welcome to redistribute it\n",
+          "under certain conditions;\n",
+          "See \"sed -n '4,19{s/.//;p}' \$(which $0)\" for details.\n\n",
     print STDERR "usage: eval `angel-prompt --shell=\$0`\n";
     exit 1;
 }
