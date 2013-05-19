@@ -125,6 +125,10 @@ $SIG{INT} = sub {
 # Clean exits that will call our END block
 $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
+# Terminal size change
+# TODO: compute $COLUMNS and $LINES
+#$SIG{WINCH} = sub { print STDERR "WINCH!\n" };
+
 
 # *****************************************************************************
 # Angel main loop
