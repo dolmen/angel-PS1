@@ -26,9 +26,31 @@ use warnings;
 
 use Getopt::Long;
 use File::Temp 'tmpnam';
+use Encode ();
 
-binmode(STDOUT, ':encoding(utf8)');
-binmode(STDERR, ':encoding(utf8)');
+# Extact encoding name from the locale
+my $ENCODING = do {
+    # Shortcut for the most common case
+    my $locale = $ENV{LC_ALL} || $ENV{LC_CTYPE} || $ENV{LANG};
+    $locale =~ /\.UTF-8(?:@.)?/i
+        ? 'UTF-8'
+        : do {
+            # warn "slow locale lookup...";
+            require POSIX;
+            POSIX::setlocale(POSIX::LC_CTYPE(), '');
+            require I18N::Langinfo;
+            eval { I18N::Langinfo::langinfo(I18N::Langinfo::CODESET()) }
+                or do { warn $@; undef }
+        }
+};
+
+# Decode @ARGV and encode STDOUT, STDERR
+if ($ENCODING) {
+    my $encoding_obj = Encode::find_encoding($ENCODING);
+    map { $_ = $encoding_obj->decode($_) } @ARGV;
+    binmode(STDOUT, ":encoding($ENCODING)");
+    binmode(STDERR, ":encoding($ENCODING)");
+}
 
 my $SHELL;
 my $NAME = 'angel';
@@ -63,6 +85,14 @@ my $FIFO_OUT = "$FIFO_PATH.out";
 
 if (-t STDOUT) {
     die "TERM is not set\n" unless exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
+
+    unless ($ENCODING) {
+        print STDERR "Encoding not set in locale. Please set LC_CTYPE.\n";
+    } elsif ($ENCODING !~ /^UTF-/i) {
+        # Get the canonical name
+        $ENCODING = Encode::find_encoding($ENCODING)->name;
+        print STDERR "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel Prompt developers.\n"
+    }
 
     print "Copyright (C) 2013  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
