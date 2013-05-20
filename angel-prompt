@@ -60,6 +60,32 @@ my $TERM = $ENV{TERM};
 
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
+sub terminfo ($;@); # Pre-declare for recursion
+
+sub terminfo ($;@)
+{
+    my ($capability, @args) = @_;
+    if (ref $capability) {
+        for my $cap (@$capability) {
+            my $res = terminfo $cap, @args;
+            return $res if $res ne '';
+        }
+        return '';
+    }
+    open my $tput, '-|', '/usr/bin/tput', $capability, @args
+        or return '';
+    undef $/;
+    scalar readline $tput
+}
+
+sub setaf ($) { terminfo [ qw(setaf AF) ], $_[0] }
+
+my ($BLACK, $RED, $GREEN, $YELLOW, $BLUE, $MAGENTA, $CYAN, $GRAY) =
+    map { setaf $_ } 0..7;
+my $BOLD = terminfo [ qw(bold md) ];
+my $NO_COLOR = terminfo [ qw(sgr0 me) ];
+
+
 GetOptions(
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
@@ -93,6 +119,8 @@ if (-t STDOUT) {
         $ENCODING = Encode::find_encoding($ENCODING)->name;
         print STDERR "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel Prompt developers.\n"
     }
+
+    print "${RED}Red!${NO_COLOR}\n";
 
     print "Copyright (C) 2013  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
