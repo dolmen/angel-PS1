@@ -236,7 +236,9 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
         my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
         my $PWD = $opts{'PWD'};
 
-        my $PS1 = (scalar localtime) . " $opts{'?'} \\w\\\$ ";
+        my $time = sprintf '%3$02d:%2$02d:%1$02d', localtime;
+        my $err = $opts{'?'} == 0 ? '' : "$RED$opts{'?'}$NO_COLOR ";
+        my $PS1 = "$BLUE$time${NO_COLOR} $TTYNAME $err\\w\\\$ ";
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
