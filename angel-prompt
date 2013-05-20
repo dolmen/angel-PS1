@@ -183,6 +183,8 @@ $NAME()
 EOF
 # TODO: exit trap to kill the daemon
 
+(my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
+
 close STDIN;
 
 my $child = fork();
