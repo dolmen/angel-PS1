@@ -84,7 +84,7 @@ my ($BLACK, $RED, $GREEN, $YELLOW, $BLUE, $MAGENTA, $CYAN, $GRAY) =
     map { setaf $_ } 0..7;
 my $BOLD = terminfo [ qw(bold md) ];
 my $NO_COLOR = terminfo [ qw(sgr0 me) ];
-
+my ($B, $E) = ('\[', '\]');
 
 GetOptions(
     'shell=s' => \$SHELL,
@@ -219,6 +219,7 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 # TODO: compute $COLUMNS and $LINES
 #$SIG{WINCH} = sub { print STDERR "WINCH!\n" };
 
+my $USER_MARK = $< ? "$B$BOLD$E\\\$$B$NO_COLOR$E" : "$B$BOLD$RED$E#$B$NO_COLOR$E";
 
 # *****************************************************************************
 # Angel main loop
@@ -237,8 +238,8 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
         my $PWD = $opts{'PWD'};
 
         my $time = sprintf '%3$02d:%2$02d:%1$02d', localtime;
-        my $err = $opts{'?'} == 0 ? '' : "$RED$opts{'?'}$NO_COLOR ";
-        my $PS1 = "$BLUE$time${NO_COLOR} $TTYNAME $err\\w\\\$ ";
+        my $err = $opts{'?'} == 0 ? '' : "$B$RED$E$opts{'?'}$B$NO_COLOR$E ";
+        my $PS1 = "$B$BLUE$E$time$B${NO_COLOR}$E $TTYNAME \\w $err$USER_MARK ";
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
