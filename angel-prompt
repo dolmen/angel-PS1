@@ -86,6 +86,35 @@ my $BOLD = terminfo [ qw(bold md) ];
 my $NO_COLOR = terminfo [ qw(sgr0 me) ];
 my ($B, $E) = ('\[', '\]');
 
+sub expand
+{
+    my $options = shift;
+    my @args = @_;
+    my $out = '';
+    my $color;
+    while (@args) {
+        my $v = shift @args;
+        my $r = ref $v;
+        if ($r eq 'CODE') {
+            unshift @args, $v->($options);
+            redo;
+        }
+        if ($r eq 'SCALAR') {
+            # TODO also handle strings that don't start with \e as margins
+            $color = $$v;
+            $out .= $B . $color . $E;
+        } else {
+            $out .= $v;
+            if (defined $color) {
+                $out .= $B . $NO_COLOR . $E;
+                undef $color;
+            }
+        }
+    }
+    return $out
+}
+
+
 GetOptions(
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
@@ -219,7 +248,7 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 # TODO: compute $COLUMNS and $LINES
 #$SIG{WINCH} = sub { print STDERR "WINCH!\n" };
 
-my $USER_MARK = $< ? "$B$BOLD$E\\\$$B$NO_COLOR$E" : "$B$BOLD$RED$E#$B$NO_COLOR$E";
+my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
 
 # *****************************************************************************
 # Angel main loop
@@ -237,10 +266,20 @@ my $USER_MARK = $< ? "$B$BOLD$E\\\$$B$NO_COLOR$E" : "$B$BOLD$RED$E#$B$NO_COLOR$E
         my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
         my $PWD = $opts{'PWD'};
 
-        my $time = sprintf '%3$02d:%2$02d:%1$02d', localtime;
-        my $err = $opts{'?'} == 0 ? '' : "$B$RED$E$opts{'?'}$B$NO_COLOR$E ";
-        my $writable_dir_color = -w $opts{PWD} ? $GREEN : $RED;
-        my $PS1 = "$B$BLUE$E$time$B${NO_COLOR}$E $TTYNAME $writable_dir_color:$NO_COLOR\\w $err$USER_MARK ";
+        my $PS1 = expand(\%opts,
+            \$BLUE,
+            sprintf('%3$02d:%2$02d:%1$02d', localtime),
+            ' ',
+            $TTYNAME,
+            ' ',
+            (-w $opts{PWD} ? \$GREEN : \$RED),
+            ':',
+            '\\w',
+            ' ',
+            ($opts{'?'} == 0 ? () : (\$RED, $opts{'?'}, ' ')),
+            @USER_MARK,
+            ' ',
+        );
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
