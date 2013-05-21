@@ -239,7 +239,8 @@ my $USER_MARK = $< ? "$B$BOLD$E\\\$$B$NO_COLOR$E" : "$B$BOLD$RED$E#$B$NO_COLOR$E
 
         my $time = sprintf '%3$02d:%2$02d:%1$02d', localtime;
         my $err = $opts{'?'} == 0 ? '' : "$B$RED$E$opts{'?'}$B$NO_COLOR$E ";
-        my $PS1 = "$B$BLUE$E$time$B${NO_COLOR}$E $TTYNAME \\w $err$USER_MARK ";
+        my $writable_dir_color = -w $opts{PWD} ? $GREEN : $RED;
+        my $PS1 = "$B$BLUE$E$time$B${NO_COLOR}$E $TTYNAME $writable_dir_color:$NO_COLOR\\w $err$USER_MARK ";
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
