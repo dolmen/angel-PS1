@@ -86,19 +86,26 @@ my $BOLD = terminfo [ qw(bold md) ];
 my $NO_COLOR = terminfo [ qw(sgr0 me) ];
 my ($B, $E) = ('\[', '\]');
 
-sub expand
+sub interp
 {
     my $options = shift;
+    my @args = @_;
+    for(my $i=0; $i<=$#args; $i++) {
+        if (ref($args[$i]) eq 'CODE') {
+            splice @args, $i, 1, interp($options, $args[$i]->($options));
+        }
+    }
+    return @args
+}
+
+sub expand
+{
     my @args = @_;
     my $out = '';
     my $color;
     while (@args) {
         my $v = shift @args;
         my $r = ref $v;
-        if ($r eq 'CODE') {
-            unshift @args, $v->($options);
-            redo;
-        }
         if ($r eq 'SCALAR') {
             # TODO also handle strings that don't start with \e as margins
             $color = $$v;
@@ -284,7 +291,7 @@ sub main_loop
 
         my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
 
-        my $PS1 = expand(\%opts, @PS1);
+        my $PS1 = expand(interp(\%opts, @PS1));
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
