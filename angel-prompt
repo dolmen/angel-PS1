@@ -272,11 +272,11 @@ my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
             ' ',
             $TTYNAME,
             ' ',
-            (-w $opts{PWD} ? \$GREEN : \$RED),
+            sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
             ':',
             '\\w',
             ' ',
-            ($opts{'?'} == 0 ? () : (\$RED, $opts{'?'}, ' ')),
+            sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
             @USER_MARK,
             ' ',
         );
