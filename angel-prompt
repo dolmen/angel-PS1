@@ -250,6 +250,21 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
 
+my @PS1 = (
+    \$BLUE,
+    sprintf('%3$02d:%2$02d:%1$02d', localtime),
+    ' ',
+    $TTYNAME,
+    ' ',
+    sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
+    ':',
+    '\\w',
+    ' ',
+    sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
+    @USER_MARK,
+    ' ',
+);
+
 # *****************************************************************************
 # Angel main loop
 # *****************************************************************************
@@ -264,22 +279,8 @@ my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
         printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp };
 
         my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
-        my $PWD = $opts{'PWD'};
 
-        my $PS1 = expand(\%opts,
-            \$BLUE,
-            sprintf('%3$02d:%2$02d:%1$02d', localtime),
-            ' ',
-            $TTYNAME,
-            ' ',
-            sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
-            ':',
-            '\\w',
-            ' ',
-            sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
-            @USER_MARK,
-            ' ',
-        );
+        my $PS1 = expand(\%opts, @PS1);
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
