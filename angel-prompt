@@ -272,8 +272,8 @@ sub main_loop
 {
     my @PS1 = @_;
 
+    my $FIFO;
     for (;;) {
-        my $FIFO;
         unless (open $FIFO, "<:encoding($ENCODING)", $FIFO_IN) {
             redo if -e $FIFO_IN && -p _;
             last;
