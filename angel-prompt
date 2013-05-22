@@ -252,7 +252,7 @@ my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
 
 my @PS1 = (
     \$BLUE,
-    sprintf('%3$02d:%2$02d:%1$02d', localtime),
+    sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
     ' ',
     $TTYNAME,
     ' ',
