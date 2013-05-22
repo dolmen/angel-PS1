@@ -268,6 +268,10 @@ my @PS1 = (
 # *****************************************************************************
 # Angel main loop
 # *****************************************************************************
+sub main_loop
+{
+    my @PS1 = @_;
+
     for (;;) {
         my $FIFO;
         unless (open $FIFO, "<:encoding($ENCODING)", $FIFO_IN) {
@@ -293,7 +297,9 @@ my @PS1 = (
         print $FIFO "$out\n";
         close $FIFO;
     }
+}
 
+main_loop(@PS1);
 
 END {
     no warnings 'uninitialized';
