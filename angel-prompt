@@ -98,6 +98,28 @@ sub interp
     return @args
 }
 
+sub compact
+{
+    my @template = @_;
+    my @out;
+    while (@template) {
+        my $v = shift @template;
+        my $r = ref $v;
+        # Reference followed by a scalar => replace by the expanded result
+        if ($r eq 'SCALAR' && @template && !ref $template[0]) {
+            $v = expand($v, shift @template);
+            $r = ref $v;
+        }
+        if (!$r && (@out >= 1 && !ref($out[$#out]))
+                && (@out  > 1 && !ref($out[$#out-1]))) {
+            $out[$#out] .= $v
+        } else {
+            push @out, $v
+        }
+    }
+    @out
+}
+
 sub expand
 {
     my @args = @_;
@@ -257,7 +279,7 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
 
-my @PS1 = (
+my @PS1 = compact(
     \$BLUE,
     sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
     ' ',
@@ -271,6 +293,8 @@ my @PS1 = (
     @USER_MARK,
     ' ',
 );
+
+#warn $_ for @PS1;
 
 # *****************************************************************************
 # Angel main loop
