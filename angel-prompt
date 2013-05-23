@@ -62,14 +62,41 @@ my $TERM = $ENV{TERM};
 
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
+{
+    my @PATH = split /:/, $ENV{'PATH'};
+    my %which;
+
+    sub which ($)
+    {
+        my ($name, $no_cache) = @_;
+
+        # Use the cache
+        return $which{$name} if exists $which{$name};
+        # Already a path with a directory?
+        return $name if index($name, '/') >= 0;
+
+        # Search in $PATH
+        foreach my $p (@PATH) {
+            my $f = "$p/$name";
+            if (-x $f && ! -d _) {
+                $which{$name} = $f unless $no_cache;
+                return $f;
+            }
+        }
+        undef
+    }
+}
+
 sub run
 {
+    my $command = which(shift);
     my ($in, $out);
     my $err = gensym;
     my $pid = IPC::Open3::open3(
         $in,
         $out,
         $err,
+        $command,
         @_
     );
     undef $/;
@@ -102,7 +129,7 @@ sub terminfo ($;@)
 
     #print STDERR "[$capability]\n";
 
-    run('/usr/bin/tput', $capability, @args);
+    run(tput => $capability, @args);
 
     # We could cache the result:
     #   $terminfo{join('\0', $capability, @args)} = $result
