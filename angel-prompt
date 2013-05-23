@@ -341,9 +341,12 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 # TODO: compute $COLUMNS and $LINES
 #$SIG{WINCH} = sub { print STDERR "WINCH!\n" };
 
+
+
 my $git = which 'git';
 sub git
 {
+    # All Git commands we call return a single line. We don't want '\n'
     one_line(run $git, @_)
 }
 
