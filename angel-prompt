@@ -99,11 +99,17 @@ sub run
         $command,
         @_
     );
-    undef $/;
-    my $result = readline $out;
+    my $result = do { undef $/; readline $out };
     # TODO UTF-8 decoding
     waitpid($pid, 0);
     return $result
+}
+
+sub one_line
+{
+    # chop
+    (my $result = shift) =~ s{\n$}{}s;
+    $result
 }
 
 sub terminfo ($;@); # Pre-declare for recursion
