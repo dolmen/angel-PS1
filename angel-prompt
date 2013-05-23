@@ -379,6 +379,8 @@ sub main_loop
 
         my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
 
+        chdir $opts{'PWD'};
+
         my $PS1 = expand(interp(\%opts, @PS1));
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
