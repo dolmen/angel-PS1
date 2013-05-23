@@ -27,6 +27,8 @@ use warnings;
 use Getopt::Long;
 use File::Temp 'tmpnam';
 use Encode ();
+use IPC::Open3 ();
+use Symbol 'gensym';
 
 # Extact encoding name from the locale
 my $ENCODING = do {
@@ -60,6 +62,23 @@ my $TERM = $ENV{TERM};
 
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
+sub run
+{
+    my ($in, $out);
+    my $err = gensym;
+    my $pid = IPC::Open3::open3(
+        $in,
+        $out,
+        $err,
+        @_
+    );
+    undef $/;
+    my $result = readline $out;
+    # TODO UTF-8 decoding
+    waitpid($pid, 0);
+    return $result
+}
+
 sub terminfo ($;@); # Pre-declare for recursion
 
 sub terminfo ($;@)
@@ -72,10 +91,7 @@ sub terminfo ($;@)
         }
         return '';
     }
-    open my $tput, '-|', '/usr/bin/tput', $capability, @args
-        or return '';
-    undef $/;
-    scalar readline $tput
+    run('/usr/bin/tput', $capability, @args);
 }
 
 sub setaf ($) { terminfo [ qw(setaf AF) ], $_[0] }
