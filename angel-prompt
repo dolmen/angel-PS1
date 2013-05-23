@@ -384,8 +384,8 @@ sub GitInfo
     }
 
     if (my $shortstat = git qw(diff --shortstat)) {
-        my ($ins) = ($shortstat =~ /([0-9]+) insertions\(/);
-        my ($del) = ($shortstat =~ /([0-9]+) deletions\(/);
+        my ($ins) = ($shortstat =~ /([0-9]+) insertions?\(/);
+        my ($del) = ($shortstat =~ /([0-9]+) deletions?\(/);
 
         push @out,
             \$RED, $branch, \$NO_COLOR,
