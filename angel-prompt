@@ -54,6 +54,7 @@ if ($ENCODING) {
     binmode(STDERR, ":encoding($ENCODING)");
 }
 
+my $DEBUG = $ENV{APS1_DEBUG};
 my $SHELL;
 my $NAME = 'angel';
 my $VERBOSE = 0;
@@ -212,6 +213,7 @@ GetOptions(
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'v|verbose' => \$VERBOSE,
+    'debug'  => \$DEBUG,
 );
 
 
@@ -268,6 +270,7 @@ POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
 # The shell code will be evaluated with eval as a single line
 # so statements must be properly terminated with ';'
 # No shell comments allowed
+my $shell_debug = $DEBUG ? q|printf 'DEBUG> PS1=%q\\n' "\$PS1" ; | : '';
 print <<EOF;
 [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
@@ -278,7 +281,7 @@ angel-PS1()
     [[ -e '$FIFO_IN' ]] || { $NAME leave ; return ; };
     printf '%s\\0%s\\0%s' "?=\$err" "PWD=\$PWD" > '$FIFO_IN' || { $NAME leave ; return ; };
     read PS1 < '$FIFO_OUT' || $NAME leave ;
-    printf 'DEBUG> PS1=%q\\n' "\$PS1" ;
+    $shell_debug
 } ;
 PROMPT_COMMAND=angel-PS1 ;
 APS1_NAME=$NAME ;
@@ -453,7 +456,7 @@ sub main_loop
         }
         $_ = do { undef $/; <$FIFO> };
         close $FIFO;
-        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp };
+        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG;
 
         my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
 
