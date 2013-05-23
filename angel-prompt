@@ -156,6 +156,7 @@ sub interp
     for(my $i=0; $i<=$#args; $i++) {
         if (ref($args[$i]) eq 'CODE') {
             splice @args, $i, 1, interp($options, $args[$i]->($options));
+            redo;
         }
     }
     return @args
