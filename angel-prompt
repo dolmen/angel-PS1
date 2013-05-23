@@ -81,17 +81,31 @@ sub run
 
 sub terminfo ($;@); # Pre-declare for recursion
 
+my %terminfo_cache;
+
 sub terminfo ($;@)
 {
     my ($capability, @args) = @_;
     if (ref $capability) {
+        my $cap0 = $capability->[0];
+        if (exists $terminfo_cache{$cap0}) {
+            return terminfo $terminfo_cache{$cap0}, @args
+        }
         for my $cap (@$capability) {
             my $res = terminfo $cap, @args;
-            return $res if $res ne '';
+            next if $res eq '';
+            $terminfo_cache{$cap0} = $cap if $cap ne $cap0;
+            return $res
         }
         return '';
     }
+
+    #print STDERR "[$capability]\n";
+
     run('/usr/bin/tput', $capability, @args);
+
+    # We could cache the result:
+    #   $terminfo{join('\0', $capability, @args)} = $result
 }
 
 sub setaf ($) { terminfo [ qw(setaf AF) ], $_[0] }
