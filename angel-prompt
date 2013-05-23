@@ -359,7 +359,7 @@ sub GitInfo
     local $ENV{'GIT_DIR'} = $git_dir;
 
     my @out;
-    my $local_commits = '';
+    my $local_commits = 0;
 
     my $branch = git 'symbolic-ref', 'HEAD';
     if ($branch eq '') {
@@ -379,7 +379,7 @@ sub GitInfo
             $local_commits =
                 git(qw(rev-list --no-merges --count),
                     "$remote_branch_ref..HEAD")
-                || '0';
+                || 0;
         }
     }
 
@@ -395,7 +395,7 @@ sub GitInfo
                 ($local_commits ? (\$NO_COLOR, ',', \$YELLOW, $local_commits) : ()),
                 \$NO_COLOR,
             ')';
-    } elsif ($local_commits ne '') {
+    } elsif ($local_commits) {
         push @out,
             \$YELLOW, $branch, \$NO_COLOR,
             '(', \$YELLOW, $local_commits, \$NO_COLOR, ')';
