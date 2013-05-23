@@ -341,6 +341,80 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 # TODO: compute $COLUMNS and $LINES
 #$SIG{WINCH} = sub { print STDERR "WINCH!\n" };
 
+my $git = which 'git';
+sub git
+{
+    one_line(run $git, @_)
+}
+
+sub GitInfo
+{
+    my $options = shift;
+
+    my $git_dir = "$options->{'PWD'}/.git";
+    unless (-d $git_dir) {
+        ($git_dir = git qw(rev-parse --git-dir))
+            or return;
+    }
+    local $ENV{'GIT_DIR'} = $git_dir;
+
+    my @out;
+    my $local_commits = '';
+
+    my $branch = git 'symbolic-ref', 'HEAD';
+    if ($branch eq '') {
+        ($branch = git 'rev-parse', '--short')
+            or return;
+    } else {
+        $branch =~ s{^refs/heads/}{};
+
+        # Count the number of commits to push ($local_commits)
+        if ((my $remote_branch = git qw(config --get), "branch.$branch.merge")
+            && (my $remote = git qw(config --get), "branch.$branch.remote")) {
+
+            # Compute the ref of our local image of the remote branch
+            (my $remote_branch_ref = $remote_branch) =~ s{^refs/heads/}{refs/remotes/$remote/};
+
+            # Count the commits
+            $local_commits =
+                git(qw(rev-list --no-merges --count),
+                    "$remote_branch_ref..HEAD")
+                || '0';
+        }
+    }
+
+    if (my $shortstat = git qw(diff --shortstat)) {
+        my ($ins) = ($shortstat =~ /([0-9]+) insertions\(/);
+        my ($del) = ($shortstat =~ /([0-9]+) deletions\(/);
+
+        push @out,
+            \$RED, $branch, \$NO_COLOR,
+            '(',
+                \$MAGENTA,
+                ($ins ? ("+$ins" . ($del ? "/" : '')) : '') . ($del ? "-$del" : ''),
+                ($local_commits ? (\$NO_COLOR, ',', \$YELLOW, $local_commits) : ()),
+                \$NO_COLOR,
+            ')';
+    } elsif ($local_commits ne '') {
+        push @out,
+            \$YELLOW, $branch, \$NO_COLOR,
+            '(', \$YELLOW, $local_commits, \$NO_COLOR, ')';
+    } else {
+        push @out, \$GREEN, $branch, \$NO_COLOR;
+    }
+
+    # TODO untracked files
+
+    if (-f "$git_dir/refs/stash") {
+        push @out, \$RED, '+', \$NO_COLOR;
+    }
+
+    # TODO Git mark
+
+    @out, ' '
+}
+
+
 my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
 
 my @PS1 = compact(
@@ -353,6 +427,7 @@ my @PS1 = compact(
     ':',
     '\\w',
     ' ',
+    \&GitInfo,
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
     @USER_MARK,
     ' ',
