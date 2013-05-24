@@ -30,6 +30,9 @@ use Encode ();
 use IPC::Open3 ();
 use Symbol 'gensym';
 
+use lib "$ENV{HOME}/.config/angel-prompt", '/etc/angel-prompt';
+
+
 # Extact encoding name from the locale
 my $ENCODING = do {
     # Shortcut for the most common case
@@ -208,13 +211,19 @@ sub expand
     return $out
 }
 
+my @INCLUDES;
 
 GetOptions(
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'v|verbose' => \$VERBOSE,
     'debug'  => \$DEBUG,
+    'I=s' => \@INCLUDES,
 );
+
+# Order is important: preserve the order as perl itself
+lib->import(@INCLUDES);
+undef @INCLUDES;
 
 # FIXME extract the name of $PPID instead of $SHELL
 unless ($SHELL) {
@@ -252,6 +261,9 @@ if (-t STDOUT) {
           "under certain conditions;\n",
           "See \"sed -n '4,19{s/.//;p}' \$(which $0)\" for details.\n\n",
     print STDERR "usage: eval `angel-prompt --shell=\$0`\n";
+
+    #print "\@INC:\n  - ", join("\n  - ", @INC), "\n";
+
     exit 1;
 }
 
