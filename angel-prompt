@@ -347,6 +347,18 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 #$SIG{WINCH} = sub { print STDERR "WINCH!\n" };
 
 
+sub MarginLeft
+{
+    my $code = pop;
+    my $margin = shift;
+    $margin = ' ' unless defined $margin;
+    sub {
+        my @result = interp $code;
+        return unless @result;
+        ($margin, @result)
+    }
+}
+
 
 my $git = which 'git';
 sub git
