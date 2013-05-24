@@ -24,6 +24,8 @@ use 5.008003;  # 5.010 is the sane minimum
 use strict;
 use warnings;
 
+package Angel::Prompt;
+
 use Getopt::Long;
 use File::Temp 'tmpnam';
 use Encode ();
@@ -34,7 +36,7 @@ use lib "$ENV{HOME}/.config/angel-prompt", '/etc/angel-prompt';
 
 
 # Extact encoding name from the locale
-my $ENCODING = do {
+our $ENCODING = do {
     # Shortcut for the most common case
     my $locale = $ENV{LC_ALL} || $ENV{LC_CTYPE} || $ENV{LANG};
     $locale =~ /\.UTF-8(?:@.)?/i
@@ -57,12 +59,12 @@ if ($ENCODING) {
     binmode(STDERR, ":encoding($ENCODING)");
 }
 
-my $DEBUG = $ENV{APS1_DEBUG};
-my $SHELL;
-my $NAME = 'angel';
-my $VERBOSE = 0;
-my $SHELL_PPID = getppid();
-my $TERM = $ENV{TERM};
+our $DEBUG = $ENV{APS1_DEBUG};
+our $SHELL;
+our $NAME = 'angel';
+our $VERBOSE = 0;
+our $SHELL_PPID = getppid();
+our $TERM = $ENV{TERM};
 
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
