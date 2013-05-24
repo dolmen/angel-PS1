@@ -239,6 +239,13 @@ unless ($SHELL) {
 # Note that '-' is allowed, even as a first char
 $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
+# Load the configuration from @INC
+# Usually: $HOME/.config/angel-prompt/PS1.pl
+my @PS1 = do { package Angel::Prompt::Config; do 'PS1.pl' };
+die "Invalid configuration: $@" if $@;
+pop @PS1 if @PS1 == 1 && !defined $PS1[0];
+
+
 
 my $FIFO_PATH = tmpnam().".$$";
 my $FIFO_IN = "$FIFO_PATH.in";
@@ -451,7 +458,7 @@ sub GitInfo
 
 my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
 
-my @PS1 = compact(
+@PS1 = compact(
     \$BLUE,
     sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
     ' ',
@@ -465,7 +472,7 @@ my @PS1 = compact(
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
     @USER_MARK,
     ' ',
-);
+) unless @PS1;
 
 #warn $_ for @PS1;
 
