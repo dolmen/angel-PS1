@@ -216,7 +216,7 @@ GetOptions(
     'debug'  => \$DEBUG,
 );
 
-
+# FIXME extract the name of $PPID instead of $SHELL
 unless ($SHELL) {
     $SHELL = $ENV{SHELL};
     $SHELL =~ s{^.*/}{};
@@ -244,7 +244,7 @@ if (-t STDOUT) {
         print STDERR "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel Prompt developers.\n"
     }
 
-    print "${RED}Red!${NO_COLOR}\n";
+    #print "${RED}Red!${NO_COLOR}\n";
 
     print "Copyright (C) 2013  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
@@ -262,6 +262,8 @@ if (-t STDOUT) {
 # No terminal? This is not an interactive shell.
 # So we don't install.
 exit 0 unless -t STDIN && exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
+
+$SHELL eq 'bash' or die "Your shell ($SHELL) is not (yet?) supported.\n";
 
 require POSIX;
 POSIX::mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
