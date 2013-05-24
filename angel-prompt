@@ -293,7 +293,7 @@ POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
 # The shell code will be evaluated with eval as a single line
 # so statements must be properly terminated with ';'
 # No shell comments allowed
-my $shell_debug = $DEBUG ? q|printf 'DEBUG> PS1=%q\\n' "\$PS1" ; | : '';
+my $shell_debug = $DEBUG ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
 print <<EOF;
 [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
