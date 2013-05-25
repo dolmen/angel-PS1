@@ -316,7 +316,7 @@ angel-PS1()
 {
     local err=\$?;
     [[ -e '$FIFO_IN' ]] || { $NAME leave ; return ; };
-    printf '%s\\0%s\\0%s' "?=\$err" "PWD=\$PWD" > '$FIFO_IN' || { $NAME leave ; return ; };
+    printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$FIFO_IN' || { $NAME leave ; return ; };
     read PS1 < '$FIFO_OUT' || $NAME leave ;
     $shell_debug
 } ;
