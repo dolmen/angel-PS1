@@ -29,6 +29,7 @@ package Angel::Prompt;
 use Getopt::Long;
 use File::Temp 'tmpnam';
 use Encode ();
+use FindBin;
 use IPC::Open3 ();
 use Symbol 'gensym';
 
@@ -269,8 +270,10 @@ if (-t STDOUT) {
           "This is free software, and you are welcome to redistribute it\n",
           "under certain conditions;\n",
           "See \"sed -n '4,19{s/.//;p}' \$(which $0)\" for details.\n\n",
-    print STDERR "usage: eval `angel-prompt --shell=\$0`\n";
+    print STDERR "usage: eval `$FindBin::Script`\n";
 
+    #print "\$Bin: $FindBin::Bin\n";
+    #print "\$Script: $FindBin::Script\n";
     #print "\@INC:\n  - ", join("\n  - ", @INC), "\n";
 
     exit 1;
