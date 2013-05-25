@@ -64,7 +64,7 @@ our $DEBUG = $ENV{APS1_DEBUG};
 our $SHELL;
 our $NAME = 'angel';
 our $VERBOSE = 0;
-our $SHELL_PPID = getppid();
+our $SHELL_PID = getppid();
 our $TERM = $ENV{TERM};
 
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
@@ -239,12 +239,9 @@ GetOptions(
 lib->import(@INCLUDES);
 undef @INCLUDES;
 
-# FIXME extract the name of $PPID instead of $SHELL
 unless ($SHELL) {
-    $SHELL = $ENV{SHELL};
-    $SHELL =~ s{^.*/}{};
-} else {
-    $SHELL =~ s/^-//;
+    # Extract the name of $PPID
+    $SHELL = one_line(run(ps => qw(-o comm=), $SHELL_PID));
 }
 
 # The angel name must be a valid shell function identifier
