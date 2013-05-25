@@ -39,8 +39,8 @@ use lib "$ENV{HOME}/.config/angel-prompt", '/etc/angel-prompt';
 # Extact encoding name from the locale
 our $ENCODING = do {
     # Shortcut for the most common case
-    my $locale = $ENV{LC_ALL} || $ENV{LC_CTYPE} || $ENV{LANG};
-    $locale =~ /\.UTF-8(?:@.)?/i
+    my $locale = $ENV{LC_ALL} || $ENV{LC_CTYPE} || $ENV{LANG} || 'POSIX';
+    $locale =~ /\.UTF-?8(?:@.*)?$/i
         ? 'UTF-8'
         : do {
             # warn "slow locale lookup...";
