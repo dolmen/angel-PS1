@@ -156,6 +156,17 @@ my $BOLD = terminfo [ qw(bold md) ];
 my $NO_COLOR = terminfo [ qw(sgr0 me) ];
 my ($B, $E) = ('\[', '\]');
 
+$SIG{__DIE__} = sub {
+    return if $^S;
+    if (-t STDERR) {
+        my $last = pop @_;
+        $last =~ s/(\n)$//s;
+        die "$RED$FindBin::Script: ", @_, $last, $NO_COLOR, ($1 ? ($1) : ());
+    } else {
+        die "$FindBin::Script: ", @_;
+    }
+};
+
 sub interp
 {
     my $options = shift;
