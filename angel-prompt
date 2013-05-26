@@ -467,7 +467,6 @@ sub GitInfo
 }
 
 
-my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
 
 @PS1 = compact(
     \$BLUE,
@@ -481,7 +480,8 @@ my @USER_MARK = ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#'));
     ' ',
     \&GitInfo,
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
-    @USER_MARK,
+    # User mark: root => #    else  $
+    ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#')),
     ' ',
 ) unless @PS1;
 
