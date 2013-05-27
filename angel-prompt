@@ -128,13 +128,13 @@ sub terminfo ($;@)
     my ($capability, @args) = @_;
     if (ref $capability) {
         my $cap0 = $capability->[0];
-        if (exists $terminfo_cache{$cap0}) {
-            return terminfo $terminfo_cache{$cap0}, @args
+        if (exists $terminfo_cache{"\0$cap0"}) {
+            return terminfo $terminfo_cache{"\0$cap0"}, @args
         }
         for my $cap (@$capability) {
             my $res = terminfo $cap, @args;
             next if $res eq '';
-            $terminfo_cache{$cap0} = $cap if $cap ne $cap0;
+            $terminfo_cache{"\0$cap0"} = $cap if $cap ne $cap0;
             return $res
         }
         return '';
