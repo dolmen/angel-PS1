@@ -129,23 +129,27 @@ sub terminfo ($;@)
     if (ref $capability) {
         my $cap0 = $capability->[0];
         if (exists $terminfo_cache{"\0$cap0"}) {
-            return terminfo $terminfo_cache{"\0$cap0"}, @args
+            $capability = $terminfo_cache{"\0$cap0"}
+        } else {
+            for my $cap (@$capability) {
+                my $res = terminfo $cap, @args;
+                next if $res eq '';
+                $terminfo_cache{"\0$cap0"} = $cap if $cap ne $cap0;
+                return $res
+            }
+            return '';
         }
-        for my $cap (@$capability) {
-            my $res = terminfo $cap, @args;
-            next if $res eq '';
-            $terminfo_cache{"\0$cap0"} = $cap if $cap ne $cap0;
-            return $res
-        }
-        return '';
     }
 
-    #print STDERR "[$capability]\n";
+    my $query = join("\0", $capability, @args);
+    return $terminfo_cache{$query} if exists $terminfo_cache{$query};
 
-    run(tput => $capability, @args);
+    my $result = run(tput => $capability, @args);
 
-    # We could cache the result:
-    #   $terminfo{join('\0', $capability, @args)} = $result
+    # Cache the result
+    $terminfo_cache{$query} = $result;
+
+    $result
 }
 
 sub setaf ($) { terminfo [ qw(setaf AF) ], $_[0] }
