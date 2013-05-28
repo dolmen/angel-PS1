@@ -60,7 +60,7 @@ if ($ENCODING) {
     binmode(STDERR, ":encoding($ENCODING)");
 }
 
-our $DEBUG = $ENV{APS1_DEBUG};
+our $DEBUG = !! $ENV{APS1_DEBUG};
 our $SHELL;
 our $NAME = 'angel';
 our $VERBOSE = 0;
