@@ -235,6 +235,7 @@ GetOptions(
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'v|verbose' => \$VERBOSE,
+    'q|quiet' => sub { $VERBOSE = -1 },
     'debug'  => \$DEBUG,
     'I=s' => \@INCLUDES,
 );
@@ -357,7 +358,7 @@ if ($child) {
     undef $FIFO_IN;
     undef $FIFO_OUT;
     print "APS1_PID=$child\n";
-    print STDERR "angel-prompt $child installed.\n";
+    print STDERR "angel-prompt $child installed.\n" unless $VERBOSE < 0;
     exit 0;
 }
 
