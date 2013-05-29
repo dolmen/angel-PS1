@@ -60,6 +60,7 @@ if ($ENCODING) {
     binmode(STDERR, ":encoding($ENCODING)");
 }
 
+our $APP = !defined scalar caller;  # Running as command or include
 our $DEBUG = !! $ENV{APS1_DEBUG};
 our $SHELL;
 our $NAME = 'angel';
@@ -285,8 +286,11 @@ if (-t STDOUT) {
           "See \"sed -n '4,19{s/.//;p}' \$(which $0)\" for details.\n\n";
     print STDERR "usage: eval `$FindBin::Script`\n";
 
+    #print 'Running as an app: ', $APP, "\n";
     #print "\$Bin: $FindBin::Bin\n";
     #print "\$Script: $FindBin::Script\n";
+    #print '__FILE__: ', __FILE__, "\n";
+    #print "\%INC:\n  - ", join("\n  - ", sort keys %INC), "\n";
     #print "\@INC:\n  - ", join("\n  - ", @INC), "\n";
 
     exit 1;
