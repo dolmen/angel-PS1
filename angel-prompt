@@ -444,6 +444,9 @@ sub GitInfo
         }
     }
 
+    my $status = git qw(status --porcelain -z);
+    my $untracked = $status =~ /(?:^|\0)\?\? /s;
+
     if (my $shortstat = git qw(diff --shortstat)) {
         my ($ins) = ($shortstat =~ /([0-9]+) insertions?\(/);
         my ($del) = ($shortstat =~ /([0-9]+) deletions?\(/);
@@ -464,10 +467,12 @@ sub GitInfo
         push @out, \$GREEN, $branch, \$NO_COLOR;
     }
 
-    # TODO untracked files
-
     if (-f "$git_dir/refs/stash") {
         push @out, \$RED, '+', \$NO_COLOR;
+    }
+
+    if ($untracked) {
+        push @out, \$RED, '*', \$NO_COLOR;
     }
 
     # TODO Git mark
