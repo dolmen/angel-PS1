@@ -282,7 +282,7 @@ if (-t STDOUT) {
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
           "This is free software, and you are welcome to redistribute it\n",
           "under certain conditions;\n",
-          "See \"sed -n '4,19{s/.//;p}' \$(which $0)\" for details.\n\n",
+          "See \"sed -n '4,19{s/.//;p}' \$(which $0)\" for details.\n\n";
     print STDERR "usage: eval `$FindBin::Script`\n";
 
     #print "\$Bin: $FindBin::Bin\n";
