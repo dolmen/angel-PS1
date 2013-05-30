@@ -26,7 +26,9 @@ use warnings;
 
 package Angel::Prompt;
 
-use Getopt::Long;
+our $VERSION = '0.0';
+
+use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 use File::Temp 'tmpnam';
 use Encode ();
 use FindBin;
@@ -61,6 +63,7 @@ if ($ENCODING) {
 }
 
 our $APP = !defined scalar caller;  # Running as command or include
+$main::VERSION = $VERSION if $APP;
 our $DEBUG = !! $ENV{APS1_DEBUG};
 our $SHELL;
 our $NAME = 'angel';
