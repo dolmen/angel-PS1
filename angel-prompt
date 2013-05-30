@@ -174,11 +174,11 @@ $SIG{__DIE__} = sub {
 
 sub interp
 {
-    my $options = shift;
+    my $state = shift;
     my @args = @_;
     for(my $i=0; $i<=$#args; $i++) {
         if (ref($args[$i]) eq 'CODE') {
-            splice @args, $i, 1, interp($options, $args[$i]->($options));
+            splice @args, $i, 1, interp($state, $args[$i]->($state));
             redo;
         }
     }
@@ -410,9 +410,9 @@ sub git
 
 sub GitInfo
 {
-    my $options = shift;
+    my $shell_state = shift;
 
-    my $git_dir = "$options->{'PWD'}/.git";
+    my $git_dir = "$shell_state->{'PWD'}/.git";
     unless (-d $git_dir) {
         ($git_dir = git qw(rev-parse --git-dir))
             or return;
@@ -518,11 +518,11 @@ sub main_loop
         close $FIFO;
         printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG;
 
-        my %opts = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
+        my %shell_state = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
 
-        chdir $opts{'PWD'};
+        chdir $shell_state{'PWD'};
 
-        my $PS1 = expand(interp(\%opts, @PS1));
+        my $PS1 = expand(interp(\%shell_state, @PS1));
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
