@@ -2,7 +2,7 @@
 use utf8;
 
 #    Copyright © 2013 Olivier Mengué
-#    Original source code is available at https://github.com/dolmen/angel-prompt
+#    Original source code is available at https://github.com/dolmen/Angel-PS1
 #
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -35,7 +35,7 @@ use FindBin;
 use IPC::Open3 ();
 use Symbol 'gensym';
 
-use lib "$ENV{HOME}/.config/angel-prompt", '/etc/angel-prompt';
+use lib "$ENV{HOME}/.config/angel-PS1", '/etc/angel-PS1';
 
 
 # Extact encoding name from the locale
@@ -258,7 +258,7 @@ unless ($SHELL) {
 $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
 # Load the configuration from @INC
-# Usually: $HOME/.config/angel-prompt/PS1.pl
+# Usually: $HOME/.config/angel-PS1/PS1.pl
 my @PS1 = do { package AngelPS1::Config; do 'PS1.pl' };
 die "Invalid configuration: $@" if $@;
 pop @PS1 if @PS1 == 1 && !defined $PS1[0];
@@ -367,7 +367,7 @@ if ($child) {
     undef $FIFO_IN;
     undef $FIFO_OUT;
     print "APS1_PID=$child\n";
-    print STDERR "angel-prompt $child installed.\n" unless $VERBOSE < 0;
+    print STDERR "angel-PS1 $child installed.\n" unless $VERBOSE < 0;
     exit 0;
 }
 
