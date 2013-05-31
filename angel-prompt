@@ -312,6 +312,8 @@ $SHELL eq 'bash' or die "Your shell ($SHELL) is not (yet?) supported.\n";
 require POSIX;
 POSIX::mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
 POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
+-p $FIFO_IN or die "Fifo $FIFO_IN creation failed.";
+-p $FIFO_OUT or die "Fifo $FIFO_OUT creation failed.";
 
 # The shell code will be evaluated with eval as a single line
 # so statements must be properly terminated with ';'
