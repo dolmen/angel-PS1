@@ -24,7 +24,7 @@ use 5.008003;  # 5.010 is the sane minimum
 use strict;
 use warnings;
 
-package Angel::Prompt;
+package AngelPS1;
 
 our $VERSION = '0.0';
 
@@ -259,7 +259,7 @@ $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
 # Load the configuration from @INC
 # Usually: $HOME/.config/angel-prompt/PS1.pl
-my @PS1 = do { package Angel::Prompt::Config; do 'PS1.pl' };
+my @PS1 = do { package AngelPS1::Config; do 'PS1.pl' };
 die "Invalid configuration: $@" if $@;
 pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
@@ -277,7 +277,7 @@ if (-t STDOUT) {
     } elsif ($ENCODING !~ /^UTF-/i) {
         # Get the canonical name
         $ENCODING = Encode::find_encoding($ENCODING)->name;
-        print STDERR "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel Prompt developers.\n"
+        print STDERR "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel PS1 developers.\n"
     }
 
     #print "${RED}Red!${NO_COLOR}\n";
