@@ -1,7 +1,5 @@
-angel-PS1
-=========
-The Angel's Prompt
-------------------
+angel-PS1 - The Angel's Prompt
+==============================
 
 
 `angel-PS1` is your guardian angel for the Unix world.
