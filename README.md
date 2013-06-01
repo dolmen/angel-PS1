@@ -49,6 +49,9 @@ This is also:
   you have access to the thousands of Perl modules on the CPAN to efficiently
   and/or portably retrieve information that you will show in the prompt.
 
+### News
+
+Follow <a href="https://twitter.com/ngelPS1">@ngelPS1</a> on Twitter.
 
 ### Copyright & license
 
