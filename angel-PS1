@@ -391,12 +391,12 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 our ($LINES, $COLUMNS);
 
-my $WINSZ = pack('S4');
 require 'sys/ioctl.ph';
+my $_WINSZ = pack('S4');
 sub _update_winsize
 {
-    ioctl(STDERR, TIOCGWINSZ(), $WINSZ);
-    ($LINES, $COLUMNS) = unpack('S2', $WINSZ);
+    ioctl(STDERR, TIOCGWINSZ(), $_WINSZ);
+    ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
 }
 
 # Terminal size change
