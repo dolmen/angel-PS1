@@ -388,10 +388,22 @@ $SIG{INT} = sub {
 # Clean exits that will call our END block
 $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
-# Terminal size change
-# TODO: compute $COLUMNS and $LINES
-#$SIG{WINCH} = sub { print STDERR "WINCH!\n" };
 
+our ($LINES, $COLUMNS);
+
+my $WINSZ = pack('S4');
+require 'sys/ioctl.ph';
+sub _update_winsize
+{
+    ioctl(STDERR, TIOCGWINSZ(), $WINSZ);
+    ($LINES, $COLUMNS) = unpack('S2', $WINSZ);
+}
+
+# Terminal size change
+$SIG{WINCH} = \&_update_winsize;
+
+# Fetch now
+_update_winsize;
 
 sub MarginLeft
 {
@@ -492,6 +504,7 @@ sub GitInfo
     sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
     ' ',
     $TTYNAME,
+    (sub { "(${COLUMNS}x${LINES})" }) x!! $DEBUG,
     ' ',
     sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
     ':',
