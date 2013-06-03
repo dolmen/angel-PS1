@@ -405,6 +405,15 @@ $SIG{WINCH} = \&_update_winsize;
 # Fetch now
 _update_winsize;
 
+sub Escape
+{
+    my @content = compact(@_);
+    sub {
+        my @result = interp @content;
+        \ compact(@result);
+    }
+}
+
 sub MarginLeft
 {
     my $code = pop;
