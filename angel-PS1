@@ -367,7 +367,7 @@ if ($child) {
     undef $FIFO_IN;
     undef $FIFO_OUT;
     print "APS1_PID=$child\n";
-    print STDERR "angel-PS1 $child installed.\n" unless $VERBOSE < 0;
+    print STDERR "$NAME installed.\n" unless $VERBOSE < 0;
     exit 0;
 }
 
