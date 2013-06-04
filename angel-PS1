@@ -323,7 +323,7 @@ print <<EOF;
 [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
 APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
-angel-PS1()
+-angel-PS1()
 {
     local err=\$?;
     [[ -e '$FIFO_IN' ]] || { $NAME leave ; return ; };
@@ -331,7 +331,7 @@ angel-PS1()
     read PS1 < '$FIFO_OUT' || $NAME leave ;
     $shell_debug
 } ;
-PROMPT_COMMAND=angel-PS1 ;
+PROMPT_COMMAND=-angel-PS1 ;
 APS1_NAME=$NAME ;
 $NAME()
 {
@@ -342,7 +342,7 @@ $NAME()
         kill \$APS1_PID 2>/dev/null ;
         rm -f -- '$FIFO_IN' '$FIFO_OUT' ;
         unset APS1_PS1 APS1_PID APS1_NAME ;
-        unset -f $NAME angel-PS1 ;;
+        unset -f -- $NAME -angel-PS1 ;;
     mute|off)
         PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
         PS1="\$APS1_PS1" ;;
