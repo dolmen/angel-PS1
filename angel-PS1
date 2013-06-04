@@ -175,6 +175,14 @@ $SIG{__DIE__} = sub {
     }
 };
 
+if (-t STDERR) {
+    $SIG{__WARN__} = sub {
+        my $last = pop;
+        $last =~ s/(\n)$//s;
+        warn "$YELLOW$BOLD", @_, $last, $NO_COLOR, ($1 ? ($1) : ());
+    };
+}
+
 sub interp
 {
     my $state = shift;
@@ -273,11 +281,11 @@ if (-t STDOUT) {
     die "TERM is not set\n" unless exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 
     unless ($ENCODING) {
-        print STDERR "Encoding not set in locale. Please set LC_CTYPE.\n";
+        warn "Encoding not set in locale. Please set LC_CTYPE.\n";
     } elsif ($ENCODING !~ /^UTF-/i) {
         # Get the canonical name
         $ENCODING = Encode::find_encoding($ENCODING)->name;
-        print STDERR "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel PS1 developers.\n"
+        warn "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel PS1 developers.\n"
     }
 
     #print "${RED}Red!${NO_COLOR}\n";
