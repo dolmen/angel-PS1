@@ -265,7 +265,7 @@ pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
 
 
-my $FIFO_PATH = tmpnam().".$$";
+my $FIFO_PATH = tmpnam().".$NAME-$$";
 my $FIFO_IN = "$FIFO_PATH.in";
 my $FIFO_OUT = "$FIFO_PATH.out";
 
