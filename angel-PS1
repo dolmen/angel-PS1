@@ -438,6 +438,36 @@ die "Invalid configuration: $@" if $@;
 pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
 
+# TODO load the default PS1 in the AngelPS1::Config namespace
+BEGIN {
+    AngelPS1::Plugin::Core->import;
+    AngelPS1::Plugin::TerminalSize->import;
+    AngelPS1::Plugin::Git->import;
+}
+
+require POSIX;
+(my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
+
+@PS1 = compact(
+    \$BLUE,
+    sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
+    ' ',
+    $TTYNAME,
+    (sub { "(${COLUMNS}x${LINES})" }) x!! $DEBUG,
+    ' ',
+    sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
+    ':',
+    '\\w',
+    ' ',
+    \&GitInfo,
+    sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
+    # User mark: root => #    else  $
+    ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#')),
+    ' ',
+) unless @PS1;
+
+
+
 
 my $FIFO_PATH = tmpnam().".$NAME-$$";
 my $FIFO_IN = "$FIFO_PATH.in";
@@ -530,8 +560,6 @@ $NAME()
 EOF
 # TODO: exit trap to kill the daemon
 
-(my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
-
 close STDIN;
 
 my $child = fork();
@@ -565,32 +593,6 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 
 
-
-BEGIN {
-    AngelPS1::Plugin::Core->import;
-    AngelPS1::Plugin::TerminalSize->import;
-    AngelPS1::Plugin::Git->import;
-}
-
-@PS1 = compact(
-    \$BLUE,
-    sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
-    ' ',
-    $TTYNAME,
-    (sub { "(${COLUMNS}x${LINES})" }) x!! $DEBUG,
-    ' ',
-    sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
-    ':',
-    '\\w',
-    ' ',
-    \&GitInfo,
-    sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
-    # User mark: root => #    else  $
-    ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#')),
-    ' ',
-) unless @PS1;
-
-#warn $_ for @PS1;
 
 # *****************************************************************************
 # Angel main loop
