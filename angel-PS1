@@ -265,6 +265,172 @@ unless ($SHELL) {
 # Note that '-' is allowed, even as a first char
 $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
+{
+package AngelPS1::Plugin::Core;
+
+use Exporter 5.57 'import';
+BEGIN {
+    our $VERSION = $AngelPS1::VERSION;
+    our @EXPORT = qw(Escape MarginLeft);
+}
+
+sub Escape
+{
+    my @content = AngelPS1::compact(@_);
+    sub {
+        my @result = AngelPS1::interp @content;
+        \ AngelPS1::compact(@result);
+    }
+}
+
+sub MarginLeft
+{
+    my $code = pop;
+    my $margin = shift;
+    $margin = ' ' unless defined $margin;
+    sub {
+        my @result = AngelPS1::interp $code;
+        return unless @result;
+        ($margin, @result)
+    }
+}
+
+package AngelPS1::Plugin::TerminalSize;
+
+#use Exporter 5.57 ();
+
+our ($LINES, $COLUMNS);
+
+my $_WINSZ;
+BEGIN {
+    our $VERSION = $AngelPS1::VERSION;
+    our @ISA = 'Exporter';
+    our @EXPORT = qw($LINES $COLUMNS);
+    $_WINSZ = pack('S4');
+}
+
+sub _update_winsize
+{
+    ioctl(STDERR, &TIOCGWINSZ, $_WINSZ);
+    ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
+}
+
+
+sub import
+{
+    # Avoid multiple install due to multiple import from different packages
+    unless (defined $SIG{WINCH}) {
+        # Delay loading of ioctl.ph until import time
+        no strict 'refs';
+        *TIOCGWINSZ = do {
+            package AngelPS1::Plugin::TerminalSize::ioctl;
+            require 'sys/ioctl.ph';
+            \&TIOCGWINSZ
+        };
+        delete $INC{'sys/ioctl.ph'};
+        # Terminal size change
+        $SIG{WINCH} = \&_update_winsize;
+
+        # Fetch now
+        _update_winsize;
+    }
+
+    $_[0]->export_to_level(1, @_);
+}
+
+
+package AngelPS1::Plugin::Git;
+
+use Exporter 5.57 'import';
+BEGIN {
+    our $VERSION = $AngelPS1::VERSION;
+    our @EXPORT = qw(GitInfo);
+}
+
+my $git = AngelPS1::which 'git';
+sub git
+{
+    # All Git commands we call return a single line. We don't want '\n'
+    AngelPS1::one_line(AngelPS1::run $git, @_)
+}
+
+sub GitInfo
+{
+    my $shell_state = shift;
+
+    my $git_dir = "$shell_state->{'PWD'}/.git";
+    unless (-d $git_dir) {
+        ($git_dir = git qw(rev-parse --git-dir))
+            or return;
+    }
+    local $ENV{'GIT_DIR'} = $git_dir;
+
+    my @out;
+    my $local_commits = 0;
+
+    my $branch = git 'symbolic-ref', 'HEAD';
+    if ($branch eq '') {
+        ($branch = git 'rev-parse', '--short')
+            or return;
+    } else {
+        $branch =~ s{^refs/heads/}{};
+
+        # Count the number of commits to push ($local_commits)
+        if ((my $remote_branch = git qw(config --get), "branch.$branch.merge")
+            && (my $remote = git qw(config --get), "branch.$branch.remote")) {
+
+            # Compute the ref of our local image of the remote branch
+            (my $remote_branch_ref = $remote_branch) =~ s{^refs/heads/}{refs/remotes/$remote/};
+
+            # Count the commits
+            $local_commits =
+                git(qw(rev-list --no-merges --count),
+                    "$remote_branch_ref..HEAD")
+                || 0;
+        }
+    }
+
+    my $status = git qw(status --porcelain -z);
+    my $untracked = $status =~ /(?:^|\0)\?\? /s;
+
+    if (my $shortstat = git qw(diff --shortstat)) {
+        my ($ins) = ($shortstat =~ /([0-9]+) insertions?\(/);
+        my ($del) = ($shortstat =~ /([0-9]+) deletions?\(/);
+
+        push @out,
+            \$RED, $branch, \$NO_COLOR,
+            '(',
+                \$MAGENTA,
+                ($ins ? ("+$ins" . ($del ? "/" : '')) : '') . ($del ? "-$del" : ''),
+                ($local_commits ? (\$NO_COLOR, ',', \$YELLOW, $local_commits) : ()),
+                \$NO_COLOR,
+            ')';
+    } elsif ($local_commits) {
+        push @out,
+            \$YELLOW, $branch, \$NO_COLOR,
+            '(', \$YELLOW, $local_commits, \$NO_COLOR, ')';
+    } else {
+        push @out, \$GREEN, $branch, \$NO_COLOR;
+    }
+
+    if (-f "$git_dir/refs/stash") {
+        push @out, \$RED, '+', \$NO_COLOR;
+    }
+
+    if ($untracked) {
+        push @out, \$RED, '*', \$NO_COLOR;
+    }
+
+    # TODO Git mark
+
+    @out, ' '
+}
+
+} # End of embedded packages
+
+
+
+
 # Load the configuration from @INC
 # Usually: $HOME/.config/angel-PS1/PS1.pl
 my @PS1 = do { package AngelPS1::Config; do 'PS1.pl' };
@@ -397,124 +563,14 @@ $SIG{INT} = sub {
 $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 
-our ($LINES, $COLUMNS);
 
-require 'sys/ioctl.ph';
-my $_WINSZ = pack('S4');
-sub _update_winsize
-{
-    ioctl(STDERR, TIOCGWINSZ(), $_WINSZ);
-    ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
+
+
+BEGIN {
+    AngelPS1::Plugin::Core->import;
+    AngelPS1::Plugin::TerminalSize->import;
+    AngelPS1::Plugin::Git->import;
 }
-
-# Terminal size change
-$SIG{WINCH} = \&_update_winsize;
-
-# Fetch now
-_update_winsize;
-
-sub Escape
-{
-    my @content = compact(@_);
-    sub {
-        my @result = interp @content;
-        \ compact(@result);
-    }
-}
-
-sub MarginLeft
-{
-    my $code = pop;
-    my $margin = shift;
-    $margin = ' ' unless defined $margin;
-    sub {
-        my @result = interp $code;
-        return unless @result;
-        ($margin, @result)
-    }
-}
-
-
-my $git = which 'git';
-sub git
-{
-    # All Git commands we call return a single line. We don't want '\n'
-    one_line(run $git, @_)
-}
-
-sub GitInfo
-{
-    my $shell_state = shift;
-
-    my $git_dir = "$shell_state->{'PWD'}/.git";
-    unless (-d $git_dir) {
-        ($git_dir = git qw(rev-parse --git-dir))
-            or return;
-    }
-    local $ENV{'GIT_DIR'} = $git_dir;
-
-    my @out;
-    my $local_commits = 0;
-
-    my $branch = git 'symbolic-ref', 'HEAD';
-    if ($branch eq '') {
-        ($branch = git 'rev-parse', '--short')
-            or return;
-    } else {
-        $branch =~ s{^refs/heads/}{};
-
-        # Count the number of commits to push ($local_commits)
-        if ((my $remote_branch = git qw(config --get), "branch.$branch.merge")
-            && (my $remote = git qw(config --get), "branch.$branch.remote")) {
-
-            # Compute the ref of our local image of the remote branch
-            (my $remote_branch_ref = $remote_branch) =~ s{^refs/heads/}{refs/remotes/$remote/};
-
-            # Count the commits
-            $local_commits =
-                git(qw(rev-list --no-merges --count),
-                    "$remote_branch_ref..HEAD")
-                || 0;
-        }
-    }
-
-    my $status = git qw(status --porcelain -z);
-    my $untracked = $status =~ /(?:^|\0)\?\? /s;
-
-    if (my $shortstat = git qw(diff --shortstat)) {
-        my ($ins) = ($shortstat =~ /([0-9]+) insertions?\(/);
-        my ($del) = ($shortstat =~ /([0-9]+) deletions?\(/);
-
-        push @out,
-            \$RED, $branch, \$NO_COLOR,
-            '(',
-                \$MAGENTA,
-                ($ins ? ("+$ins" . ($del ? "/" : '')) : '') . ($del ? "-$del" : ''),
-                ($local_commits ? (\$NO_COLOR, ',', \$YELLOW, $local_commits) : ()),
-                \$NO_COLOR,
-            ')';
-    } elsif ($local_commits) {
-        push @out,
-            \$YELLOW, $branch, \$NO_COLOR,
-            '(', \$YELLOW, $local_commits, \$NO_COLOR, ')';
-    } else {
-        push @out, \$GREEN, $branch, \$NO_COLOR;
-    }
-
-    if (-f "$git_dir/refs/stash") {
-        push @out, \$RED, '+', \$NO_COLOR;
-    }
-
-    if ($untracked) {
-        push @out, \$RED, '*', \$NO_COLOR;
-    }
-
-    # TODO Git mark
-
-    @out, ' '
-}
-
-
 
 @PS1 = compact(
     \$BLUE,
