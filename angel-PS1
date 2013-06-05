@@ -445,27 +445,32 @@ BEGIN {
     AngelPS1::Plugin::Git->import;
 }
 
-require POSIX;
-(my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
+unless (@PS1) {
+    require POSIX;
+    (my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
 
-@PS1 = compact(
-    \$BLUE,
-    sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
-    ' ',
-    $TTYNAME,
-    (sub { "(${COLUMNS}x${LINES})" }) x!! $DEBUG,
-    ' ',
-    sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
-    ':',
-    '\\w',
-    ' ',
-    \&GitInfo,
-    sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
-    # User mark: root => #    else  $
-    ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#')),
-    ' ',
-) unless @PS1;
+    @PS1 =
+    (
+        \$BLUE,
+        sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
+        ' ',
+        $TTYNAME,
+        (sub { "(${COLUMNS}x${LINES})" }) x!! $DEBUG,
+        ' ',
+        sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
+        ':',
+        '\\w',
+        ' ',
+        \&GitInfo,
+        sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
+        # User mark: root => #    else  $
+        ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#')),
+        ' ',
+    );
+}
 
+
+@PS1 = compact @PS1;
 
 
 
