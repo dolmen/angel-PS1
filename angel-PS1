@@ -266,6 +266,17 @@ unless ($SHELL) {
 $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
 {
+# The public API for plugins
+package AngelPS1::Plugin;
+use Exporter 5.57 'import';
+BEGIN {
+    $INC{'AngelPS1/Plugin.pm'} = __FILE__;
+    our $VERSION = $AngelPS1::VERSION;
+    our @EXPORT = qw(compact interp);
+    *compact = \&AngelPS1::compact;
+    *interp = \&AngelPS1::interp;
+}
+
 package AngelPS1::Plugin::Core;
 
 use Exporter 5.57 'import';
