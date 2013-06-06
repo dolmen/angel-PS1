@@ -209,7 +209,7 @@ sub compact
             $r = ref $v;
         }
         if (!$r && (@out >= 1 && !ref($out[$#out]))
-                && (@out  > 1 && !ref($out[$#out-1]))) {
+                && (@out == 1 || !ref($out[$#out-1]))) {
             $out[$#out] .= $v
         } else {
             push @out, $v
