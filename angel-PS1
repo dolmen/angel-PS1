@@ -285,12 +285,14 @@ BEGIN {
     our @EXPORT = qw(Escape MarginLeft);
 }
 
+use AngelPS1::Plugin;
+
 sub Escape
 {
-    my @content = AngelPS1::compact(@_);
+    my @content = compact(@_);
     sub {
-        my @result = AngelPS1::interp @content;
-        \ AngelPS1::compact(@result);
+        my @result = interp @content;
+        \ compact(@result);
     }
 }
 
@@ -300,7 +302,7 @@ sub MarginLeft
     my $margin = shift;
     $margin = ' ' unless defined $margin;
     sub {
-        my @result = AngelPS1::interp $code;
+        my @result = interp $code;
         return unless @result;
         ($margin, @result)
     }
