@@ -536,7 +536,7 @@ $SHELL eq 'bash' or die "Your shell ($SHELL) is not (yet?) supported.\n";
 # and plugins without the runtime cost.
 if (@PS1 == 1) {
     (my $PS1 = $PS1[0]) =~ s/'/'\\''/g;
-    print q{[[ -n "$APS1_NAME" ]] && $APS1_NAME leave; PS1='}.$PS1."'\n";
+    print qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n};
     exit 0
 }
 
