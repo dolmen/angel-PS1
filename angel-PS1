@@ -196,6 +196,8 @@ sub interp
     return @args
 }
 
+# Compact a @PS1 definition: scalar refs are expanded to their escaped result
+# and static strings are then concatenated.
 sub compact
 {
     my @template = @_;
