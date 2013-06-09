@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1024"
+   height="1024"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="angel-PS1.svg"
+   inkscape:export-filename="/home/dolmen/Ubuntu One/Images/angel-PS1/angel-PS1.png"
+   inkscape:export-xdpi="2.8099999"
+   inkscape:export-ydpi="2.8099999">
+  <title
+     id="title3784">angel-PS1 logo</title>
+  <defs
+     id="defs4">
+    <linearGradient
+       id="linearGradient3763">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop3765" />
+      <stop
+         id="stop3771"
+         offset="0.5"
+         style="stop-color:#ffffff;stop-opacity:0.69387758;" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop3767" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3763"
+       id="linearGradient3769"
+       x1="136.439"
+       y1="402.745"
+       x2="365"
+       y2="402.745"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.1691163,0,0,1.1353861,-149.55281,134.65135)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3763"
+       id="linearGradient2992"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-1.1691163,0,0,1.1353861,1178.3755,134.65134)"
+       x1="136.439"
+       y1="402.745"
+       x2="365"
+       y2="402.745" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#d2ebf7"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.49497475"
+     inkscape:cx="826.48956"
+     inkscape:cy="464.75214"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1615"
+     inkscape:window-height="1026"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>angel-PS1 logo</dc:title>
+        <dc:date>2013-06-09</dc:date>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Olivier Mengué</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Copyright 2013 Olivier Mengué</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:language>fr</dc:language>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>angel-PS1</rdf:li>
+            <rdf:li>shell</rdf:li>
+            <rdf:li>Unix</rdf:li>
+            <rdf:li>prompt</rdf:li>
+            <rdf:li>bash</rdf:li>
+            <rdf:li>zsh</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-28.362183)">
+    <path
+       style="fill:url(#linearGradient3769);fill-opacity:1;stroke:#000000;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="M 271.32905,943.92357 C 172.82918,966.70824 100.83736,830.08389 205.30129,809.03448 66.831631,832.48499 25.838054,730.62564 116.169,698.48416 51.567462,691.20823 -39.79004,640.05069 99.6352,566.58914 81.293622,561.86998 -60.42215,528.01913 71.29154,470.24844 -10.917733,449.99365 3.7929301,358.90785 81.711651,357.72374 55.634548,310.62749 74.808219,259.56496 152.77955,299.35838 c -22.27593,-60.45021 78.76816,-62.4718 118.5495,-61.93331"
+       id="aile-gauche"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc">
+      <title
+         id="title3776">Aile gauche</title>
+    </path>
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="aile-droite"
+       d="m 757.49368,943.92357 c 98.49987,22.78466 170.4917,-113.83968 66.02776,-134.88909 138.46967,23.45051 179.46326,-78.40885 89.1323,-110.55032 64.60154,-7.27593 155.95906,-58.43348 16.5338,-131.89502 18.34158,-4.71917 160.05716,-38.57001 28.34366,-96.3407 82.2092,-20.25479 67.4986,-111.34059 -10.42011,-112.5247 26.0771,-47.09626 6.90343,-98.15878 -71.06791,-58.36536 22.27593,-60.45022 -78.76816,-62.4718 -118.5495,-61.93331"
+       style="fill:url(#linearGradient2992);fill-opacity:1;stroke:#000000;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
+      <title
+         id="title3774">Aile droite</title>
+    </path>
+    <text
+       xml:space="preserve"
+       style="font-size:1116.64086913999994977px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#808080;fill-opacity:0.50196081;stroke:#000000;font-family:Liberation Mono;-inkscape-font-specification:Liberation Mono;stroke-opacity:1;stroke-width:14.99999994000000036;stroke-miterlimit:4;stroke-dasharray:none"
+       x="165.28424"
+       y="995.22491"
+       id="dollar"
+       sodipodi:linespacing="125%"
+       transform="scale(1.0306228,0.9702871)"><desc
+         id="desc3778">Réprésente le shell</desc><title
+         id="title3770">Signe « dollar »</title><tspan
+         sodipodi:role="line"
+         id="tspan3000"
+         x="165.28424"
+         y="995.22491">$</tspan></text>
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#f2b11a;stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="aureole"
+       sodipodi:cx="474.7717"
+       sodipodi:cy="105.77134"
+       sodipodi:rx="145.46196"
+       sodipodi:ry="37.375645"
+       d="m 620.23366,105.77134 a 145.46196,37.375645 0 1 1 -290.92392,0 145.46196,37.375645 0 1 1 290.92392,0 z"
+       transform="matrix(1.1691163,0,0,1.1353861,-43.063331,-6.5750278)"
+       inkscape:label="#aureole">
+      <title
+         id="title3772">Auréole</title>
+    </path>
+  </g>
+</svg>
