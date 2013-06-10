@@ -243,35 +243,10 @@ pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
 
 unless (@PS1) {
-    # TODO load the default PS1 in the AngelPS1::Config namespace
-
-    require POSIX;
-    (my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
-
-    require AngelPS1::Plugin::Core;
-    AngelPS1::Plugin::Core->import;
-    use AngelPS1::Plugin::TerminalSize;
-    require AngelPS1::Plugin::Git;
-    AngelPS1::Plugin::Git->import;
-
-    @PS1 =
-    (
-        \$BLUE,
-        sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
-        ' ',
-        $TTYNAME,
-        (sub { "(${COLUMNS}x${LINES})" }) x!! $DEBUG,
-        ' ',
-        sub { -w $_[0]->{PWD} ? (\$GREEN) : (\$RED) },
-        ':',
-        '\\w',
-        ' ',
-        \&GitInfo,
-        sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (\$RED, $err, ' ') },
-        # User mark: root => #    else  $
-        ($< ? (\$BOLD, '\\$') : (\"$BOLD$RED", '#')),
-        ' ',
-    );
+    package # Not indexed
+            AngelPS1::Config;
+    @PS1 = do 'AngelPS1/Prompt/Default.pm';
+    die "Invalid configuration: $@" if $@;
 }
 
 
