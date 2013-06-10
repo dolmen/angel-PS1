@@ -74,7 +74,8 @@ our $TERM = $ENV{TERM};
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
 {
-    my @PATH = split /:/, $ENV{'PATH'};
+    my @PATH;
+    BEGIN { @PATH = split /:/, $ENV{'PATH'}; }
     my %which;
 
     sub which ($)
@@ -94,7 +95,7 @@ my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
                 return $f;
             }
         }
-        undef
+        die "$name: not found";
     }
 }
 
@@ -123,46 +124,11 @@ sub one_line
     $result
 }
 
-sub terminfo ($;@); # Pre-declare for recursion
 
-my %terminfo_cache;
-
-sub terminfo ($;@)
-{
-    my ($capability, @args) = @_;
-    if (ref $capability) {
-        my $cap0 = $capability->[0];
-        if (exists $terminfo_cache{"\0$cap0"}) {
-            $capability = $terminfo_cache{"\0$cap0"}
-        } else {
-            for my $cap (@$capability) {
-                my $res = terminfo $cap, @args;
-                next if $res eq '';
-                $terminfo_cache{"\0$cap0"} = $cap if $cap ne $cap0;
-                return $res
-            }
-            return '';
-        }
-    }
-
-    my $query = join("\0", $capability, @args);
-    return $terminfo_cache{$query} if exists $terminfo_cache{$query};
-
-    my $result = run(tput => $capability, @args);
-
-    # Cache the result
-    $terminfo_cache{$query} = $result;
-
-    $result
-}
-
-sub setaf ($) { terminfo [ qw(setaf AF) ], $_[0] }
-
-my ($BLACK, $RED, $GREEN, $YELLOW, $BLUE, $MAGENTA, $CYAN, $GRAY) =
-    map { setaf $_ } 0..7;
-my $BOLD = terminfo [ qw(bold md) ];
-my $NO_COLOR = terminfo [ qw(sgr0 me) ];
+# Bash escapes
 my ($B, $E) = ('\[', '\]');
+
+use AngelPS1::Color;
 
 $SIG{__DIE__} = sub {
     return if $^S;
@@ -267,183 +233,6 @@ unless ($SHELL) {
 # Note that '-' is allowed, even as a first char
 $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
-{
-# The public API for plugins
-package AngelPS1::Plugin;
-use Exporter 5.57 'import';
-BEGIN {
-    $INC{'AngelPS1/Plugin.pm'} = __FILE__;
-    our $VERSION = $AngelPS1::VERSION;
-    our @EXPORT = qw(compact interp);
-    *compact = \&AngelPS1::compact;
-    *interp = \&AngelPS1::interp;
-}
-
-package AngelPS1::Plugin::Core;
-
-use Exporter 5.57 'import';
-BEGIN {
-    our $VERSION = $AngelPS1::VERSION;
-    our @EXPORT = qw(Escape MarginLeft);
-}
-
-use AngelPS1::Plugin;
-
-sub Escape
-{
-    my @content = compact(@_);
-    sub {
-        my @result = interp @content;
-        \ compact(@result);
-    }
-}
-
-sub MarginLeft
-{
-    my $code = pop;
-    my $margin = shift;
-    $margin = ' ' unless defined $margin;
-    sub {
-        my @result = interp $code;
-        return unless @result;
-        ($margin, @result)
-    }
-}
-
-package AngelPS1::Plugin::TerminalSize;
-
-#use Exporter 5.57 ();
-
-our ($LINES, $COLUMNS);
-
-my $_WINSZ;
-BEGIN {
-    our $VERSION = $AngelPS1::VERSION;
-    our @ISA = 'Exporter';
-    our @EXPORT = qw($LINES $COLUMNS);
-    $_WINSZ = pack('S4');
-}
-
-sub _update_winsize
-{
-    ioctl(STDERR, &TIOCGWINSZ, $_WINSZ);
-    ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
-}
-
-
-sub import
-{
-    # Avoid multiple install due to multiple import from different packages
-    unless (defined $SIG{WINCH}) {
-        # Delay loading of ioctl.ph until import time
-        no strict 'refs';
-        *TIOCGWINSZ = do {
-            package AngelPS1::Plugin::TerminalSize::ioctl;
-            require 'sys/ioctl.ph';
-            \&TIOCGWINSZ
-        };
-        delete $INC{'sys/ioctl.ph'};
-        # Terminal size change
-        $SIG{WINCH} = \&_update_winsize;
-
-        # Fetch now
-        _update_winsize;
-    }
-
-    $_[0]->export_to_level(1, @_);
-}
-
-
-package AngelPS1::Plugin::Git;
-
-use Exporter 5.57 'import';
-BEGIN {
-    our $VERSION = $AngelPS1::VERSION;
-    our @EXPORT = qw(GitInfo);
-}
-
-my $git = AngelPS1::which 'git';
-sub git
-{
-    # All Git commands we call return a single line. We don't want '\n'
-    AngelPS1::one_line(AngelPS1::run $git, @_)
-}
-
-sub GitInfo
-{
-    my $shell_state = shift;
-
-    my $git_dir = "$shell_state->{'PWD'}/.git";
-    unless (-d $git_dir) {
-        ($git_dir = git qw(rev-parse --git-dir))
-            or return;
-    }
-    local $ENV{'GIT_DIR'} = $git_dir;
-
-    my @out;
-    my $local_commits = 0;
-
-    my $branch = git 'symbolic-ref', 'HEAD';
-    if ($branch eq '') {
-        ($branch = git 'rev-parse', '--short')
-            or return;
-    } else {
-        $branch =~ s{^refs/heads/}{};
-
-        # Count the number of commits to push ($local_commits)
-        if ((my $remote_branch = git qw(config --get), "branch.$branch.merge")
-            && (my $remote = git qw(config --get), "branch.$branch.remote")) {
-
-            # Compute the ref of our local image of the remote branch
-            (my $remote_branch_ref = $remote_branch) =~ s{^refs/heads/}{refs/remotes/$remote/};
-
-            # Count the commits
-            $local_commits =
-                git(qw(rev-list --no-merges --count),
-                    "$remote_branch_ref..HEAD")
-                || 0;
-        }
-    }
-
-    my $status = git qw(status --porcelain -z);
-    my $untracked = $status =~ /(?:^|\0)\?\? /s;
-
-    if (my $shortstat = git qw(diff --shortstat)) {
-        my ($ins) = ($shortstat =~ /([0-9]+) insertions?\(/);
-        my ($del) = ($shortstat =~ /([0-9]+) deletions?\(/);
-
-        push @out,
-            \$RED, $branch, \$NO_COLOR,
-            '(',
-                \$MAGENTA,
-                ($ins ? ("+$ins" . ($del ? "/" : '')) : '') . ($del ? "-$del" : ''),
-                ($local_commits ? (\$NO_COLOR, ',', \$YELLOW, $local_commits) : ()),
-                \$NO_COLOR,
-            ')';
-    } elsif ($local_commits) {
-        push @out,
-            \$YELLOW, $branch, \$NO_COLOR,
-            '(', \$YELLOW, $local_commits, \$NO_COLOR, ')';
-    } else {
-        push @out, \$GREEN, $branch, \$NO_COLOR;
-    }
-
-    if (-f "$git_dir/refs/stash") {
-        push @out, \$RED, '+', \$NO_COLOR;
-    }
-
-    if ($untracked) {
-        push @out, \$RED, '*', \$NO_COLOR;
-    }
-
-    # TODO Git mark
-
-    @out, ' '
-}
-
-} # End of embedded packages
-
-
 
 
 # Load the configuration from @INC
@@ -453,16 +242,17 @@ die "Invalid configuration: $@" if $@;
 pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
 
-# TODO load the default PS1 in the AngelPS1::Config namespace
-BEGIN {
-    AngelPS1::Plugin::Core->import;
-    AngelPS1::Plugin::TerminalSize->import;
-    AngelPS1::Plugin::Git->import;
-}
-
 unless (@PS1) {
+    # TODO load the default PS1 in the AngelPS1::Config namespace
+
     require POSIX;
     (my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
+
+    require AngelPS1::Plugin::Core;
+    AngelPS1::Plugin::Core->import;
+    use AngelPS1::Plugin::TerminalSize;
+    require AngelPS1::Plugin::Git;
+    AngelPS1::Plugin::Git->import;
 
     @PS1 =
     (
