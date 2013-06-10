@@ -242,6 +242,7 @@ die "Invalid configuration: $@" if $@;
 pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
 
+# If no custom config, load instead AngelPS1/Prompt/Default.pm
 unless (@PS1) {
     package # Not indexed
             AngelPS1::Config;
