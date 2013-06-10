@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 use utf8;
 
+use constant COPYRIGHT => <<END;
+
 #    Copyright © 2013 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
@@ -18,6 +20,8 @@ use utf8;
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+END
+
 use 5.010;
 use strict;
 use warnings;
@@ -29,8 +33,8 @@ use File::Copy 'copy';
 
 # Create the script
 #system '(echo "#!/usr/bin/env perl"; fatpack file; cat bin/angel-PS1) > 'angel-PS1';
-open my $script, '>:raw', 'angel-PS1';
-print $script "#!/usr/bin/perl\n";
+open my $script, '>:utf8', 'angel-PS1';
+print $script "#!/usr/bin/perl\n", COPYRIGHT;
 close $script;
 system "fatpack file >> angel-PS1";
 open $script, '>>:raw', 'angel-PS1';
