@@ -1,0 +1,11 @@
+language: perl
+perl:
+    - "5.10"
+    - "5.12"
+    - "5.14"
+    - "5.16"
+    - "5.18"
+script:
+    - perl -c angel-PS1
+    # Ensure that the script runs on a tty
+    - script -q -c "perl angel-PS1" /dev/null
