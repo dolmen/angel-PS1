@@ -5,7 +5,7 @@ perl:
     - "5.14"
     - "5.16"
 before_install:
-    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/' || { ( x=$PWD; cd /usr/include ; h2ph -d $x/ph * sys/* ) && perl -Iph -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/' ; }
+    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/' || { ( ph=$PWD/ph; mkdir $ph; cd /usr/include ; h2ph -d $ph * sys/* ) && perl -Iph -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/' ; }
 install:
     - cpanm --notest App::FatPacker Git::Sub || { cat ~/.cpanm/build.log ; false ; }
     - perl build.pl
