@@ -20,6 +20,12 @@ sub _update_winsize
     ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
 }
 
+# TODO If sys/ioctl.ph is not available, try:
+# - Term::Size
+# - Term::ReadKey
+# - hardcoded value of TIOCGWINSZ based on $^O
+# See also perlfaq8: How do I get the screen size?
+
 
 sub import
 {
