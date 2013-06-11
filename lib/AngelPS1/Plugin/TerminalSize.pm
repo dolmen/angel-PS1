@@ -14,15 +14,23 @@ our ($LINES, $COLUMNS);
 my $_WINSZ = pack('S4');
 
 
-sub _update_winsize
+sub _update_from_ioctl
 {
     ioctl(STDERR, &TIOCGWINSZ, $_WINSZ);
     ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
 }
 
+my $TTYNAME;
+sub _update_from_stty
+{
+    my $line = `stty -F $TTYNAME size`;
+    ($LINES, $COLUMNS) = split / /, $line;
+}
+
 # TODO If sys/ioctl.ph is not available, try:
 # - Term::Size
 # - Term::ReadKey
+# - stty size
 # - hardcoded value of TIOCGWINSZ based on $^O
 # See also perlfaq8: How do I get the screen size?
 
@@ -31,19 +39,27 @@ sub import
 {
     # Avoid multiple install due to multiple import from different packages
     unless (defined $SIG{WINCH}) {
-        # Delay loading of ioctl.ph until import time
-        no strict 'refs';
-        *TIOCGWINSZ = do {
-            package AngelPS1::Plugin::TerminalSize::ioctl;
-            require 'sys/ioctl.ph';
-            \&TIOCGWINSZ
+        eval {
+            # Delay loading of ioctl.ph until import time
+            no strict 'refs';
+            *TIOCGWINSZ = do {
+                package AngelPS1::Plugin::TerminalSize::ioctl;
+                require 'sys/ioctl.ph';
+                \&TIOCGWINSZ
+            };
+            delete $INC{'sys/ioctl.ph'};
         };
-        delete $INC{'sys/ioctl.ph'};
-        # Terminal size change
-        $SIG{WINCH} = \&_update_winsize;
+        if ($@) {
+            require POSIX;
+            $TTYNAME = POSIX::ttyname(2); # STDERR
+            $SIG{WINCH} = \&_update_from_stty;
+        } else {
+            # Terminal size change
+            $SIG{WINCH} = \&_update_from_ioctl;
+        }
 
         # Fetch now
-        _update_winsize;
+        $SIG{WINCH}->();
     }
 
     $_[0]->export_to_level(1, @_);
