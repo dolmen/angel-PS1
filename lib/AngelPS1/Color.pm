@@ -7,6 +7,7 @@ use Exporter 'import';
 our @EXPORT = (qw($BLACK $RED $GREEN $YELLOW $BLUE $MAGENTA $CYAN $GRAY),
                qw($NO_COLOR $BOLD));
 
+use AngelPS1::Util 'run';
 
 sub terminfo ($;@); # Pre-declare for recursion
 
@@ -33,7 +34,7 @@ sub terminfo ($;@)
     my $query = join("\0", $capability, @args);
     return $terminfo_cache{$query} if exists $terminfo_cache{$query};
 
-    my $result = AngelPS1::run(tput => $capability, @args);
+    my $result = run(tput => $capability, @args);
 
     # Cache the result
     $terminfo_cache{$query} = $result;

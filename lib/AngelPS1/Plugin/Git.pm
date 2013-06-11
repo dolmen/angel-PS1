@@ -9,13 +9,14 @@ BEGIN {
     our @EXPORT = qw(GitInfo);
 }
 
+use AngelPS1::Util qw< which run one_line >;
 use AngelPS1::Color;
 
-my $git = AngelPS1::which 'git';
+my $git = which 'git';
 sub git
 {
     # All Git commands we call return a single line. We don't want '\n'
-    AngelPS1::one_line(AngelPS1::run $git, @_)
+    one_line(run $git, @_)
 }
 
 sub GitInfo

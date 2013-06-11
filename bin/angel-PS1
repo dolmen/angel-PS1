@@ -73,57 +73,6 @@ our $TERM = $ENV{TERM};
 
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
-{
-    my @PATH;
-    BEGIN { @PATH = split /:/, $ENV{'PATH'}; }
-    my %which;
-
-    sub which ($)
-    {
-        my ($name, $no_cache) = @_;
-
-        # Use the cache
-        return $which{$name} if exists $which{$name};
-        # Already a path with a directory?
-        return $name if index($name, '/') >= 0;
-
-        # Search in $PATH
-        foreach my $p (@PATH) {
-            my $f = "$p/$name";
-            if (-x $f && ! -d _) {
-                $which{$name} = $f unless $no_cache;
-                return $f;
-            }
-        }
-        die "$name: not found";
-    }
-}
-
-sub run
-{
-    my $command = which(shift);
-    my ($in, $out);
-    my $err = gensym;
-    my $pid = IPC::Open3::open3(
-        $in,
-        $out,
-        $err,
-        $command,
-        @_
-    );
-    my $result = do { undef $/; readline $out };
-    # TODO UTF-8 decoding
-    waitpid($pid, 0);
-    return $result
-}
-
-sub one_line
-{
-    # chop
-    (my $result = shift) =~ s{\n$}{}s;
-    $result
-}
-
 
 # Bash escapes
 my ($B, $E) = ('\[', '\]');
@@ -225,8 +174,16 @@ lib->import(@INCLUDES);
 undef @INCLUDES;
 
 unless ($SHELL) {
+    require AngelPS1::Util;
     # Extract the name of $PPID
-    $SHELL = one_line(run(ps => qw(-o comm=), $SHELL_PID));
+    my $comm_file = "/proc/$SHELL_PID/comm";
+    if (-f $comm_file && -r _) { # Linux shortcut
+        open my $comm, '<', $comm_file;
+        $SHELL = <$comm>
+    } else {
+        $SHELL = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
+    }
+    $SHELL = AngelPS1::Util::one_line($SHELL);
 }
 
 # The angel name must be a valid shell function identifier
