@@ -4,8 +4,8 @@ perl:
     - "5.12"
     - "5.14"
     - "5.16"
-before_install:
-    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
+#before_install:
+#    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
 install:
     - cpanm --notest App::FatPacker Git::Sub || { cat ~/.cpanm/build.log ; false ; }
     - perl build.pl
