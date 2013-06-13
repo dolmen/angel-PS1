@@ -26,7 +26,7 @@ use warnings;
 
 package AngelPS1;
 
-our $VERSION = '0.0';
+our $VERSION = '0.01';
 
 use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 use File::Temp 'tmpnam';
@@ -226,6 +226,8 @@ if (-t STDOUT) {
     }
 
     #print "${RED}Red!${NO_COLOR}\n";
+
+    print "angel-PS1 $VERSION\n";
 
     print "Copyright (C) 2013  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
