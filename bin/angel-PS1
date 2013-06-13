@@ -159,6 +159,7 @@ sub expand
 my @INCLUDES;
 
 GetOptions(
+    'version' => sub { print "angel-PS1 version $VERSION\n"; exit 0 },
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'v|verbose' => \$VERBOSE,
