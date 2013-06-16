@@ -23,7 +23,7 @@ use POSIX ();
     sub { ((-w $_[0]->{PWD} ? [ $GREEN ] : [ $RED ]), ':') },
     \'\\w',
     ' ',
-    \&GitInfo,
+    GitInfo,
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : ([ $RED ], $err, ' ') },
     # User mark: root => #    else  $
     ($< ? ([ $BOLD ], \'\\$') : ([ "$BOLD$RED" ], '#')),
