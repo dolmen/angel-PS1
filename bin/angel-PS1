@@ -379,6 +379,8 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 
 
+# Bash PS1 fallback
+my $PS1_fallback = compact("[$NAME sick!] ", \'\w\$ ');
 
 
 # *****************************************************************************
@@ -402,7 +404,12 @@ sub main_loop
 
         chdir $shell_state{'PWD'};
 
-        my $PS1 = compact(interp(\%shell_state, @PS1));
+        my $PS1 = eval { compact(interp(\%shell_state, @PS1)) };
+        unless (defined $PS1) {
+            (my $err = $@) =~ s/\s*$//s;
+            print STDERR "$RED$BOLD$NAME PS1 eval: $err$NO_COLOR\n";
+            $PS1 = $PS1_fallback;
+        }
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
