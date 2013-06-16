@@ -63,27 +63,26 @@ sub GitInfo
         my ($del) = ($shortstat =~ /([0-9]+) deletions?\(/);
 
         push @out,
-            \$RED, $branch, \$NO_COLOR,
+            [ $RED ], $branch,
             '(',
-                \$MAGENTA,
+                [ $MAGENTA ],
                 ($ins ? ("+$ins" . ($del ? "/" : '')) : '') . ($del ? "-$del" : ''),
-                ($local_commits ? (\$NO_COLOR, ',', \$YELLOW, $local_commits) : ()),
-                \$NO_COLOR,
+                ($local_commits ? (',', [ $YELLOW ], $local_commits) : ()),
             ')';
     } elsif ($local_commits) {
         push @out,
-            \$YELLOW, $branch, \$NO_COLOR,
-            '(', \$YELLOW, $local_commits, \$NO_COLOR, ')';
+            [ $YELLOW ], $branch,
+            '(', [ $YELLOW ], $local_commits, ')';
     } else {
-        push @out, \$GREEN, $branch, \$NO_COLOR;
+        push @out, [ $GREEN ], $branch;
     }
 
     if (-f "$git_dir/refs/stash") {
-        push @out, \$RED, '+', \$NO_COLOR;
+        push @out, [ $RED ], '+';
     }
 
     if ($untracked) {
-        push @out, \$RED, '*', \$NO_COLOR;
+        push @out, [ $RED ], '*';
     }
 
     # TODO Git mark

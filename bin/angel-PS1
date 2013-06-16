@@ -116,11 +116,13 @@ sub interp
     for(my $i=0; $i<=$#args; $i++) {
         if (ref($args[$i]) eq 'CODE') {
             splice @args, $i, 1, interp($state, $args[$i]->($state));
-            redo;
+            redo; # A dynamic part can return dynamic parts!
         }
     }
     return @args
 }
+
+
 
 # Compact a @PS1 definition: scalar refs are expanded to their escaped result
 # and static strings are then concatenated.
@@ -131,42 +133,59 @@ sub compact
     while (@template) {
         my $v = shift @template;
         my $r = ref $v;
+        if ($r eq 'CODE') {
+            push @out, $v;
+            next;
+        }
         # Reference followed by a scalar => replace by the expanded result
-        if ($r eq 'SCALAR' && @template && !ref $template[0]) {
-            $v = expand($v, shift @template);
+        if ($r eq 'ARRAY' && @template) {
+            my $r = ref $template[0];
+            if ($r && $r ne 'SCALAR') {
+                push @out, $v, shift @template;
+                next;
+            }
+            # Expand the color
+            $v = colored($v, shift @template);
             $r = ref $v;
         }
-        if (!$r && (@out >= 1 && !ref($out[$#out]))
-                && (@out == 1 || !ref($out[$#out-1]))) {
-            $out[$#out] .= $v
+        if ($r) {
+            $v = $$v;
         } else {
-            push @out, $v
+            ps1_escape($v);
+        }
+        if (@out && ref($out[$#out]) eq 'SCALAR') {
+            ${$out[$#out]} .= $v
+        } else {
+            push @out, \$v;
         }
     }
-    @out
+    return @out if wantarray;
+    die "invalid state after compact" if @out != 1 || ref $out[0] ne 'SCALAR';
+    ${pop @out}
 }
 
-sub expand
+sub colored
 {
     my @args = @_;
     my $out = '';
-    my $color;
+    my $color_str;
     while (@args) {
         my $v = shift @args;
         my $r = ref $v;
-        if ($r eq 'SCALAR') {
-            # TODO also handle strings that don't start with \e as margins
-            $color = $$v;
-            $out .= $B . $color . $E;
-        } else {
-            $out .= $v;
-            if (defined $color) {
-                $out .= $B . $NO_COLOR . $E;
-                undef $color;
-            }
+        if ($r eq 'ARRAY') {
+            $color_str = $v->[0];
+            # TODO ensure that color strings are already PS1-escaped
+            $out .= ps1_invisible($color_str);
+            next;
+        }
+        #print STDERR "$r $v\n";
+        $out .= $r ? $$v : ps1_escape($v);
+        if (defined $color_str) {
+            $out .= ps1_invisible($NO_COLOR);
+            undef $color_str;
         }
     }
-    return $out
+    return \$out
 }
 
 my @INCLUDES;
@@ -273,8 +292,8 @@ $SHELL eq 'bash' or die "Your shell ($SHELL) is not (yet?) supported.\n";
 # If the prompt is static after compact(), just output it and don't install the
 # angel. This allows the user to use the power of the angel-PS1 prompt compiler
 # and plugins without the runtime cost.
-if (@PS1 == 1) {
-    (my $PS1 = $PS1[0]) =~ s/'/'\\''/g;
+if (@PS1 == 1 && (ref $PS1[0]) eq 'SCALAR') {
+    (my $PS1 = ${$PS1[0]}) =~ s/'/'\\''/g;
     print qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n};
     exit 0
 }
@@ -383,7 +402,7 @@ sub main_loop
 
         chdir $shell_state{'PWD'};
 
-        my $PS1 = expand(interp(\%shell_state, @PS1));
+        my $PS1 = compact(interp(\%shell_state, @PS1));
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         # Escape the last space using bash PS1 encoding as 'read' removes spaces
