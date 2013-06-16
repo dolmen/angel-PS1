@@ -1,6 +1,7 @@
-angel-PS1 - The Angel's Prompt
-==============================
+![angel-PS1 logo][1] angel-PS1 - The Angel's Prompt
+===================================================
 
+   [1]: angel-PS1_64x64.png
 
 `angel-PS1` is your guardian angel for the Unix world.
 
