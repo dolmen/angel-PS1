@@ -15,6 +15,12 @@ guardian angel, attached to the shell and who gives him precious
 information about the world around that you can't see. You'll not see him,
 but he is there. Always around, but always discreet.
 
+### Build status
+
+`release`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=release)](https://travis-ci.org/dolmen/angel-PS1)
+
+`devel`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=devel)](https://travis-ci.org/dolmen/angel-PS1)
+
 ### Basic usage
 
 Try this in `bash` to get a fancy prompt with the default settings:
