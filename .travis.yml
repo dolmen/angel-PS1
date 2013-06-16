@@ -7,6 +7,7 @@ perl:
     - "5.18"
 install:
     # No install (Travis has a default)
+    - echo No install.
 script:
     - perl -c angel-PS1
     # Ensure that the script runs on a tty
