@@ -72,8 +72,6 @@ our $TERM = $ENV{TERM};
 my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
 
-# Bash escapes
-my ($B, $E) = ('\[', '\]');
 
 use AngelPS1::Color;
 
@@ -94,6 +92,21 @@ if (-t STDERR) {
         $last =~ s/(\n)$//s;
         warn "$YELLOW$BOLD", @_, $last, $NO_COLOR, ($1 ? ($1) : ());
     };
+}
+
+sub ps1_escape
+{
+    # bash only
+    (my $str = shift) =~ s{\\}{\\\\}gs;
+    $str
+}
+
+# Bash escapes
+my ($B, $E) = ('\[', '\]');
+
+sub ps1_invisible
+{
+    $B . $_[0] . $E
 }
 
 sub interp
