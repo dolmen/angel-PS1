@@ -340,7 +340,7 @@ $NAME()
     unmute|on)
         PROMPT_COMMAND=-angel-PS1 ;;
     *)
-        echo 'What?' >&2 ;
+        echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
     esac ;
 } ;
