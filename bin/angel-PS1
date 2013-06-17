@@ -338,7 +338,7 @@ $NAME()
         PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
         PS1="\$APS1_PS1" ;;
     unmute|on)
-        PROMPT_COMMAND=angel-PS1 ;;
+        PROMPT_COMMAND=-angel-PS1 ;;
     *)
         echo 'What?' >&2 ;
         return 1 ;;
