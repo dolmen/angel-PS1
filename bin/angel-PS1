@@ -225,7 +225,7 @@ $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
 # Load the configuration from @INC
 # Usually: $HOME/.config/angel-PS1/PS1.pl
-my @PS1 = do { package AngelPS1::Config; do 'PS1.pl' };
+my @PS1 = do { package AngelPS1::Prompt; do 'PS1.pl' };
 die "Invalid configuration: $@" if $@;
 pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
