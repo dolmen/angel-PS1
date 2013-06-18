@@ -295,47 +295,13 @@ POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
 -p $FIFO_IN && -o _ or die "Fifo $FIFO_IN creation failed.";
 -p $FIFO_OUT && -o _ or die "Fifo $FIFO_OUT creation failed.";
 
-# The shell code will be evaluated with eval as a single line
-# so statements must be properly terminated with ';'
-# No shell comments allowed
-my $shell_debug = $DEBUG ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
-my $time_debug = $DEBUG ? q|time | : '';
-print <<EOF;
-[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
-APS1_PS1="\$PS1";
-APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
--angel-PS1()
-{
-    local err=\$?;
-    [[ -e '$FIFO_IN' ]] || { $NAME leave ; return ; };
-    printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$FIFO_IN' || { $NAME leave ; return ; };
-    read PS1 < '$FIFO_OUT' || $NAME leave ;
-    $shell_debug
-} ;
-PROMPT_COMMAND='${time_debug}-angel-PS1' ;
-APS1_NAME=$NAME ;
-$NAME()
-{
-    case "\$1" in
-    leave|quit|go-away)
-        PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
-        PS1="\$APS1_PS1" ;
-        kill \$APS1_PID 2>/dev/null ;
-        rm -f -- '$FIFO_IN' '$FIFO_OUT' ;
-        unset APS1_PS1 APS1_PID APS1_NAME ;
-        unset -f -- $NAME -angel-PS1 ;;
-    mute|off)
-        PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
-        PS1="\$APS1_PS1" ;;
-    unmute|on)
-        PROMPT_COMMAND=-angel-PS1 ;;
-    *)
-        echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
-        return 1 ;;
-    esac ;
-} ;
-EOF
-# TODO: exit trap to kill the daemon
+print AngelPS1::Shell->shell_code(
+    name  => $NAME,
+    debug => $DEBUG,
+    in    => $FIFO_IN,
+    out   => $FIFO_OUT,
+    env   => [qw< PWD >],
+);
 
 close STDIN;
 

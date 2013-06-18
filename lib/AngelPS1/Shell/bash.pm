@@ -28,12 +28,55 @@ sub ps1_finalize
     $PS1
 }
 
+# Returns the code to send to the shell
 sub shell_code
 {
-    my %options = @_;
-    my ($debug, $name, $env) = @options{qw<debug name env>};
+    my ($class, %options) = @_;
+    my ($DEBUG, $NAME, $IN, $OUT, $env) = @options{qw<debug name in out env>};
 
-    # TODO move code from bin/angel-PS1
+    my $shell_debug = $DEBUG ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
+    my $time_debug = $DEBUG ? q|time | : '';
+
+    # The shell code will be evaluated with eval as a single line
+    # so statements must be properly terminated with ';'
+    # No shell comments allowed
+    <<EOF;
+[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
+APS1_PS1="\$PS1";
+APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
+-angel-PS1()
+{
+    local err=\$?;
+    [[ -e '$IN' ]] || { $NAME leave ; return ; };
+    printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { $NAME leave ; return ; };
+    read PS1 < '$OUT' || $NAME leave ;
+    $shell_debug
+} ;
+PROMPT_COMMAND='${time_debug}-angel-PS1' ;
+APS1_NAME=$NAME ;
+$NAME()
+{
+    case "\$1" in
+    leave|quit|go-away)
+        PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
+        PS1="\$APS1_PS1" ;
+        kill \$APS1_PID 2>/dev/null ;
+        rm -f -- '$IN' '$OUT' ;
+        unset APS1_PS1 APS1_PID APS1_NAME ;
+        unset -f -- $NAME -angel-PS1 ;;
+    mute|off)
+        PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
+        PS1="\$APS1_PS1" ;;
+    unmute|on)
+        PROMPT_COMMAND=-angel-PS1 ;;
+    *)
+        echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
+        return 1 ;;
+    esac ;
+} ;
+EOF
+# TODO: exit trap to kill the daemon
+
 }
 
 '$';
