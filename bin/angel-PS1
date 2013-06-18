@@ -33,6 +33,10 @@ use File::Temp 'tmpnam';
 use Encode ();
 use FindBin;
 
+# TODO build.pl should inline those modules
+use AngelPS1::Shell;
+use AngelPS1::Color;
+
 use lib "$ENV{HOME}/.config/angel-PS1", '/etc/angel-PS1';
 
 
@@ -69,11 +73,7 @@ our $VERBOSE = 0;
 our $SHELL_PID = getppid();
 our $TERM = $ENV{TERM};
 
-my %SUPPORTED_SHELLS = map { ($_ => undef) } qw(bash zsh);
 
-
-
-use AngelPS1::Color;
 
 $SIG{__DIE__} = sub {
     return if $^S;
@@ -94,20 +94,6 @@ if (-t STDERR) {
     };
 }
 
-sub ps1_escape
-{
-    # bash only
-    (my $str = shift) =~ s{\\}{\\\\}gs;
-    $str
-}
-
-# Bash escapes
-my ($B, $E) = ('\[', '\]');
-
-sub ps1_invisible
-{
-    $B . $_[0] . $E
-}
 
 sub interp
 {
@@ -151,7 +137,7 @@ sub compact
         if ($r) {
             $v = $$v;
         } else {
-            ps1_escape($v);
+            AngelPS1::Shell->ps1_escape($v);
         }
         if (@out && ref($out[$#out]) eq 'SCALAR') {
             ${$out[$#out]} .= $v
@@ -175,13 +161,13 @@ sub colored
         if ($r eq 'ARRAY') {
             $color_str = $v->[0];
             # TODO ensure that color strings are already PS1-escaped
-            $out .= ps1_invisible($color_str);
+            $out .= AngelPS1::Shell->ps1_invisible($color_str);
             next;
         }
         #print STDERR "$r $v\n";
-        $out .= $r ? $$v : ps1_escape($v);
+        $out .= $r ? $$v : AngelPS1::Shell->ps1_escape($v);
         if (defined $color_str) {
-            $out .= ps1_invisible($NO_COLOR);
+            $out .= AngelPS1::Shell->ps1_invisible($NO_COLOR);
             undef $color_str;
         }
     }
@@ -216,6 +202,9 @@ unless ($SHELL) {
     }
     $SHELL = AngelPS1::Util::one_line($SHELL);
 }
+
+# Dynamically load our shell plugin
+AngelPS1::Shell->use($SHELL);
 
 # The angel name must be a valid shell function identifier
 # Note that '-' is allowed, even as a first char
@@ -412,14 +401,7 @@ sub main_loop
         }
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
-        # Escape the last space using bash PS1 encoding as 'read' removes spaces
-        # at beginning and end of line
-        (my $out = $PS1) =~ s/^ | $/\\040/g;
-        # Escape \ as 'read' expands them
-        $out =~ s/\\/\\\\/g;
-        # Escape newlines
-        $out =~ s/\n/\\\n/g;
-        print $FIFO "$out\n";
+        print $FIFO AngelPS1::Shell->ps1_finalize($PS1), "\n";
         close $FIFO;
     }
 }
