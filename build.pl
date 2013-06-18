@@ -36,13 +36,12 @@ my $make_release = @ARGV && ($ARGV[0] eq '-r');
 
 
 # Create the script
-#system '(echo "#!/usr/bin/env perl"; fatpack file; cat bin/angel-PS1) > 'angel-PS1';
+
 open my $script, '>:utf8', 'angel-PS1';
 print $script "#!/usr/bin/perl\n", COPYRIGHT;
 close $script;
-system "fatpack file >> angel-PS1";
 open $script, '>>:raw', 'angel-PS1';
-copy('bin/angel-PS1', $script);
+print $script App::FatPacker->fatpack_file('bin/angel-PS1');
 close $script;
 
 chmod 0755, 'angel-PS1';
