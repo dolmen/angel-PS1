@@ -18,6 +18,7 @@ return () unless AngelPS1::Shell->can('WorkingDir')
 
 # The prompt is the list returned as the last statement
 (
+    (AngelPS1::Shell->name, ' ') x!! $AngelPS1::DEBUG,
     [ $BLUE ],
     sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
     ' ',
