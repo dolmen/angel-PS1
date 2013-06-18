@@ -277,8 +277,6 @@ if (-t STDOUT) {
 # So we don't install.
 exit 0 unless -t STDIN && exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 
-$SHELL eq 'bash' or die "Your shell ($SHELL) is not (yet?) supported.\n";
-
 # If the prompt is static after compact(), just output it and don't install the
 # angel. This allows the user to use the power of the angel-PS1 prompt compiler
 # and plugins without the runtime cost.
