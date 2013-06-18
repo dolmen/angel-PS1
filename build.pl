@@ -71,7 +71,12 @@ my @new_files = (
     'angel-PS1',
 );
 
-my %ignored_file = map { ($_ => 1) } qw(.gitignore .travis.yml);
+my %ignored_file = map { ($_ => 1) } qw(
+    .gitignore
+    .travis.yml
+    bin
+    lib
+);
 
 my ($devel_commit) = git::rev_parse 'devel';
 say "devel: $devel_commit";
@@ -81,6 +86,7 @@ say "release: $release_commit";
 my %devel_tree;
 git::ls_tree $devel_commit, sub {
     my ($mode, $type, $object, $file) = split;
+    return if exists $ignored_file{$file};
     $devel_tree{$file} = [ $mode, $type, $object ];
 };
 
@@ -89,8 +95,7 @@ my %updated_files;
 git::ls_tree $release_commit, sub {
     my ($mode, $type, $object, $file) = split / |\t/;
     # Merge files updated in devel
-    if (       $type eq 'blob'       # Don't touch trees
-	    && !$ignored_file{$file} # This file has its own life on each branch
+    if ( !$ignored_file{$file} # This file/dir has its own life on each branch
 	    && exists $devel_tree{$file}
 	    && $object ne $devel_tree{$file}[2]) {
 	say "- $file: $object (updated)";
