@@ -6,7 +6,7 @@ package AngelPS1::Shell::bash;
 
 sub ps1_escape
 {
-    (my $s = $_[1]) =~ s{[\\\$`]}{\\$1}gs;
+    (my $s = $_[1]) =~ s{([\\\$`])}{\\$1}gs;
     $s
 }
 
