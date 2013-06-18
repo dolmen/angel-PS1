@@ -26,6 +26,10 @@ sub GitInfo
         return
     }
 
+    # Cleanup the environment
+    # This is done globally!
+    delete @ENV{qw< GIT_DIR GIT_TRACE >};
+
     # Return a dynamic PS1 element
     sub {
         my $shell_state = shift;
