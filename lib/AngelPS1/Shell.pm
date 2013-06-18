@@ -3,6 +3,13 @@ use warnings;
 
 package AngelPS1::Shell;
 
+my $name;
+
+sub name
+{
+    $name
+}
+
 #
 # Call: AngelPS1::Shell->use('bash')
 #
@@ -18,6 +25,7 @@ sub use
 	    my $pkg = "${class}::$shell";
 	    # Make AngelPS1::Shell a sub class of $pkg
 	    our @ISA = ($pkg);
+	    $name = $shell;
 	}
     }
 }
