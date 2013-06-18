@@ -34,7 +34,7 @@ use Encode ();
 use FindBin;
 
 # TODO build.pl should inline those modules
-use AngelPS1::Shell;
+use AngelPS1::Shell ();
 use AngelPS1::Color;
 
 use lib "$ENV{HOME}/.config/angel-PS1", '/etc/angel-PS1';
