@@ -3,6 +3,7 @@ use warnings;
 
 package AngelPS1::Prompt::Default;
 
+use AngelPS1::Shell ();
 use AngelPS1::Color;
 use AngelPS1::Plugin::Core;
 use AngelPS1::Plugin::TerminalSize;
@@ -11,6 +12,9 @@ use AngelPS1::Plugin::Git;
 use POSIX ();
 
 (my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
+
+return () unless AngelPS1::Shell->can('WorkingDir')
+              && AngelPS1::Shell->can('UserPrivSymbol');
 
 # The prompt is the list returned as the last statement
 (
@@ -21,12 +25,12 @@ use POSIX ();
     (sub { "(${COLUMNS}x${LINES})" }) x!! $AngelPS1::DEBUG,
     ' ',
     sub { ((-w $_[0]->{PWD} ? [ $GREEN ] : [ $RED ]), ':') },
-    \'\\w',
+    AngelPS1::Shell->WorkingDir,
     ' ',
     GitInfo,
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : ([ $RED ], $err, ' ') },
     # User mark: root => #    else  $
-    ($< ? ([ $BOLD ], \'\\$') : ([ "$BOLD$RED" ], '#')),
+    ($< ? ([ $BOLD ], AngelPS1::Shell->UserPrivSymbol) : ([ "$BOLD$RED" ], '#')),
     ' ',
 )
 # vim:set et ts=8 sw=4 sts=4:

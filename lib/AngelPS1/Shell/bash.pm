@@ -79,5 +79,16 @@ EOF
 
 }
 
+
+sub WorkingDir
+{
+    \'\w'
+}
+
+sub UserPrivSymbol
+{
+    \'\$'
+}
+
 '$';
 # vim:set et ts=8 sw=4 sts=4:
