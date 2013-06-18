@@ -52,6 +52,10 @@ unless ($make_release) {
     exit 0
 }
 
+# TODO check if some untracked files exist in lib/ (because they have been
+# merged by the fatpacking process) and fail.
+
+
 (my $version = do {
     open my $version_output, '-|', 'perl angel-PS1 --version' or die $!;
     my $line = <$version_output>;
