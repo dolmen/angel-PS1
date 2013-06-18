@@ -39,7 +39,8 @@ sub GitInfo
             ($git_dir = git qw(rev-parse --git-dir))
                 or return;
         }
-        local $ENV{'GIT_DIR'} = $git_dir;
+        # This seems to be incompatible with "git diff --shortstat"
+        #local $ENV{'GIT_DIR'} = $git_dir;
 
         my @out;
         my $local_commits = 0;
