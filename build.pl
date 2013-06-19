@@ -74,15 +74,19 @@ if (-e ".git/refs/tags/v$version") {
     die "version $version already exists!\n";
 }
 
-my @new_files = (
+my %new_files = map { ($_ => undef) } (
     'angel-PS1',
 );
 
+# TODO store the list of files that must not be copied from devel to release in the .gitignore of
+# the release branch.
 my %ignored_file = map { ($_ => 1) } qw(
     .gitignore
     .travis.yml
     bin
     lib
+    build.pl
+    dist.ini
 );
 
 my ($devel_commit) = git::rev_parse 'devel';
@@ -102,11 +106,17 @@ my %updated_files;
 git::ls_tree $release_commit, sub {
     my ($mode, $type, $object, $file) = split / |\t/;
     # Merge files updated in devel
-    if ( !$ignored_file{$file} # This file/dir has its own life on each branch
-	    && exists $devel_tree{$file}
-	    && $object ne $devel_tree{$file}[2]) {
+    return if $ignored_file{$file}; # This file/dir has its own life on each branch
+    my $d = delete $devel_tree{$file};
+    if ( ! $d) {
+        if (exists $new_files{$file}) {
+	    $release_tree{$file} = [ $mode, $type, $object ];
+        } else {
+	    say "- $file: - (removed)";
+        }
+    } elsif ( $object ne $d->[2]) {
 	say "- $file: $object (updated)";
-	$release_tree{$file} = $devel_tree{$file};
+	$release_tree{$file} = $d;
 	$updated_files{$file} = 1;
     } else {
 	say "- $file: $object";
@@ -114,9 +124,15 @@ git::ls_tree $release_commit, sub {
     }
 };
 
+foreach my $file (sort keys %devel_tree) {
+    my $f = delete $devel_tree{$file};
+    say "- $file: $f->[2] (added)";
+    $release_tree{$file} = $f;
+}
+
 
 # Create the objects file for each new file and replace them
-foreach my $file (@new_files) {
+foreach my $file (sort keys %new_files) {
     # TODO
     my $object = git::hash_object -w => $file;
     if ($object ne $release_tree{$file}[2]) {
