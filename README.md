@@ -58,7 +58,7 @@ This is also:
 
 ### News
 
-Follow <a href="https://twitter.com/ngelPS1">@ngelPS1</a> on Twitter.
+Follow <a href="https://twitter.com/nglPS1">@nglPS1</a> on Twitter.
 
 ### Copyright & license
 
