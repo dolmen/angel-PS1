@@ -139,9 +139,9 @@ foreach my $file (sort keys %new_files) {
     # TODO
     my $object = git::hash_object -w => $file;
     if ($object ne $release_tree{$file}[2]) {
-	say "- $file: $object (updated)";
-	$release_tree{$file}[2] = $object;
-	$updated_files{$file} = 1;
+        say "- $file: $object (updated)";
+        $release_tree{$file}[2] = $object;
+        $updated_files{$file} = 1;
     }
 }
 
@@ -156,9 +156,9 @@ die "angel-PS1 updated but version unchanged!\n"
 my $new_release_tree = git::mktree -z =>
 \(
     join(
-	'',
-	map { sprintf("%s %s %s\t%s\0", @{$release_tree{$_}}, $_) }
-	    keys %release_tree
+        '',
+        map { sprintf("%s %s %s\t%s\0", @{$release_tree{$_}}, $_) }
+            keys %release_tree
     )
 );
 say "new release tree: $new_release_tree";
@@ -168,12 +168,12 @@ say "new release tree: $new_release_tree";
 # TODO use more content in the commit message (ask interactively)
 my $new_release_commit =
     git::commit_tree $new_release_tree,
-		       -p => $release_commit,
-		       -p => $devel_commit,
-		       # For maximum compat, don't use '-m' but STDIN
-		       \($version
-			    ? "Release v$version"
-			    : "Update ".join(', ', sort keys %updated_files));
+                       -p => $release_commit,
+                       -p => $devel_commit,
+                       # For maximum compat, don't use '-m' but STDIN
+                       \($version
+                            ? "Release v$version"
+                            : "Update ".join(', ', sort keys %updated_files));
 
 
 say "new release commit: $new_release_commit";
