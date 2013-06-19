@@ -31,8 +31,15 @@ use App::FatPacker ();
 use Carp 'croak';
 use File::Copy 'copy';
 use Git::Sub qw(rev-parse ls-tree hash-object mktree commit commit-tree update-ref tag);
+use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 
-my $make_release = @ARGV && ($ARGV[0] eq '-r');
+my ($make_release, $fake_release);
+
+GetOptions(
+    'r|release' => \$make_release,
+    'n' => \$fake_release,
+) or die;
+
 
 
 # Create the script
@@ -151,6 +158,8 @@ my $new_release_commit =
 
 
 say "new release commit: $new_release_commit";
+
+exit 0 if $fake_release;
 
 git::update_ref 'refs/heads/release' => $new_release_commit, $release_commit;
 
