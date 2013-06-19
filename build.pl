@@ -64,7 +64,7 @@ unless ($make_release) {
 print "Building release $version...\n";
 
 if (-e ".git/refs/tags/v$version") {
-    die "version $version already exits!\n";
+    die "version $version already exists!\n";
 }
 
 my @new_files = (
