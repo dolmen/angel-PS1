@@ -3,6 +3,13 @@ use warnings;
 
 package AngelPS1::Shell;
 
+my %ALIASES = {
+    ksh   => mksh,
+    ksh88 => mksh,
+    ksh93 => mksh,
+};
+
+
 my $name;
 
 sub name
@@ -17,6 +24,7 @@ sub use
 {
     my ($class, $shell) = @_;
     if ($shell) {
+        $shell = $ALIASES{$shell} if exists $ALIASES{$shell};
 	my $src = "AngelPS1/Shell/$shell.pm";
 	unless (exists $INC{$src}) {
 	    # TODO try to distinguish load errors (file not found) from compile errors
