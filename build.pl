@@ -81,12 +81,14 @@ my %new_files = map { ($_ => undef) } (
 # TODO store the list of files that must not be copied from devel to release in the .gitignore of
 # the release branch.
 my %ignored_file = map { ($_ => 1) } qw(
-    .gitignore
-    .travis.yml
     bin
     lib
     build.pl
     dist.ini
+);
+my %preserved_file = map { ($_ => 1) } qw(
+    .gitignore
+    .travis.yml
 );
 
 my ($devel_commit) = git::rev_parse 'devel';
@@ -97,7 +99,7 @@ say "release: $release_commit";
 my %devel_tree;
 git::ls_tree $devel_commit, sub {
     my ($mode, $type, $object, $file) = split;
-    return if exists $ignored_file{$file};
+    return if exists $ignored_file{$file} || exists $preserved_file{$file};
     $devel_tree{$file} = [ $mode, $type, $object ];
 };
 
@@ -108,19 +110,20 @@ git::ls_tree $release_commit, sub {
     # Merge files updated in devel
     return if $ignored_file{$file}; # This file/dir has its own life on each branch
     my $d = delete $devel_tree{$file};
-    if ( ! $d) {
-        if (exists $new_files{$file}) {
-	    $release_tree{$file} = [ $mode, $type, $object ];
-        } else {
-	    say "- $file: - (removed)";
+    $release_tree{$file} = [ $mode, $type, $object ];
+    if (exists $preserved_file{$file}) {
+        say "- $file: $object (preserved)";
+    } elsif ( ! $d) {
+        unless (exists $new_files{$file}) {
+            say "- $file: - (removed)";
+            delete $release_tree{$file};
         }
     } elsif ( $object ne $d->[2]) {
-	say "- $file: $object (updated)";
-	$release_tree{$file} = $d;
-	$updated_files{$file} = 1;
+        say "- $file: $object (updated)";
+        $release_tree{$file} = $d;
+        $updated_files{$file} = 1;
     } else {
-	say "- $file: $object";
-	$release_tree{$file} = [ $mode, $type, $object ];
+        say "- $file: $object";
     }
 };
 
