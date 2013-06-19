@@ -1,6 +1,7 @@
-angel-PS1 - The Angel's Prompt
-==============================
+![angel-PS1 logo][1] angel-PS1 - The Angel's Prompt
+===================================================
 
+   [1]: doc/images/angel-PS1_64.png
 
 `angel-PS1` is your guardian angel for the Unix world.
 
@@ -14,6 +15,12 @@ This is a daemon, but not a nasty demon. So it is an angel. Like a
 guardian angel, attached to the shell and who gives him precious
 information about the world around that you can't see. You'll not see him,
 but he is there. Always around, but always discreet.
+
+### Build status
+
+`release`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=release)](https://travis-ci.org/dolmen/angel-PS1)
+
+`devel`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=devel)](https://travis-ci.org/dolmen/angel-PS1)
 
 ### Basic usage
 
