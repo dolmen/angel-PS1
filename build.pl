@@ -83,6 +83,7 @@ my %new_files = map { ($_ => undef) } (
 my %ignored_file = map { ($_ => 1) } qw(
     bin
     lib
+    t
     build.pl
     dist.ini
 );
