@@ -40,7 +40,7 @@ use AngelPS1::Color;
 use lib "$ENV{HOME}/.config/angel-PS1", '/etc/angel-PS1';
 
 
-# Extact encoding name from the locale
+# Extract encoding name from the locale
 our $ENCODING = do {
     # Shortcut for the most common case
     my $locale = $ENV{LC_ALL} || $ENV{LC_CTYPE} || $ENV{LANG} || 'POSIX';
@@ -110,8 +110,9 @@ sub interp
 
 
 
-# Compact a @PS1 definition: scalar refs are expanded to their escaped result
-# and static strings are then concatenated.
+# Compact a @PS1 definition: bare scalar are expanded to their escaped result
+# and scalar refs are concatenated, and colors (ARRAY) are expanded.
+# CODE refs are preserved as is, so we can do a multiple step compilation.
 sub compact
 {
     my @template = @_;
@@ -123,7 +124,8 @@ sub compact
             push @out, $v;
             next;
         }
-        # Reference followed by a scalar => replace by the expanded result
+        # ARRAY followed by a scalar or scalar ref
+        # => replace by the colored expanded result
         if ($r eq 'ARRAY' && @template) {
             my $r = ref $template[0];
             if ($r && $r ne 'SCALAR') {
@@ -141,7 +143,7 @@ sub compact
         }
         if (@out && ref($out[$#out]) eq 'SCALAR') {
             ${$out[$#out]} .= $v
-        } else {
+        } else {  # CODE refs (and anything else) are preserved
             push @out, \$v;
         }
     }
@@ -150,6 +152,9 @@ sub compact
     ${pop @out}
 }
 
+# Process a list of mixed scalar, scalar refs and ARRAYs.
+# ARRAYS are specifications for colors that must be applied to the following
+# Returns a scalar ref that represents shell escaped text.
 sub colored
 {
     my @args = @_;
@@ -231,7 +236,7 @@ unless (@PS1) {
 @PS1 = compact @PS1;
 
 
-
+# Build the FIFO paths
 my $FIFO_PATH = tmpnam().".$NAME-$$";
 my $FIFO_IN = "$FIFO_PATH.in";
 my $FIFO_OUT = "$FIFO_PATH.out";
