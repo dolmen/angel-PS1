@@ -321,6 +321,8 @@ if ($child) {
 # Angel forked
 # *****************************************************************************
 
+$0 = qq{$FindBin::Script $NAME};
+
 open STDIN, '+<', '/dev/null';
 close STDOUT;
 open STDOUT, '>', '/dev/null';
