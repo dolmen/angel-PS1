@@ -74,8 +74,8 @@ $NAME()
         return 1 ;;
     esac ;
 } ;
+trap '$NAME leave' EXIT ;
 EOF
-# TODO: exit trap to kill the daemon
 
 }
 

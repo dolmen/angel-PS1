@@ -65,6 +65,7 @@ $NAME()
         return 1 ;;
     esac ;
 } ;
+trap '$NAME leave' EXIT ;
 EOF
 }
 
