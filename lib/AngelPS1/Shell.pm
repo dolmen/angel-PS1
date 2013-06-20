@@ -12,6 +12,9 @@ my %ALIASES = (
 
 my $name;
 
+#
+# Call: AngelPS1::Shell->name
+#
 sub name
 {
     $name
