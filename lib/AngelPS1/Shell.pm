@@ -3,11 +3,11 @@ use warnings;
 
 package AngelPS1::Shell;
 
-my %ALIASES = {
-    ksh   => mksh,
-    ksh88 => mksh,
-    ksh93 => mksh,
-};
+my %ALIASES = (
+    ksh   => 'mksh',
+    ksh88 => 'mksh',
+    ksh93 => 'mksh',
+);
 
 
 my $name;
