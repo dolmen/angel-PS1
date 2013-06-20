@@ -11,25 +11,28 @@ our @EXPORT = qw($LINES $COLUMNS);
 
 our ($LINES, $COLUMNS);
 
-BEGIN {
+# Get the ioctl number
+my $TIOCGWINSZ =
     # Shortcut static table
-    my %TIOCGWINSZ = (
+    {
         # $^O => ioctl TIOCGWINSZ constant
         linux => 0x5413,
-    );
-
-    if (my $ioctl = $TIOCGWINSZ{$^O}) {
-        *TIOCGWINSZ = eval "sub(){$ioctl}";
-    }
-}
+    }->{$^O}
+||
+    # Fallback: get the constant from ioctl.ph
+    eval {
+        package AngelPS1::Plugin::TerminalSize::ioctl;
+        require 'sys/ioctl.ph';
+        delete $INC{'sys/ioctl.ph'};
+        \&TIOCGWINSZ
+    };
 
 
 my $_WINSZ = pack('S4');
 
-
 sub _update_from_ioctl
 {
-    ioctl(STDERR, &TIOCGWINSZ, $_WINSZ);
+    ioctl(STDERR, $TIOCGWINSZ, $_WINSZ);
     ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
 }
 
@@ -51,19 +54,8 @@ sub _update_from_stty
 sub import
 {
     # Avoid multiple install due to multiple import from different packages
-    unless (defined $SIG{WINCH}) {
-        unless (defined \&TIOCGWINSZ) {
-            eval {
-                # Delay loading of ioctl.ph until import time
-                *TIOCGWINSZ = do {
-                    package AngelPS1::Plugin::TerminalSize::ioctl;
-                    require 'sys/ioctl.ph';
-                    \&TIOCGWINSZ
-                };
-                delete $INC{'sys/ioctl.ph'};
-            }
-        }
-        if (defined \&TIOCGWINSZ) {
+    unless ($SIG{WINCH}) {
+        if (defined $TIOCGWINSZ) {
             # Terminal size change
             $SIG{WINCH} = \&_update_from_ioctl;
         } else {
