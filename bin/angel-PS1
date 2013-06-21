@@ -371,7 +371,7 @@ sub main_loop
         }
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
-        print $FIFO AngelPS1::Shell->ps1_finalize($PS1), "\n";
+        print $FIFO AngelPS1::Shell->ps1_finalize($PS1);
         close $FIFO;
     }
 }

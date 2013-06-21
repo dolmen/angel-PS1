@@ -25,7 +25,7 @@ sub ps1_finalize
     $PS1 =~ s/\\/\\\\/g;
     # Escape newlines
     $PS1 =~ s/\n/\\\n/g;
-    $PS1
+    "$PS1\n"
 }
 
 # Returns the code to send to the shell
