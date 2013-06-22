@@ -313,7 +313,7 @@ if ($child) {
     undef $FIFO_IN;
     undef $FIFO_OUT;
     if (AngelPS1::Shell->name =~ /csh$/) {
-        print "set APS1_PID = $child\n";
+        print "set aps1_pid = $child\n";
     } else {
         print "APS1_PID=$child\n";
     }
