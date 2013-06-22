@@ -343,7 +343,12 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 
 # Bash PS1 fallback
-my $PS1_fallback = compact("[$NAME sick!] ", \'\w\$ ');
+my $PS1_fallback = compact(
+    "[$NAME sick!] ",
+    AngelPS1::Shell->WorkingDir,
+    AngelPS1::Shell->UserPrivSymbol,
+    ' ',
+);
 
 
 # *****************************************************************************
