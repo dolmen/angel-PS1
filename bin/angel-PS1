@@ -178,6 +178,13 @@ sub colored
     return \$out
 }
 
+sub ps1_is_static
+{
+    my $PS1 = shift;
+    $#$PS1 == 1 && (ref $PS1->[0]) eq 'SCALAR'
+}
+
+
 my @INCLUDES;
 
 GetOptions(
@@ -284,7 +291,7 @@ exit 0 unless -t STDIN && exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 # If the prompt is static after compact(), just output it and don't install the
 # angel. This allows the user to use the power of the angel-PS1 prompt compiler
 # and plugins without the runtime cost.
-if (@PS1 == 1 && (ref $PS1[0]) eq 'SCALAR' && AngelPS1::Shell->name !~ /csh$/) {
+if (ps1_is_static(\@PS1) && AngelPS1::Shell->name !~ /csh$/) {
     (my $PS1 = ${$PS1[0]}) =~ s/'/'\\''/g;
     print qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n};
     exit 0
