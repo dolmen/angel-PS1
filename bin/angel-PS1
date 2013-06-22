@@ -138,7 +138,7 @@ sub compact
         if ($r) {
             $v = $$v;
         } else {
-            AngelPS1::Shell->ps1_escape($v);
+            $v = AngelPS1::Shell->ps1_escape($v);
         }
         if (@out && ref($out[$#out]) eq 'SCALAR') {
             ${$out[$#out]} .= $v
