@@ -79,6 +79,7 @@ set aps1_angel = 'switch ( "\$aps1_arg" )\\
     default:\\
         echo "$NAME: unknown option"\\
         echo "usage: $NAME [quit|mute|off|unmute|on]"\\
+        breaksw\\
 endsw'
 alias $NAME 'set aps1_arg = \\!*; eval \$aps1_angel:q; :'
 set aps1_name = '$NAME'
