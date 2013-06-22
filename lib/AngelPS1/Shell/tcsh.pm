@@ -45,12 +45,11 @@ sub shell_code
     # - http://www.grymoire.com/Unix/CshTop10.txt
     # - http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
 
-    my $shell_code =
-    <<EOF;
+    my $shell_code = <<EOF;
 if ( \${?aps1_name} ) then
     eval \$aps1_name leave
 endif
-set aps1_prompt = "\$prompt"
+set aps1_prompt = \$prompt:q
 set aps1_precmd = 'if ( -p $IN ) then\\
     echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
     eval "`cat $OUT`"\\
@@ -58,31 +57,32 @@ else\\
     $NAME leave\\
 endif'
 alias precmd 'eval \$aps1_precmd:q'
+set aps1_angel = 'switch ( "\$aps1_arg" )\\
+    case leave:\\
+    case quit:\\
+        set prompt = "\$aps1_prompt:q"\\
+        kill \$aps1_pid\\
+        rm -f -- $IN $OUT\\
+        unset aps1_prompt aps1_pid aps1_name aps1_precmd aps1_angel aps1_arg\\
+        unalias precmd $NAME\\
+        breaksw\\
+    case off:\\
+    case mute:\\
+        unalias precmd\\
+        set prompt = \$aps1_prompt:q\\
+        breaksw\\
+    case on:\\
+    case unmute:\\
+        alias precmd \$aps1_precmd:q\\
+        breaksw\\
+    default:\\
+        echo "$NAME: unknown option"\\
+        echo "usage: $NAME [quit|mute|off|unmute|on]"\\
+endsw'
+alias $NAME 'set aps1_arg = \\!*; eval \$aps1_angel:q; :'
 set aps1_name = '$NAME'
-alias $NAME 'set prompt = "\$aps1_prompt"; kill \$aps1_pid; unalias precmd $NAME; unset aps1_name aps1_pid aps1_prompt aps1_precmd'
 EOF
-    #echo \\\?=\\\$?\\\\\\0PWD=\\\$PWD\\\\
-    #echo -n \\\\"?=\\\$?\\0PWD=\\\$PWD\\\\" | od -c # > $IN || $NAME leave\\\\
-    #set prompt = \\\\"`cat $OUT`\\\\"\\\\
-    #echo "'\\"'"\\\\
-
-# TODO inject this as an alias '$NAME'
-our $z = <<EOF;
-    switch (\\!:1)
-    case leave:
-    case quit:
-    case go-away:
-        set prompt = "\$aps1_prompt"
-        kill \$aps1_pid
-        rm -f -- '$IN' '$OUT'
-        unset aps1_prompt aps1_pid aps1_name
-        unalias $NAME precmd
-        breaksw
-    default:
-        echo 'usage: $NAME [quit|mute|off|unmute|on]'
-    endsw ;
-} ;
-EOF
+#alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd aps1_angel aps1_arg; unalias precmd $NAME $NAME-kill; :'
 
     my $file = POSIX::tmpnam()."$$.csh";
     open my $f, '>', $file;
