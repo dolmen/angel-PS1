@@ -56,14 +56,14 @@ set aps1_precmd = 'if ( -p $IN ) then\\
 else\\
     $NAME leave\\
 endif'
-alias precmd 'eval \$aps1_precmd:q'
-set aps1_angel = 'switch ( "\$aps1_arg" )\\
+alias precmd \$aps1_precmd:q
+set aps1_angel = 'switch ( \\!* )\\
     case leave:\\
     case quit:\\
         set prompt = "\$aps1_prompt:q"\\
         kill \$aps1_pid\\
         rm -f -- $IN $OUT\\
-        unset aps1_prompt aps1_pid aps1_name aps1_precmd aps1_angel aps1_arg\\
+        unset aps1_prompt aps1_pid aps1_name aps1_precmd\\
         unalias precmd $NAME\\
         breaksw\\
     case off:\\
@@ -81,10 +81,11 @@ set aps1_angel = 'switch ( "\$aps1_arg" )\\
         echo "usage: $NAME [quit|mute|off|unmute|on]"\\
         breaksw\\
 endsw'
-alias $NAME 'set aps1_arg = \\!*; eval \$aps1_angel:q; :'
+alias $NAME \$aps1_angel:q
+unset aps1_angel
 set aps1_name = '$NAME'
 EOF
-#alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd aps1_angel aps1_arg; unalias precmd $NAME $NAME-kill; :'
+#alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd; unalias precmd $NAME $NAME-kill; :'
 
     my $file = POSIX::tmpnam()."$$.csh";
     open my $f, '>', $file;
