@@ -87,7 +87,8 @@ set aps1_name = '$NAME'
 EOF
 #alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd; unalias precmd $NAME $NAME-kill; :'
 
-    my $file = POSIX::tmpnam()."$$.csh";
+    my $file = POSIX::tmpnam()."$$.tcsh";
+    # TODO encoding, as the angel name may not be ascii
     open my $f, '>', $file;
     print $f $shell_code;
     close $f;
