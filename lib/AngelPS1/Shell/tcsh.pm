@@ -18,7 +18,12 @@ sub ps1_invisible
 sub ps1_finalize
 {
     my $prompt = $_[1];
-    $prompt
+    $prompt =~ s/'/'\\''/g;
+    # tcsh replaces '\n' with a space in command substitution (backquotes: `)
+    # so '\n' will be lost in our current implementation
+    # TODO: try to replace with '\\n'
+    warn "Prompt has '\\n' This is not supported by angel-PS1!" if $prompt =~ /\n/;
+    qq{set prompt = '$prompt'};
 }
 
 sub shell_code
@@ -35,25 +40,19 @@ sub shell_code
     my $shell_code =
     <<EOF;
 if ( \${?aps1_name} ) then
-    \$aps1_name leave
+    eval \$aps1_name leave
 endif
 set aps1_prompt = "\$prompt"
 set _excl = !
-alias x 'eval "echo OK\\\\
-echo B"'
-
-echo A
-set precmd1 = 'echo OK\\\\\\
-if ( ! -e $IN ) then\\
-    $NAME leave\\
+set aps1_precmd = 'if ( -p $IN ) then\\
+    echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
+    eval "`cat $OUT`"\\
 else\\
-    # This is not finished
-    echo \\\?=\\\$?\\\\\\0PWD=\\\$PWD\\
+    $NAME leave\\
 endif'
-echo B
-#alias precmd1 'eval \$precmd1:q"
+alias precmd 'eval \$aps1_precmd:q'
 set aps1_name = '$NAME'
-alias $NAME 'set prompt = "\$aps1_prompt"; kill \$aps1_pid; unalias precmd $NAME'
+alias $NAME 'set prompt = "\$aps1_prompt"; kill \$aps1_pid; unalias precmd $NAME; unset aps1_name aps1_pid aps1_prompt aps1_precmd'
 EOF
     #echo \\\?=\\\$?\\\\\\0PWD=\\\$PWD\\\\
     #echo -n \\\\"?=\\\$?\\0PWD=\\\$PWD\\\\" | od -c # > $IN || $NAME leave\\\\
@@ -85,7 +84,7 @@ EOF
 
     # Return value, passed as the eval argument
     # aps1_pid assignment will be concatenated
-    "cat $file; " . # For debugging
+    #"cat $file; " . # For debugging
     "source $file; rm -f $file;"
 }
 
