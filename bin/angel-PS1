@@ -305,13 +305,9 @@ if ($child) {
         in    => $FIFO_IN,
         out   => $FIFO_OUT,
         env   => [qw< PWD >],
+        pid   => $child,
     );
 
-    if (AngelPS1::Shell->name =~ /csh$/) {
-        print "set aps1_pid = $child\n";
-    } else {
-        print "APS1_PID=$child\n";
-    }
     print STDERR "$NAME installed.\n" unless $VERBOSE < 0;
 
     # We don't want the fifos to be removed by the END block

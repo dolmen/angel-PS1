@@ -28,7 +28,8 @@ sub ps1_finalize
 sub shell_code
 {
     my ($class, %options) = @_;
-    my ($DEBUG, $NAME, $IN, $OUT, $env) = @options{qw<debug name in out env>};
+    my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
+        @options{qw<debug name in out pid env>};
 
     my $time_debug = $DEBUG ? q|time -- | : '';
 
@@ -47,6 +48,7 @@ APS1_PS1="\$PS1";
 } ;
 PS1='\$(${time_debug}-angel-PS1)' ;
 APS1_NAME=$NAME ;
+APS1_PID=$PID ;
 $NAME()
 {
     case "\$1" in

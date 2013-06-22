@@ -37,7 +37,8 @@ sub ps1_finalize
 sub shell_code
 {
     my ($class, %options) = @_;
-    my ($DEBUG, $NAME, $IN, $OUT, $env) = @options{qw<debug name in out env>};
+    my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
+        @options{qw<debug name in out pid env>};
 
     #my $time_debug = $DEBUG ? q|time -- | : '';
 
@@ -84,6 +85,7 @@ endsw'
 alias $NAME \$aps1_angel:q
 unset aps1_angel
 set aps1_name = '$NAME'
+set aps1_pid = '$PID'
 EOF
 #alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd; unalias precmd $NAME $NAME-kill; :'
 
@@ -96,7 +98,7 @@ EOF
     # Return value, passed as the eval argument
     # aps1_pid assignment will be concatenated
     #"cat $file; " . # For debugging
-    "source $file; rm -f $file;"
+    "source $file; rm -f $file"
 }
 
 sub WorkingDir
