@@ -5,8 +5,16 @@ package AngelPS1::Shell::tcsh;
 
 sub ps1_escape
 {
+    # csh special symbols
     (my $s = $_[1]) =~ s{%}{%%}gs;
-    $s =~ s/!/%\${_excl}/gs;
+    # csh special sequences for special chars, à la bindkey
+    $s =~ s{\\}{\\\\}gs;
+    $s =~ s{\^}{\\136}gs;
+    # csh special: history number
+    $s =~ s{!}{\\041}gs;
+    # \n must be escaped as tcsh replaces it with space in backquote (`) output
+    $s =~ s{\n}{\\n}gs;
+    #print STDERR "Escape [$_[1]] => [$s]\n";
     $s
 }
 
@@ -43,7 +51,6 @@ if ( \${?aps1_name} ) then
     eval \$aps1_name leave
 endif
 set aps1_prompt = "\$prompt"
-set _excl = !
 set aps1_precmd = 'if ( -p $IN ) then\\
     echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
     eval "`cat $OUT`"\\
