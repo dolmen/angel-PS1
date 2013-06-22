@@ -74,6 +74,7 @@ set aps1_angel = 'switch ( "\$aps1_arg" )\\
     case on:\\
     case unmute:\\
         alias precmd \$aps1_precmd:q\\
+        :\\
         breaksw\\
     default:\\
         echo "$NAME: unknown option"\\
