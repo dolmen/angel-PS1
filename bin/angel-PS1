@@ -165,13 +165,13 @@ sub colored
         if ($r eq 'ARRAY') {
             $color_str = $v->[0];
             # TODO ensure that color strings are already PS1-escaped
-            $out .= AngelPS1::Shell->ps1_invisible($color_str);
+            $out .= compact(AngelPS1::Shell->ps1_invisible($color_str));
             next;
         }
         #print STDERR "$r $v\n";
         $out .= $r ? $$v : AngelPS1::Shell->ps1_escape($v);
         if (defined $color_str) {
-            $out .= AngelPS1::Shell->ps1_invisible($NO_COLOR);
+            $out .= compact(AngelPS1::Shell->ps1_invisible($NO_COLOR));
             undef $color_str;
         }
     }

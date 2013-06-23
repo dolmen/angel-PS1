@@ -15,7 +15,8 @@ sub ps1_escape
 
 sub ps1_invisible
 {
-    INVIS_CHAR . $_[1] . INVIS_CHAR
+    shift; # $class
+    (\INVIS_CHAR, @_, \INVIS_CHAR)
 }
 
 sub ps1_finalize

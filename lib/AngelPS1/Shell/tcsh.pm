@@ -20,7 +20,8 @@ sub ps1_escape
 
 sub ps1_invisible
 {
-    '%{' . $_[1] . '%}'
+    shift; # $class
+    (\'%{', @_, \'%}')
 }
 
 sub ps1_finalize
