@@ -345,13 +345,19 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 
 
-# Bash PS1 fallback
-my $PS1_fallback = compact(
-    "[$NAME sick!] ",
-    AngelPS1::Shell->WorkingDir,
-    AngelPS1::Shell->UserPrivSymbol,
-    ' ',
-);
+# PS1 fallback, if something goes wrong with the user defined prompt
+my $PS1_fallback = do {
+    my @fallback = compact(
+        "[$NAME sick!] ",
+        AngelPS1::Shell->WorkingDir,
+        AngelPS1::Shell->UserPrivSymbol,
+        ' ',
+    );
+
+        ps1_is_static(\@fallback)
+    ? do { my $fallback = ${$fallback[0]}; sub { $fallback } }
+    : sub { scalar compact(interp(@_, @fallback)) }
+};
 
 
 # *****************************************************************************
@@ -379,7 +385,7 @@ sub main_loop
         unless (defined $PS1) {
             (my $err = $@) =~ s/\s*$//s;
             print STDERR "$RED$BOLD$NAME PS1 eval: $err$NO_COLOR\n";
-            $PS1 = $PS1_fallback;
+            $PS1 = $PS1_fallback->(\%shell_state);
         }
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
