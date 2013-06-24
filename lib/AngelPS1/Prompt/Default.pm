@@ -26,7 +26,7 @@ return () unless AngelPS1::Shell->can('WorkingDir')
     (sub { "(${COLUMNS}x${LINES})" }) x!! %AngelPS1::DEBUG,
     ' ',
     # User name
-    (scalar getpwuid $<),
+    $< ? (scalar getpwuid $<) : (),
     sub { ((-w $_[0]->{PWD} ? [ $GREEN ] : [ $RED ]), ':') },
     AngelPS1::Shell->WorkingDir,
     ' ',
