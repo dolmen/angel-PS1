@@ -41,8 +41,6 @@ sub shell_code
     my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
         @options{qw<debug name in out pid env>};
 
-    #my $time_debug = $DEBUG ? q|time -- | : '';
-
     # Reference for this csh shit:
     # - http://www.grymoire.com/Unix/CshTop10.txt
     # - http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/

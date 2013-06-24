@@ -36,8 +36,8 @@ sub shell_code
     my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
         @options{qw<debug name in out pid env>};
 
-    my $shell_debug = $DEBUG ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
-    my $time_debug = $DEBUG ? q|time | : '';
+    my $shell_debug = $DEBUG->{'in'} ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
+    my $time_debug = $DEBUG->{'time'} ? q|time | : '';
 
     # The shell code will be evaluated with eval as a single line
     # so statements must be properly terminated with ';'

@@ -18,12 +18,12 @@ return () unless AngelPS1::Shell->can('WorkingDir')
 
 # The prompt is the list returned as the last statement
 (
-    (AngelPS1::Shell->name, ' ') x!! $AngelPS1::DEBUG,
+    (AngelPS1::Shell->name, ' ') x!! %AngelPS1::DEBUG,
     [ $BLUE ],
     sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
     ' ',
     $TTYNAME,
-    (sub { "(${COLUMNS}x${LINES})" }) x!! $AngelPS1::DEBUG,
+    (sub { "(${COLUMNS}x${LINES})" }) x!! %AngelPS1::DEBUG,
     ' ',
     sub { ((-w $_[0]->{PWD} ? [ $GREEN ] : [ $RED ]), ':') },
     AngelPS1::Shell->WorkingDir,
