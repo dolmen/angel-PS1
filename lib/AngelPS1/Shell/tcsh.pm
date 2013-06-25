@@ -57,7 +57,7 @@ else\\
     $NAME leave\\
 endif'
 alias precmd \$aps1_precmd:q
-set aps1_angel = 'switch ( \\!* )\\
+alias $NAME 'switch ( \\!* )\\
     case leave:\\
     case quit:\\
         set prompt = "\$aps1_prompt:q"\\
@@ -81,8 +81,6 @@ set aps1_angel = 'switch ( \\!* )\\
         echo "usage: $NAME [quit|mute|off|unmute|on]"\\
         breaksw\\
 endsw'
-alias $NAME \$aps1_angel:q
-unset aps1_angel
 set aps1_name = '$NAME'
 set aps1_pid = '$PID'
 EOF
