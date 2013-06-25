@@ -38,18 +38,18 @@ recommend to *not yet* load it from `~/.bashrc`.
 
 #### First class
 
-    - `bash`
-    - `mksh`
+- `bash`
+- `mksh`
 
 #### Experimental
 
-    - `tcsh`: see [issue #1][1]
+- `tcsh`: see [issue #1][1]
 
     [1]: https://github.com/dolmen/angel-PS1/issues/1
 
 #### TODO
 
-    - `zsh`: porting will be easy (very similar to bash), so that's not my
+- `zsh`: porting will be easy (very similar to bash), so that's not my
       priority
 
 ### Features
