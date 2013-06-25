@@ -86,8 +86,13 @@ unset aps1_angel
 set aps1_name = '$NAME'
 set aps1_pid = '$PID'
 EOF
+# For debugging
 #alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd; unalias precmd $NAME $NAME-kill; :'
 
+    # Inside backquotes (`) output \n are replaced with spaces by tcsh
+    # So switch/if can not work.
+    # Workaround: save the shell code to a file, and source it.
+    require POSIX;
     my $file = POSIX::tmpnam()."$$.tcsh";
     # TODO encoding, as the angel name may not be ascii
     open my $f, '>', $file;
