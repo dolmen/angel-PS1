@@ -80,6 +80,115 @@ $fatpacked{"AngelPS1/Color.pm"} = <<'ANGELPS1_COLOR';
   # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_COLOR
 
+$fatpacked{"AngelPS1/Compiler.pm"} = <<'ANGELPS1_COMPILER';
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Compiler;
+  
+  use Exporter 'import';
+  our @EXPORT = qw<compact interp ps1_is_static>;
+  
+  use AngelPS1::Shell ();
+  use AngelPS1::Color '$NO_COLOR';
+  
+  
+  sub interp
+  {
+      my $state = shift;
+      my @args = @_;
+      for(my $i=0; $i<=$#args; $i++) {
+          if (ref($args[$i]) eq 'CODE') {
+              splice @args, $i, 1, interp($state, $args[$i]->($state));
+              redo; # A dynamic part can return dynamic parts!
+          }
+      }
+      return @args
+  }
+  
+  
+  
+  # Compact a @PS1 definition: bare scalar are expanded to their escaped result
+  # and scalar refs are concatenated, and colors (ARRAY) are expanded.
+  # CODE refs are preserved as is, so we can do a multiple step compilation.
+  sub compact
+  {
+      my @template = @_;
+      my @out;
+      while (@template) {
+          my $v = shift @template;
+          my $r = ref $v;
+          if ($r eq 'CODE') {
+              push @out, $v;
+              next;
+          }
+          # ARRAY followed by a scalar or scalar ref
+          # => replace by the colored expanded result
+          if ($r eq 'ARRAY' && @template) {
+              my $r = ref $template[0];
+              if ($r && $r ne 'SCALAR') {
+                  push @out, $v, shift @template;
+                  next;
+              }
+              # Expand the color
+              $v = colored($v, shift @template);
+              $r = ref $v;
+          }
+          if ($r) {
+              $v = $$v;
+          } else {
+              $v = AngelPS1::Shell->ps1_escape($v);
+          }
+          if (@out && ref($out[$#out]) eq 'SCALAR') {
+              ${$out[$#out]} .= $v
+          } else {  # CODE refs (and anything else) are preserved
+              push @out, \$v;
+          }
+      }
+      return @out if wantarray;
+      die "invalid state after compact" if @out != 1 || ref $out[0] ne 'SCALAR';
+      ${pop @out}
+  }
+  
+  # Process a list of mixed scalar, scalar refs and ARRAYs.
+  # ARRAYS are specifications for colors that must be applied to the following
+  # Returns a scalar ref that represents shell escaped text.
+  sub colored
+  {
+      my @args = @_;
+      my $out = '';
+      my $color_str;
+      while (@args) {
+          my $v = shift @args;
+          my $r = ref $v;
+          if ($r eq 'ARRAY') {
+              $color_str = $v->[0];
+              # TODO ensure that color strings are already PS1-escaped
+              $out .= compact(AngelPS1::Shell->ps1_invisible($color_str));
+              next;
+          }
+          #print STDERR "$r $v\n";
+          $out .= $r ? $$v : AngelPS1::Shell->ps1_escape($v);
+          if (defined $color_str) {
+              $out .= compact(AngelPS1::Shell->ps1_invisible($NO_COLOR));
+              undef $color_str;
+          }
+      }
+      return \$out
+  }
+  
+  
+  sub ps1_is_static
+  {
+      my $PS1 = shift;
+      $#$PS1 == 1 && (ref $PS1->[0]) eq 'SCALAR'
+  }
+  
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_COMPILER
+
 $fatpacked{"AngelPS1/Plugin.pm"} = <<'ANGELPS1_PLUGIN';
   use strict;
   use warnings;
@@ -261,12 +370,28 @@ $fatpacked{"AngelPS1/Plugin/TerminalSize.pm"} = <<'ANGELPS1_PLUGIN_TERMINALSIZE'
   
   our ($LINES, $COLUMNS);
   
-  my $_WINSZ = pack('S4');
+  # Get the ioctl number
+  my $TIOCGWINSZ =
+      # Shortcut static table
+      {
+          # $^O => ioctl TIOCGWINSZ constant
+          linux => 0x5413,
+      }->{$^O}
+  ||
+      # Fallback: get the constant from ioctl.ph
+      eval {
+          package AngelPS1::Plugin::TerminalSize::ioctl;
+          require 'sys/ioctl.ph';
+          delete $INC{'sys/ioctl.ph'};
+          \&TIOCGWINSZ
+      };
   
+  
+  my $_WINSZ = pack('S4');
   
   sub _update_from_ioctl
   {
-      ioctl(STDERR, &TIOCGWINSZ, $_WINSZ);
+      ioctl(STDERR, $TIOCGWINSZ, $_WINSZ);
       ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
   }
   
@@ -288,24 +413,14 @@ $fatpacked{"AngelPS1/Plugin/TerminalSize.pm"} = <<'ANGELPS1_PLUGIN_TERMINALSIZE'
   sub import
   {
       # Avoid multiple install due to multiple import from different packages
-      unless (defined $SIG{WINCH}) {
-          eval {
-              # Delay loading of ioctl.ph until import time
-              no strict 'refs';
-              *TIOCGWINSZ = do {
-                  package AngelPS1::Plugin::TerminalSize::ioctl;
-                  require 'sys/ioctl.ph';
-                  \&TIOCGWINSZ
-              };
-              delete $INC{'sys/ioctl.ph'};
-          };
-          if ($@) {
+      unless ($SIG{WINCH}) {
+          if (defined $TIOCGWINSZ) {
+              # Terminal size change
+              $SIG{WINCH} = \&_update_from_ioctl;
+          } else {
               require POSIX;
               $TTYNAME = POSIX::ttyname(2); # STDERR
               $SIG{WINCH} = \&_update_from_stty;
-          } else {
-              # Terminal size change
-              $SIG{WINCH} = \&_update_from_ioctl;
           }
   
           # Fetch now
@@ -340,13 +455,15 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = <<'ANGELPS1_PROMPT_DEFAULT';
   
   # The prompt is the list returned as the last statement
   (
-      (AngelPS1::Shell->name, ' ') x!! $AngelPS1::DEBUG,
+      (AngelPS1::Shell->name, ' ') x!! %AngelPS1::DEBUG,
       [ $BLUE ],
       sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
       ' ',
       $TTYNAME,
-      (sub { "(${COLUMNS}x${LINES})" }) x!! $AngelPS1::DEBUG,
+      (sub { "(${COLUMNS}x${LINES})" }) x!! %AngelPS1::DEBUG,
       ' ',
+      # User name
+      $< ? (scalar getpwuid $<) : (),
       sub { ((-w $_[0]->{PWD} ? [ $GREEN ] : [ $RED ]), ':') },
       AngelPS1::Shell->WorkingDir,
       ' ',
@@ -365,8 +482,18 @@ $fatpacked{"AngelPS1/Shell.pm"} = <<'ANGELPS1_SHELL';
   
   package AngelPS1::Shell;
   
+  my %ALIASES = (
+      ksh   => 'mksh',
+      ksh88 => 'mksh',
+      ksh93 => 'mksh',
+  );
+  
+  
   my $name;
   
+  #
+  # Call: AngelPS1::Shell->name
+  #
   sub name
   {
       $name
@@ -379,16 +506,17 @@ $fatpacked{"AngelPS1/Shell.pm"} = <<'ANGELPS1_SHELL';
   {
       my ($class, $shell) = @_;
       if ($shell) {
-  	my $src = "AngelPS1/Shell/$shell.pm";
-  	unless (exists $INC{$src}) {
-  	    # TODO try to distinguish load errors (file not found) from compile errors
-  	    # by pushing a sub on @INC that will be called.
-  	    die "$shell is not a supported shell.\n" unless eval { require $src };
-  	    my $pkg = "${class}::$shell";
-  	    # Make AngelPS1::Shell a sub class of $pkg
-  	    our @ISA = ($pkg);
-  	    $name = $shell;
-  	}
+          $shell = $ALIASES{$shell} if exists $ALIASES{$shell};
+          my $src = "AngelPS1/Shell/$shell.pm";
+          unless (exists $INC{$src}) {
+              # TODO try to distinguish load errors (file not found) from compile errors
+              # by pushing a sub on @INC that will be called.
+              die "$shell is not a supported shell.\n" unless eval { require $src };
+              my $pkg = "${class}::$shell";
+              # Make AngelPS1::Shell a sub class of $pkg
+              our @ISA = ($pkg);
+              $name = $shell;
+          }
       }
   }
   
@@ -411,7 +539,8 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = <<'ANGELPS1_SHELL_BASH';
   
   sub ps1_invisible
   {
-      '\[' . $_[1] . '\]'
+      shift; # $class
+      (\'\[', @_, \'\]')
   }
   
   
@@ -424,17 +553,18 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = <<'ANGELPS1_SHELL_BASH';
       $PS1 =~ s/\\/\\\\/g;
       # Escape newlines
       $PS1 =~ s/\n/\\\n/g;
-      $PS1
+      "$PS1\n"
   }
   
   # Returns the code to send to the shell
   sub shell_code
   {
       my ($class, %options) = @_;
-      my ($DEBUG, $NAME, $IN, $OUT, $env) = @options{qw<debug name in out env>};
+      my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
+          @options{qw<debug name in out pid env>};
   
-      my $shell_debug = $DEBUG ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
-      my $time_debug = $DEBUG ? q|time | : '';
+      my $shell_debug = $DEBUG->{'in'} ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
+      my $time_debug = $DEBUG->{'time'} ? q|time | : '';
   
       # The shell code will be evaluated with eval as a single line
       # so statements must be properly terminated with ';'
@@ -453,6 +583,7 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = <<'ANGELPS1_SHELL_BASH';
   } ;
   PROMPT_COMMAND='${time_debug}-angel-PS1' ;
   APS1_NAME=$NAME ;
+  APS1_PID=$PID ;
   $NAME()
   {
       case "\$1" in
@@ -511,7 +642,8 @@ $fatpacked{"AngelPS1/Shell/mksh.pm"} = <<'ANGELPS1_SHELL_MKSH';
   
   sub ps1_invisible
   {
-      INVIS_CHAR . $_[1] . INVIS_CHAR
+      shift; # $class
+      (\INVIS_CHAR, @_, \INVIS_CHAR)
   }
   
   sub ps1_finalize
@@ -524,9 +656,10 @@ $fatpacked{"AngelPS1/Shell/mksh.pm"} = <<'ANGELPS1_SHELL_MKSH';
   sub shell_code
   {
       my ($class, %options) = @_;
-      my ($DEBUG, $NAME, $IN, $OUT, $env) = @options{qw<debug name in out env>};
+      my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
+          @options{qw<debug name in out pid env>};
   
-      my $time_debug = $DEBUG ? q|time -- | : '';
+      my $time_debug = $DEBUG->{'time'} ? q|time -- | : '';
   
       # The shell code will be evaluated with eval as a single line
       # so statements must be properly terminated with ';'
@@ -543,6 +676,7 @@ $fatpacked{"AngelPS1/Shell/mksh.pm"} = <<'ANGELPS1_SHELL_MKSH';
   } ;
   PS1='\$(${time_debug}-angel-PS1)' ;
   APS1_NAME=$NAME ;
+  APS1_PID=$PID ;
   $NAME()
   {
       case "\$1" in
@@ -583,6 +717,127 @@ $fatpacked{"AngelPS1/Shell/mksh.pm"} = <<'ANGELPS1_SHELL_MKSH';
   '$';
   # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_MKSH
+
+$fatpacked{"AngelPS1/Shell/tcsh.pm"} = <<'ANGELPS1_SHELL_TCSH';
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Shell::tcsh;
+  
+  sub ps1_escape
+  {
+      # csh special symbols
+      (my $s = $_[1]) =~ s{%}{%%}gs;
+      # csh special sequences for special chars, à la bindkey
+      $s =~ s{\\}{\\\\}gs;
+      $s =~ s{\^}{\\136}gs;
+      # csh special: history number
+      $s =~ s{!}{\\041}gs;
+      # \n must be escaped as tcsh replaces it with space in backquote (`) output
+      $s =~ s{\n}{\\n}gs;
+      #print STDERR "Escape [$_[1]] => [$s]\n";
+      $s
+  }
+  
+  sub ps1_invisible
+  {
+      shift; # $class
+      (\'%{', @_, \'%}')
+  }
+  
+  sub ps1_finalize
+  {
+      my $prompt = $_[1];
+      $prompt =~ s/'/'\\''/g;
+      # tcsh replaces '\n' with a space in command substitution (backquotes: `)
+      # so '\n' will be lost in our current implementation
+      # TODO: try to replace with '\\n'
+      warn "Prompt has '\\n' This is not supported by angel-PS1!" if $prompt =~ /\n/;
+      qq{set prompt = '$prompt'};
+  }
+  
+  sub shell_code
+  {
+      my ($class, %options) = @_;
+      my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
+          @options{qw<debug name in out pid env>};
+  
+      # Reference for this csh shit:
+      # - http://www.grymoire.com/Unix/CshTop10.txt
+      # - http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
+  
+      my $shell_code = <<EOF;
+  if ( \${?aps1_name} ) then
+      eval \$aps1_name leave
+  endif
+  set aps1_prompt = \$prompt:q
+  set aps1_precmd = 'if ( -p $IN ) then\\
+      echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
+      eval "`cat $OUT`"\\
+  else\\
+      $NAME leave\\
+  endif'
+  alias precmd \$aps1_precmd:q
+  alias $NAME 'switch ( \\!* )\\
+      case leave:\\
+      case quit:\\
+          set prompt = "\$aps1_prompt:q"\\
+          kill \$aps1_pid\\
+          rm -f -- $IN $OUT\\
+          unset aps1_prompt aps1_pid aps1_name aps1_precmd\\
+          unalias precmd $NAME\\
+          breaksw\\
+      case off:\\
+      case mute:\\
+          unalias precmd\\
+          set prompt = \$aps1_prompt:q\\
+          breaksw\\
+      case on:\\
+      case unmute:\\
+          alias precmd \$aps1_precmd:q\\
+          :\\
+          breaksw\\
+      default:\\
+          echo "$NAME: unknown option"\\
+          echo "usage: $NAME [quit|mute|off|unmute|on]"\\
+          breaksw\\
+  endsw'
+  set aps1_name = '$NAME'
+  set aps1_pid = '$PID'
+  EOF
+  # For debugging
+  #alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd; unalias precmd $NAME $NAME-kill; :'
+  
+      # Inside backquotes (`) output \n are replaced with spaces by tcsh
+      # So switch/if can not work.
+      # Workaround: save the shell code to a file, and source it.
+      require POSIX;
+      my $file = POSIX::tmpnam()."$$.tcsh";
+      # TODO encoding, as the angel name may not be ascii
+      open my $f, '>', $file;
+      print $f $shell_code;
+      close $f;
+  
+      # Return value, passed as the eval argument
+      # aps1_pid assignment will be concatenated
+      #"cat $file; " . # For debugging
+      "source $file; rm -f $file"
+  }
+  
+  sub WorkingDir
+  {
+      \'%~'
+  }
+  
+  sub UserPrivSymbol
+  {
+      # The 'promptchars' variable defines exactly what will be displayed
+      \'%#'
+  }
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_SHELL_TCSH
 
 $fatpacked{"AngelPS1/Util.pm"} = <<'ANGELPS1_UTIL';
   use strict;
@@ -700,21 +955,22 @@ use warnings;
 
 package AngelPS1;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
-use File::Temp 'tmpnam';
+use POSIX ();
 use Encode ();
 use FindBin;
 
 # TODO build.pl should inline those modules
 use AngelPS1::Shell ();
+use AngelPS1::Compiler;
 use AngelPS1::Color;
 
 use lib "$ENV{HOME}/.config/angel-PS1", '/etc/angel-PS1';
 
 
-# Extact encoding name from the locale
+# Extract encoding name from the locale
 our $ENCODING = do {
     # Shortcut for the most common case
     my $locale = $ENV{LC_ALL} || $ENV{LC_CTYPE} || $ENV{LANG} || 'POSIX';
@@ -722,7 +978,6 @@ our $ENCODING = do {
         ? 'UTF-8'
         : do {
             # warn "slow locale lookup...";
-            require POSIX;
             POSIX::setlocale(POSIX::LC_CTYPE(), '');
             require I18N::Langinfo;
             eval { I18N::Langinfo::langinfo(I18N::Langinfo::CODESET()) }
@@ -740,12 +995,19 @@ if ($ENCODING) {
 
 our $APP = !defined scalar caller;  # Running as command or include
 $main::VERSION = $VERSION if $APP;
-our $DEBUG = !! $ENV{APS1_DEBUG};
+my @DEBUG_DEFAULTS = qw<in time>;
+our %DEBUG = $ENV{APS1_DEBUG}
+    ? (map { ($_ => 1) }
+        ($ENV{APS1_DEBUG} eq '1'
+        ? (split /,/, $ENV{APS1_DEBUG})
+        : @DEBUG_DEFAULTS))
+    : ();
 our $SHELL;
 our $NAME = 'angel';
 our $VERBOSE = 0;
 our $SHELL_PID = getppid();
 our $TERM = $ENV{TERM};
+my $CONFIG;
 
 
 
@@ -769,84 +1031,6 @@ if (-t STDERR) {
 }
 
 
-sub interp
-{
-    my $state = shift;
-    my @args = @_;
-    for(my $i=0; $i<=$#args; $i++) {
-        if (ref($args[$i]) eq 'CODE') {
-            splice @args, $i, 1, interp($state, $args[$i]->($state));
-            redo; # A dynamic part can return dynamic parts!
-        }
-    }
-    return @args
-}
-
-
-
-# Compact a @PS1 definition: scalar refs are expanded to their escaped result
-# and static strings are then concatenated.
-sub compact
-{
-    my @template = @_;
-    my @out;
-    while (@template) {
-        my $v = shift @template;
-        my $r = ref $v;
-        if ($r eq 'CODE') {
-            push @out, $v;
-            next;
-        }
-        # Reference followed by a scalar => replace by the expanded result
-        if ($r eq 'ARRAY' && @template) {
-            my $r = ref $template[0];
-            if ($r && $r ne 'SCALAR') {
-                push @out, $v, shift @template;
-                next;
-            }
-            # Expand the color
-            $v = colored($v, shift @template);
-            $r = ref $v;
-        }
-        if ($r) {
-            $v = $$v;
-        } else {
-            AngelPS1::Shell->ps1_escape($v);
-        }
-        if (@out && ref($out[$#out]) eq 'SCALAR') {
-            ${$out[$#out]} .= $v
-        } else {
-            push @out, \$v;
-        }
-    }
-    return @out if wantarray;
-    die "invalid state after compact" if @out != 1 || ref $out[0] ne 'SCALAR';
-    ${pop @out}
-}
-
-sub colored
-{
-    my @args = @_;
-    my $out = '';
-    my $color_str;
-    while (@args) {
-        my $v = shift @args;
-        my $r = ref $v;
-        if ($r eq 'ARRAY') {
-            $color_str = $v->[0];
-            # TODO ensure that color strings are already PS1-escaped
-            $out .= AngelPS1::Shell->ps1_invisible($color_str);
-            next;
-        }
-        #print STDERR "$r $v\n";
-        $out .= $r ? $$v : AngelPS1::Shell->ps1_escape($v);
-        if (defined $color_str) {
-            $out .= AngelPS1::Shell->ps1_invisible($NO_COLOR);
-            undef $color_str;
-        }
-    }
-    return \$out
-}
 
 my @INCLUDES;
 
@@ -854,11 +1038,21 @@ GetOptions(
     'version' => sub { print "angel-PS1 version $VERSION\n"; exit 0 },
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
+    'c|config=s' => \$CONFIG,
     'v|verbose' => \$VERBOSE,
     'q|quiet' => sub { $VERBOSE = -1 },
-    'debug'  => \$DEBUG,
+    'debug:s'  => sub {
+        my $value = $_[1];
+        if ($value eq '' || $value eq '1') {
+            %DEBUG = (%DEBUG, map { ($_ => 1) } @DEBUG_DEFAULTS)
+        } else {
+            $DEBUG{$_} = 1 for split /,/, $value
+        }
+    },
     'I=s' => \@INCLUDES,
 );
+
+$CONFIG = 'PS1.pl' unless defined $CONFIG;
 
 # Order is important: preserve the order as perl itself
 lib->import(@INCLUDES);
@@ -888,7 +1082,7 @@ $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
 # Load the configuration from @INC
 # Usually: $HOME/.config/angel-PS1/PS1.pl
-my @PS1 = do { package AngelPS1::Prompt; do 'PS1.pl' };
+my @PS1 = do { package AngelPS1::Prompt; do $CONFIG };
 die "Invalid configuration: $@" if $@;
 pop @PS1 if @PS1 == 1 && !defined $PS1[0];
 
@@ -899,14 +1093,17 @@ unless (@PS1) {
             AngelPS1::Config;
     @PS1 = do 'AngelPS1/Prompt/Default.pm';
     die "Invalid configuration: $@" if $@;
+    print STDERR "${NAME}'s config: AngelPS1::Prompt::Default\n" if $DEBUG{config};
+} else {
+    print STDERR "${NAME}'s config: ", $CONFIG, ' => ', $INC{$CONFIG}, "\n" if $DEBUG{config};
 }
 
 
 @PS1 = compact @PS1;
 
 
-
-my $FIFO_PATH = tmpnam().".$NAME-$$";
+# Build the FIFO paths
+my $FIFO_PATH = POSIX::tmpnam().".$NAME-$$";
 my $FIFO_IN = "$FIFO_PATH.in";
 my $FIFO_OUT = "$FIFO_PATH.out";
 
@@ -954,43 +1151,44 @@ exit 0 unless -t STDIN && exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 # If the prompt is static after compact(), just output it and don't install the
 # angel. This allows the user to use the power of the angel-PS1 prompt compiler
 # and plugins without the runtime cost.
-if (@PS1 == 1 && (ref $PS1[0]) eq 'SCALAR') {
+if (ps1_is_static(\@PS1) && AngelPS1::Shell->name !~ /csh$/) {
     (my $PS1 = ${$PS1[0]}) =~ s/'/'\\''/g;
     print qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n};
     exit 0
 }
 
 
-require POSIX;
 POSIX::mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
 POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
 -p $FIFO_IN && -o _ or die "Fifo $FIFO_IN creation failed.";
 -p $FIFO_OUT && -o _ or die "Fifo $FIFO_OUT creation failed.";
 
-print AngelPS1::Shell->shell_code(
-    name  => $NAME,
-    debug => $DEBUG,
-    in    => $FIFO_IN,
-    out   => $FIFO_OUT,
-    env   => [qw< PWD >],
-);
-
-close STDIN;
-
 my $child = fork();
 die if $child == -1;
 if ($child) {
+    print AngelPS1::Shell->shell_code(
+        name  => $NAME,
+        debug => \%DEBUG,
+        in    => $FIFO_IN,
+        out   => $FIFO_OUT,
+        env   => [qw< PWD >],
+        pid   => $child,
+    );
+
+    print STDERR "$NAME installed.\n" unless $VERBOSE < 0;
+
     # We don't want the fifos to be removed by the END block
     undef $FIFO_IN;
     undef $FIFO_OUT;
-    print "APS1_PID=$child\n";
-    print STDERR "$NAME installed.\n" unless $VERBOSE < 0;
+
     exit 0;
 }
 
 # *****************************************************************************
 # Angel forked
 # *****************************************************************************
+
+$0 = qq{$FindBin::Script $NAME};
 
 open STDIN, '+<', '/dev/null';
 close STDOUT;
@@ -1007,8 +1205,19 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 
 
-# Bash PS1 fallback
-my $PS1_fallback = compact("[$NAME sick!] ", \'\w\$ ');
+# PS1 fallback, if something goes wrong with the user defined prompt
+my $PS1_fallback = do {
+    my @fallback = compact(
+        "[$NAME sick!] ",
+        AngelPS1::Shell->WorkingDir,
+        AngelPS1::Shell->UserPrivSymbol,
+        ' ',
+    );
+
+        ps1_is_static(\@fallback)
+    ? do { my $fallback = ${$fallback[0]}; sub { $fallback } }
+    : sub { scalar compact(interp(@_, @fallback)) }
+};
 
 
 # *****************************************************************************
@@ -1026,7 +1235,7 @@ sub main_loop
         }
         $_ = do { undef $/; <$FIFO> };
         close $FIFO;
-        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG;
+        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG{'in'};
 
         my %shell_state = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
 
@@ -1036,11 +1245,11 @@ sub main_loop
         unless (defined $PS1) {
             (my $err = $@) =~ s/\s*$//s;
             print STDERR "$RED$BOLD$NAME PS1 eval: $err$NO_COLOR\n";
-            $PS1 = $PS1_fallback;
+            $PS1 = $PS1_fallback->(\%shell_state);
         }
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
-        print $FIFO AngelPS1::Shell->ps1_finalize($PS1), "\n";
+        print $FIFO AngelPS1::Shell->ps1_finalize($PS1);
         close $FIFO;
     }
 }
