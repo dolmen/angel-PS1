@@ -26,7 +26,7 @@ use warnings;
 
 package AngelPS1;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 use POSIX ();
