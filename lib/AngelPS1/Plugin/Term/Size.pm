@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-package AngelPS1::Plugin::TerminalSize;
+package AngelPS1::Plugin::Term::Size;
 
 our $VERSION = $AngelPS1::VERSION;
 
@@ -21,7 +21,7 @@ my $TIOCGWINSZ =
 ||
     # Fallback: get the constant from ioctl.ph
     eval {
-        package AngelPS1::Plugin::TerminalSize::ioctl;
+        package AngelPS1::Plugin::Term::Size::ioctl;
         require 'sys/ioctl.ph';
         delete $INC{'sys/ioctl.ph'};
         \&TIOCGWINSZ
