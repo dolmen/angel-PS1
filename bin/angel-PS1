@@ -78,7 +78,7 @@ our $NAME = 'angel';
 our $VERBOSE = 0;
 our $SHELL_PID = getppid();
 our $TERM = $ENV{TERM};
-my $CONFIG;
+my ($CONFIG, $PROMPT);
 
 
 
@@ -110,6 +110,7 @@ GetOptions(
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'c|config=s' => \$CONFIG,
+    'p|prompt=s' => \$PROMPT,
     'v|verbose' => \$VERBOSE,
     'q|quiet' => sub { $VERBOSE = -1 },
     'debug:s'  => sub {
@@ -122,8 +123,6 @@ GetOptions(
     },
     'I=s' => \@INCLUDES,
 );
-
-$CONFIG = 'PS1.pl' unless defined $CONFIG;
 
 # Order is important: preserve the order as perl itself
 lib->import(@INCLUDES);
@@ -152,22 +151,33 @@ $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
 
 # Load the configuration from @INC
-# Usually: $HOME/.config/angel-PS1/PS1.pl
-my @PS1 = do { package AngelPS1::Prompt; do $CONFIG };
-die "Invalid configuration: $@" if $@;
-pop @PS1 if @PS1 == 1 && !defined $PS1[0];
-
-
-# If no custom config, load instead AngelPS1/Prompt/Default.pm
-unless (@PS1) {
-    package # Not indexed
-            AngelPS1::Config;
-    @PS1 = do 'AngelPS1/Prompt/Default.pm';
-    die "Invalid configuration: $@" if $@;
-    print STDERR "${NAME}'s config: AngelPS1::Prompt::Default\n" if $DEBUG{config};
+my @PS1;
+if (defined $PROMPT) {
+    (my $src = "AngelPS1/Prompt/$PROMPT.pm") =~ s{::}{/};
+    @PS1 = do $src;
+    die "load error: $@" if $@;
+    die "$src load error: $!" if $!;
+    $CONFIG = $INC{$src};
 } else {
-    print STDERR "${NAME}'s config: ", $CONFIG, ' => ', $INC{$CONFIG}, "\n" if $DEBUG{config};
+    # Usually: $HOME/.config/angel-PS1/PS1.pl
+    $CONFIG = 'PS1.pl' unless defined $CONFIG;
+    # If no custom config, load instead AngelPS1/Prompt/Default.pm
+    foreach my $config ($CONFIG, 'AngelPS1/Prompt/Default.pm') {
+        undef $!;
+        @PS1 = do { package AngelPS1::Prompt; do $config };
+        die "load error: $@" if $@;
+        $CONFIG = $INC{$config};
+        # Break if loading is ok
+        last unless $!;
+    }
+    die "load $CONFIG error: $!" if $!;
+    undef $!
 }
+
+die "invalid prompt value returned by $CONFIG: empty list\n" unless @PS1;
+die "invalid prompt value returned by $CONFIG: undef value\n" unless defined $PS1[0];
+
+print STDERR "${NAME}'s config: $CONFIG\n" if $DEBUG{config};
 
 
 @PS1 = compact @PS1;
