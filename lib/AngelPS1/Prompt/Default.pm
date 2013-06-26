@@ -6,7 +6,7 @@ package AngelPS1::Prompt::Default;
 use AngelPS1::Shell ();
 use AngelPS1::Color;
 use AngelPS1::Plugin::Core;
-use AngelPS1::Plugin::TerminalSize;
+use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::Git;
 
 use POSIX ();
