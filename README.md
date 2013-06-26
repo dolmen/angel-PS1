@@ -43,9 +43,9 @@ recommend to *not yet* load it from `~/.bashrc`.
 
 #### Experimental
 
-- `tcsh`: see [issue #1][1]
+- `tcsh`: see [issue #1][2]
 
-    [1]: https://github.com/dolmen/angel-PS1/issues/1
+    [2]: https://github.com/dolmen/angel-PS1/issues/1
 
 #### TODO
 
