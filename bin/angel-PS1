@@ -342,4 +342,49 @@ END {
     unlink $FIFO_IN, $FIFO_OUT;
 }
 
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+angel-PS1 - The Angel's Prompt
+
+=head1 SYNOPSIS
+
+    eval `angel-PS1 [--name <name>] [-p <prompt> | -c <config>]
+                    [-I <dir>]`
+
+=head1 SHELLS
+
+angel-PS1 is compatible with:
+
+=over 4
+
+=item *
+
+bash
+
+=item *
+
+mksh
+
+=back
+
+=head1 SUPPORT
+
+Bug tracker: L<https://github.com/dolmen/angel-PS1/issues>
+
+Announces of new releases: L<https://twitter.com/nglPS1>
+
+=head1 AUTHOR
+
+Olivier Mengué, L<mailto:dolmen@cpan.org>
+
+=head1 COPYRIGHT & LICENSE
+
+See the header of this file.
+
+=cut
+
 # vim:set et ts=8 sw=4 sts=4:
