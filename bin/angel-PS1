@@ -317,6 +317,9 @@ sub main_loop
     my @PS1 = @_;
 
     my $FIFO;
+    my %prompt_state;
+    my ($k, $v);
+
     for (;;) {
         unless (open $FIFO, "<:encoding($ENCODING)", $FIFO_IN) {
             redo if -e $FIFO_IN && -p _;
@@ -326,20 +329,29 @@ sub main_loop
         close $FIFO;
         printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG{'in'};
 
-        my %shell_state = map { ( m/^(.*?)=(.*)/s ) } split /\0/;
+        #my @shell_keys;
+        foreach (split /\0/) {
+            ($k, $v) = m/^(.*?)=(.*)/s;
+            #push @shell_keys, $k;
+            $prompt_state{$k} = $v;
+        }
 
-        chdir $shell_state{'PWD'};
+        chdir $prompt_state{'PWD'};
 
-        my $PS1 = eval { compact(interp(\%shell_state, @PS1)) };
+        my $PS1 = eval { compact(interp(\%prompt_state, @PS1)) };
         unless (defined $PS1) {
             (my $err = $@) =~ s/\s*$//s;
             print STDERR "$RED$BOLD$NAME PS1 eval: $err$NO_COLOR\n";
-            $PS1 = $PS1_fallback->(\%shell_state);
+            $PS1 = $PS1_fallback->(\%prompt_state);
         }
 
         open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
         print $FIFO AngelPS1::Shell->ps1_finalize($PS1);
         close $FIFO;
+
+        # Cleanup for next iteration, but so far the keys of shell_state
+        # are always the same
+        #delete @prompt_state{@shell_keys};
     }
 }
 
