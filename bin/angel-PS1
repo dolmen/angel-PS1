@@ -150,28 +150,36 @@ $NAME =~ /^[-A-Z_][-A-Z_0-9]*$/si or die "invalid angel name";
 
 
 
-# Load the configuration from @INC
 my @PS1;
-if (defined $PROMPT) {
-    (my $src = "AngelPS1/Prompt/$PROMPT.pm") =~ s{::}{/};
-    @PS1 = do $src;
-    die "load error: $@" if $@;
-    die "$src load error: $!" if $!;
-    $CONFIG = $INC{$src};
-} else {
-    # Usually: $HOME/.config/angel-PS1/PS1.pl
-    $CONFIG = 'PS1.pl' unless defined $CONFIG;
-    # If no custom config, load instead AngelPS1/Prompt/Default.pm
-    foreach my $config ($CONFIG, 'AngelPS1/Prompt/Default.pm') {
+
+# Load the configuration from @INC
+{
+    my @configs;
+
+    if (defined $PROMPT) {
+        (my $mod = "AngelPS1/Prompt/$PROMPT.pm") =~ s{::}{/};
+        push @configs, $mod, "$PROMPT.PS1";
+    } elsif ($CONFIG) {
+        push @configs, $CONFIG;
+    } else {
+        # Usually: $HOME/.config/angel-PS1/angel.PS1
+        push @configs, "AngelPS1/Prompt/$NAME.pm", "$NAME.PS1", 'AngelPS1/Prompt/Default.pm';
+    }
+
+    undef $CONFIG;
+    foreach my $config (@configs) {
         undef $!;
         @PS1 = do { package AngelPS1::Prompt; do $config };
         die "load error: $@" if $@;
-        $CONFIG = $INC{$config};
-        # Break if loading is ok
-        last unless $!;
+        unless ($!) {
+            # Break if loading is ok
+            $CONFIG = $INC{$config};
+            last;
+        }
+        warn "$config load error: $!" if $! && $DEBUG{config};
+        $CONFIG = $config;
     }
-    die "load $CONFIG error: $!" if $!;
-    undef $!
+    die "$CONFIG load error: $!" if $!;
 }
 
 die "invalid prompt value returned by $CONFIG: empty list\n" unless @PS1;
