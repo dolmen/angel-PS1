@@ -66,13 +66,30 @@ if ($ENCODING) {
 
 our $APP = !defined scalar caller;  # Running as command or include
 $main::VERSION = $VERSION if $APP;
-my @DEBUG_DEFAULTS = qw<in time>;
-our %DEBUG = $ENV{APS1_DEBUG}
-    ? (map { ($_ => 1) }
-        ($ENV{APS1_DEBUG} eq '1'
-        ? (split /,/, $ENV{APS1_DEBUG})
-        : @DEBUG_DEFAULTS))
-    : ();
+
+our %DEBUG;
+# Initialize from $ENV{APS1_DEBUG}
+BEGIN {
+    my @DEBUG_DEFAULTS = qw< in time >;
+
+    sub _DEBUG
+    {
+        # $value is in $_[1] (instead of $_[0]) to be compatible with GetOptions
+        # callback
+        my $value = $_[1];
+        if ($value eq '' || $value eq '1') {
+            $DEBUG{$_} = 1 for @DEBUG_DEFAULTS
+        } else {
+            my @debug = split /,/, $value;
+            splice(@debug, 0, 1, @DEBUG_DEFAULTS) if $debug[0] eq '';
+            $DEBUG{$_} = 1 for @debug
+        }
+    }
+
+    _DEBUG(undef, $ENV{APS1_DEBUG})
+        if defined $ENV{APS1_DEBUG} && length $ENV{APS1_DEBUG};
+}
+
 our $SHELL;
 our $NAME = 'angel';
 our $VERBOSE = 0;
@@ -113,14 +130,7 @@ GetOptions(
     'p|prompt=s' => \$PROMPT,
     'v|verbose' => \$VERBOSE,
     'q|quiet' => sub { $VERBOSE = -1 },
-    'debug:s'  => sub {
-        my $value = $_[1];
-        if ($value eq '' || $value eq '1') {
-            %DEBUG = (%DEBUG, map { ($_ => 1) } @DEBUG_DEFAULTS)
-        } else {
-            $DEBUG{$_} = 1 for split /,/, $value
-        }
-    },
+    'debug:s'  => \&_DEBUG,
     'I=s' => \@INCLUDES,
 );
 
