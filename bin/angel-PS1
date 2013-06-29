@@ -183,7 +183,7 @@ my @PS1;
         die "load error: $@" if $@;
         unless ($!) {
             # Break if loading is ok
-            $CONFIG = $INC{$config};
+            $CONFIG = ref($INC{$config}) ? $config : $INC{$config};
             last;
         }
         warn "$config load error: $!" if $! && $DEBUG{config};
