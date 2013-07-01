@@ -98,7 +98,7 @@ sub colored
 sub ps1_is_static
 {
     my $PS1 = shift;
-    $#$PS1 == 1 && (ref $PS1->[0]) eq 'SCALAR'
+    $#$PS1 == 0 && (ref $PS1->[0]) eq 'SCALAR'
 }
 
 
