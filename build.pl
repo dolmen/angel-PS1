@@ -45,7 +45,7 @@ GetOptions(
 # Create the script
 
 open my $script, '>:utf8', 'angel-PS1';
-print $script "#!/usr/bin/perl\n", COPYRIGHT;
+print $script "#!/usr/bin/env perl\n", COPYRIGHT;
 close $script;
 open $script, '>>:raw', 'angel-PS1';
 print $script App::FatPacker->fatpack_file('bin/angel-PS1');
