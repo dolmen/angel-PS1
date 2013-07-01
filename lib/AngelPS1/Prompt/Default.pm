@@ -6,6 +6,7 @@ package AngelPS1::Prompt::Default;
 use AngelPS1::Shell ();
 use AngelPS1::Color;
 use AngelPS1::Plugin::Core;
+use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::Git;
 
@@ -19,8 +20,7 @@ return () unless AngelPS1::Shell->can('WorkingDir')
 # The prompt is the list returned as the last statement
 (
     (AngelPS1::Shell->name, ' ') x!! %AngelPS1::DEBUG,
-    [ $BLUE ],
-    sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) },
+    [ $BLUE ], Time,
     ' ',
     $TTYNAME,
     (sub { "(${COLUMNS}x${LINES})" }) x!! %AngelPS1::DEBUG,
