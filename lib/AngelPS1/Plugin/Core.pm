@@ -24,12 +24,12 @@ sub MarginLeft ($;$)
 {
     my $code = pop;
     die 'MarginLeft: not a CODEREF' unless ref($code) eq 'CODE';
-    my $margin = shift;
-    $margin = ' ' unless defined $margin;
+    my @margin = @_;
+    @margin = (' ') unless @margin;
     sub {
         my @result = expand(@_, $code);
         return unless @result;
-        ($margin, @result)
+        (@margin, @result)
     }
 }
 
