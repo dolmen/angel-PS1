@@ -6,7 +6,7 @@ package AngelPS1::Plugin::DateTime;
 use Exporter 'import';
 our @EXPORT = qw< Time >;
 
-sub Time
+sub Time ()
 {
     # FIXME this does not take in account if the user changes $ENV{TZ} in the
     # shell
