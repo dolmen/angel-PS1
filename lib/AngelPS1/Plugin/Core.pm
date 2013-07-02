@@ -8,7 +8,7 @@ our $VERSION = $AngelPS1::VERSION;
 use Exporter 5.57 'import';
 our @EXPORT = qw(Escape MarginLeft);
 
-use AngelPS1::Plugin;
+use AngelPS1::Compiler;
 
 
 sub Escape
@@ -23,10 +23,11 @@ sub Escape
 sub MarginLeft
 {
     my $code = pop;
+    die 'MarginLeft: not a CODEREF' unless ref($code) eq 'CODE';
     my $margin = shift;
     $margin = ' ' unless defined $margin;
     sub {
-        my @result = interp $code;
+        my @result = interp @_, $code;
         return unless @result;
         ($margin, @result)
     }
