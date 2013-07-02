@@ -63,6 +63,7 @@ sub compact
         }
     }
     return @out if wantarray;
+    return '' unless @out;
     die "invalid state after compact" if @out != 1 || ref $out[0] ne 'SCALAR';
     ${pop @out}
 }
