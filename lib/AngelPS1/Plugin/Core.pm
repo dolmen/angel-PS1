@@ -20,7 +20,7 @@ sub Escape
     }
 }
 
-sub MarginLeft
+sub MarginLeft ($;$)
 {
     my $code = pop;
     die 'MarginLeft: not a CODEREF' unless ref($code) eq 'CODE';

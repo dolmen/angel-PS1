@@ -2,7 +2,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 2;
+use Test::More tests => 6;
 
 use AngelPS1::Plugin::Core;
 use AngelPS1::Compiler;
@@ -14,6 +14,20 @@ my @MarginLeft = MarginLeft(' ', sub { $_[0]->{empty} ? () : ('Hello') });
 
 is(scalar compact(interp({ empty => 1 }, @MarginLeft)), '');
 is(scalar compact(interp({ empty => 0 }, @MarginLeft)), ' Hello');
+
+# Test prototype
+@MarginLeft = ('[', (MarginLeft '  ', sub { $_[0]->{empty} ? () : ('Hello') }), ']');
+
+is(scalar compact(interp({ empty => 1 }, @MarginLeft)), '[]');
+is(scalar compact(interp({ empty => 0 }, @MarginLeft)), '[  Hello]');
+
+# Test default margin
+@MarginLeft = ('[', (MarginLeft sub { $_[0]->{empty} ? () : ('Hello') }), ']');
+
+is(scalar compact(interp({ empty => 1 }, @MarginLeft)), '[]');
+is(scalar compact(interp({ empty => 0 }, @MarginLeft)), '[ Hello]');
+
+
 # TODO test with colors
 
 __END__
