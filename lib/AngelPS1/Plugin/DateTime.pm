@@ -4,7 +4,7 @@ use warnings;
 package AngelPS1::Plugin::DateTime;
 
 use Exporter 'import';
-our @EXPORT = qw< Time >;
+our @EXPORT = qw< Time StrFTime >;
 
 sub Time ()
 {
@@ -13,6 +13,14 @@ sub Time ()
     # TODO provoke an angel reload in that case
 
     sub { sprintf('%3$02d:%2$02d:%1$02d', localtime) }
+}
+
+sub StrFTime ($)
+{
+    my $format = shift;
+
+    require POSIX;
+    sub { POSIX::strftime($format, localtime) }
 }
 
 '$'
