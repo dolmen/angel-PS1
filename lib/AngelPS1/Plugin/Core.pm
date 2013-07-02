@@ -13,10 +13,10 @@ use AngelPS1::Compiler;
 
 sub Escape
 {
-    my @content = compact(@_);
+    my @content = reduce(@_);
     sub {
-        my @result = interp @content;
-        \ compact(@result);
+        my @result = expand(@_, @content);
+        \ reduce(@result);
     }
 }
 
@@ -27,7 +27,7 @@ sub MarginLeft ($;$)
     my $margin = shift;
     $margin = ' ' unless defined $margin;
     sub {
-        my @result = interp @_, $code;
+        my @result = expand(@_, $code);
         return unless @result;
         ($margin, @result)
     }

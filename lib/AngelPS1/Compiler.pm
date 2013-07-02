@@ -4,19 +4,19 @@ use warnings;
 package AngelPS1::Compiler;
 
 use Exporter 'import';
-our @EXPORT = qw<compact interp ps1_is_static>;
+our @EXPORT = qw< reduce expand ps1_is_static >;
 
 use AngelPS1::Shell ();
 use AngelPS1::Color '$NO_COLOR';
 
 
-sub interp
+sub expand
 {
     my $state = shift;
     my @args = @_;
     for(my $i=0; $i<=$#args; $i++) {
         if (ref($args[$i]) eq 'CODE') {
-            splice @args, $i, 1, interp($state, $args[$i]->($state));
+            splice @args, $i, 1, expand($state, $args[$i]->($state));
             redo; # A dynamic part can return dynamic parts!
         }
     }
@@ -25,10 +25,15 @@ sub interp
 
 
 
-# Compact a @PS1 definition: bare scalar are expanded to their escaped result
-# and scalar refs are concatenated, and colors (ARRAY) are expanded.
-# CODE refs are preserved as is, so we can do a multiple step compilation.
-sub compact
+# Reduce a @PS1 definition:
+# - bare scalar are expanded to their escaped result
+# - scalar refs are concatenated
+# - colors (ARRAY) are expanded
+# - CODE refs are preserved as is (for multiple step compilation)
+# In scalar context the result of that process is expected to be a single
+# scalar ref (which implies that no CODE appeared in the original arguments)
+# and that dereferenced scalar is returned.
+sub reduce
 {
     my @template = @_;
     my @out;
@@ -64,7 +69,7 @@ sub compact
     }
     return @out if wantarray;
     return '' unless @out;
-    die "invalid state after compact" if @out != 1 || ref $out[0] ne 'SCALAR';
+    die "invalid state after reduce" if @out != 1 || ref $out[0] ne 'SCALAR';
     ${pop @out}
 }
 
@@ -82,13 +87,13 @@ sub colored
         if ($r eq 'ARRAY') {
             $color_str = $v->[0];
             # TODO ensure that color strings are already PS1-escaped
-            $out .= compact(AngelPS1::Shell->ps1_invisible($color_str));
+            $out .= reduce(AngelPS1::Shell->ps1_invisible($color_str));
             next;
         }
         #print STDERR "$r $v\n";
         $out .= $r ? $$v : AngelPS1::Shell->ps1_escape($v);
         if (defined $color_str) {
-            $out .= compact(AngelPS1::Shell->ps1_invisible($NO_COLOR));
+            $out .= reduce(AngelPS1::Shell->ps1_invisible($NO_COLOR));
             undef $color_str;
         }
     }

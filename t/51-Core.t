@@ -12,20 +12,20 @@ AngelPS1::Shell->use('bash');
 
 my @MarginLeft = MarginLeft(' ', sub { $_[0]->{empty} ? () : ('Hello') });
 
-is(scalar compact(interp({ empty => 1 }, @MarginLeft)), '');
-is(scalar compact(interp({ empty => 0 }, @MarginLeft)), ' Hello');
+is(scalar reduce(expand({ empty => 1 }, @MarginLeft)), '');
+is(scalar reduce(expand({ empty => 0 }, @MarginLeft)), ' Hello');
 
 # Test prototype
 @MarginLeft = ('[', (MarginLeft '  ', sub { $_[0]->{empty} ? () : ('Hello') }), ']');
 
-is(scalar compact(interp({ empty => 1 }, @MarginLeft)), '[]');
-is(scalar compact(interp({ empty => 0 }, @MarginLeft)), '[  Hello]');
+is(scalar reduce(expand({ empty => 1 }, @MarginLeft)), '[]');
+is(scalar reduce(expand({ empty => 0 }, @MarginLeft)), '[  Hello]');
 
 # Test default margin
 @MarginLeft = ('[', (MarginLeft sub { $_[0]->{empty} ? () : ('Hello') }), ']');
 
-is(scalar compact(interp({ empty => 1 }, @MarginLeft)), '[]');
-is(scalar compact(interp({ empty => 0 }, @MarginLeft)), '[ Hello]');
+is(scalar reduce(expand({ empty => 1 }, @MarginLeft)), '[]');
+is(scalar reduce(expand({ empty => 0 }, @MarginLeft)), '[ Hello]');
 
 
 # TODO test with colors

@@ -198,7 +198,7 @@ die "invalid prompt value returned by $CONFIG: undef value\n" unless defined $PS
 print STDERR "${NAME}'s config: $CONFIG\n" if $DEBUG{config};
 
 
-@PS1 = compact @PS1;
+@PS1 = reduce @PS1;
 
 
 # Build the FIFO paths
@@ -247,7 +247,7 @@ if (-t STDOUT) {
 # So we don't install.
 exit 0 unless -t STDIN && exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 
-# If the prompt is static after compact(), just output it and don't install the
+# If the prompt is static after reduce(), just output it and don't install the
 # angel. This allows the user to use the power of the angel-PS1 prompt compiler
 # and plugins without the runtime cost.
 if (ps1_is_static(\@PS1) && AngelPS1::Shell->name !~ /csh$/) {
@@ -306,7 +306,7 @@ $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
 # PS1 fallback, if something goes wrong with the user defined prompt
 my $PS1_fallback = do {
-    my @fallback = compact(
+    my @fallback = reduce(
         "[$NAME sick!] ",
         AngelPS1::Shell->WorkingDir,
         AngelPS1::Shell->UserPrivSymbol,
@@ -315,7 +315,7 @@ my $PS1_fallback = do {
 
         ps1_is_static(\@fallback)
     ? do { my $fallback = ${$fallback[0]}; sub { $fallback } }
-    : sub { scalar compact(interp(@_, @fallback)) }
+    : sub { scalar reduce(expand(@_, @fallback)) }
 };
 
 
@@ -348,7 +348,7 @@ sub main_loop
 
         chdir $prompt_state{'PWD'};
 
-        my $PS1 = eval { compact(interp(\%prompt_state, @PS1)) };
+        my $PS1 = eval { reduce(expand(\%prompt_state, @PS1)) };
         unless (defined $PS1) {
             (my $err = $@) =~ s/\s*$//s;
             print STDERR "$RED$BOLD$NAME PS1 eval: $err$NO_COLOR\n";
