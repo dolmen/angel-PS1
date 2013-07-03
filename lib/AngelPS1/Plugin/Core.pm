@@ -11,14 +11,6 @@ our @EXPORT = qw(Escape MarginLeft);
 use AngelPS1::Compiler;
 
 
-sub Escape
-{
-    my @content = reduce(@_);
-    sub {
-        my @result = expand(@_, @content);
-        \ reduce(@result);
-    }
-}
 
 sub MarginLeft ($;$)
 {
