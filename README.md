@@ -40,9 +40,11 @@ recommend to *not yet* load it from `~/.bashrc`.
 
 - `bash`
 - `mksh`
+- `dash`
 
 #### Experimental
 
+- `ksh`: implemented, but not yet tested
 - `tcsh`: see [issue #1][2]
 
     [2]: https://github.com/dolmen/angel-PS1/issues/1
