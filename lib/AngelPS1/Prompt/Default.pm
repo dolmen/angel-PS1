@@ -7,6 +7,7 @@ use AngelPS1::Shell ();
 use AngelPS1::Color;
 use AngelPS1::Plugin::Core;
 use AngelPS1::Plugin::DateTime;
+use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::Git;
 
@@ -19,11 +20,18 @@ return () unless AngelPS1::Shell->can('WorkingDir')
 
 # The prompt is the list returned as the last statement
 (
-    (AngelPS1::Shell->name, ' ') x!! %AngelPS1::DEBUG,
+    TermTitle(
+        (
+            AngelPS1::Shell->name,
+            ' (',
+            # Columns and lines are dynamic!
+            sub { "${COLUMNS}x${LINES}) " },
+        ) x!! %AngelPS1::DEBUG,
+        AngelPS1::Shell->WorkingDir,
+    ),
     [ $BLUE ], Time,
     ' ',
     $TTYNAME,
-    (sub { "(${COLUMNS}x${LINES})" }) x!! %AngelPS1::DEBUG,
     ' ',
     # User name
     $< ? (scalar getpwuid $<) : (),
