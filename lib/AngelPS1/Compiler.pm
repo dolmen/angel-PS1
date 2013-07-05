@@ -47,15 +47,15 @@ sub reduce
         # ARRAY followed by a scalar or scalar ref
         # => replace by the colored expanded result
         if ($r eq 'ARRAY' && @template) {
-            my $r = ref $template[0];
+            $r = ref(my $content = shift @template);
             if ($r && $r ne 'SCALAR') {
-                push @out, $v, shift @template;
+                push @out, $v, $content;
                 next;
             }
             # Expand the color
             unshift @template,
                 AngelPS1::Shell->ps1_invisible($v->[0]),
-                shift @template,
+                $content,
                 AngelPS1::Shell->ps1_invisible($NO_COLOR);
             redo;
         }
