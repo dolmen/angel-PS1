@@ -53,8 +53,11 @@ sub reduce
                 next;
             }
             # Expand the color
-            $v = colored($v, shift @template);
-            $r = ref $v;
+            unshift @template,
+                AngelPS1::Shell->ps1_invisible($v->[0]),
+                shift @template,
+                AngelPS1::Shell->ps1_invisible($NO_COLOR);
+            redo;
         }
         if ($r) {
             $v = $$v;
@@ -71,33 +74,6 @@ sub reduce
     return '' unless @out;
     die "invalid state after reduce" if @out != 1 || ref $out[0] ne 'SCALAR';
     ${pop @out}
-}
-
-# Process a list of mixed scalar, scalar refs and ARRAYs.
-# ARRAYS are specifications for colors that must be applied to the following
-# Returns a scalar ref that represents shell escaped text.
-sub colored
-{
-    my @args = @_;
-    my $out = '';
-    my $color_str;
-    while (@args) {
-        my $v = shift @args;
-        my $r = ref $v;
-        if ($r eq 'ARRAY') {
-            $color_str = $v->[0];
-            # TODO ensure that color strings are already PS1-escaped
-            $out .= reduce(AngelPS1::Shell->ps1_invisible($color_str));
-            next;
-        }
-        #print STDERR "$r $v\n";
-        $out .= $r ? $$v : AngelPS1::Shell->ps1_escape($v);
-        if (defined $color_str) {
-            $out .= reduce(AngelPS1::Shell->ps1_invisible($NO_COLOR));
-            undef $color_str;
-        }
-    }
-    return \$out
 }
 
 
