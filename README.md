@@ -24,12 +24,16 @@ but he is there. Always around, but always discreet.
 
 ### Basic usage
 
-Try this in `bash`/`mksh`/`tcsh` to get a fancy prompt with the default
+Try this in your Unix/Linux shell to get a fancy prompt with the default
 settings:
 
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
+
+[`bash`](https://www.gnu.org/software/bash/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`tcsh`](http://tcsh.org/):
     eval `./angel-PS1`
+[`fish`](http://fishshell.com):
+    eval (./angel-PS1)
 
 **Note:** this project is still very young and is constantly evolving. I
 recommend to *not yet* load it from `~/.bashrc`.
@@ -44,6 +48,8 @@ recommend to *not yet* load it from `~/.bashrc`.
 
 #### Experimental
 
+- `fish`: incompatibility with the TermTitle plugin. Define instead the [`fish_title`
+  function](http://fishshell.com/docs/2.0/index.html#title).
 - `ksh`: implemented, but not yet tested
 - `tcsh`: see [issue #1][2]
 
