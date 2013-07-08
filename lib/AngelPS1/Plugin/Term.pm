@@ -15,6 +15,11 @@ use constant {
 
 sub TermTitle
 {
+    if (AngelPS1::Shell->name eq 'fish') {
+        require Carp;
+        Carp::carp("TermTitle is not supported on fish. See instead fish_title in the fish manual");
+        return
+    }
     # TODO use tsl/fsl from terminfo, if the terminfo definition has them
     # TODO Truncate to wsl
     # TODO check eslok and escape if necessary
