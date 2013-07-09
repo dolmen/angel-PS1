@@ -77,7 +77,7 @@ sub WorkingDir
     my $home = $ENV{'HOME'};
     sub {
         my $pwd = $_[0]->{'PWD'};
-        $pwd =~ s{^$home/}{~/}s;
+        $pwd =~ s{^$home(/|$)}{~$1}s;
         $pwd
     }
 }
