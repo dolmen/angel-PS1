@@ -22,7 +22,13 @@ sub ps1_invisible
 sub ps1_finalize
 {
     my $PS1 = $_[1];
-    substr($PS1, 0, 0, INVIS_CHAR . "\r") if index($PS1, INVIS_CHAR) >= 0;
+    if (index($PS1, INVIS_CHAR) >= 0) {
+        # Remove useless leave/enter invisible mode
+        my $inv = INVIS_CHAR;
+        $PS1 =~ s/$inv$inv//g;
+        # Insert the special sequence that tells the invisible mode marker
+        substr $PS1, 0, 0, INVIS_CHAR . "\r";
+    }
     $PS1
 }
 
