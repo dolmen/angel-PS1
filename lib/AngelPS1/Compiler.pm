@@ -15,8 +15,15 @@ sub expand
     my $state = shift;
     my @args = @_;
     LOOP: for(my $i=0; $i<=$#args; $i++) {
+        #warn $i;
         if (ref($args[$i]) eq 'CODE') {
+            #use B 'svref_2object';
+            #my $GV = svref_2object($args[$i])->GV;
+            #warn('expanding sub '.$GV->SAFENAME.' defined at '.$GV->FILE.' line '.$GV->LINE);
+            #undef $GV;
+
             splice @args, $i, 1, $args[$i]->($state);
+            #warn "OK";
             redo LOOP; # A dynamic part can return dynamic parts!
         }
     }
