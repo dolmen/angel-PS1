@@ -96,6 +96,7 @@ our $VERBOSE = 0;
 our $SHELL_PID = getppid();
 our $TERM = $ENV{TERM};
 my ($CONFIG, $PROMPT);
+my $RUN_TEST;
 
 
 
@@ -124,6 +125,7 @@ my @INCLUDES;
 
 GetOptions(
     'version' => sub { print "angel-PS1 version $VERSION\n"; exit 0 },
+    'test'    => \$RUN_TEST,
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'c|config=s' => \$CONFIG,
@@ -215,6 +217,11 @@ if (-t STDOUT) {
         # Get the canonical name
         $ENCODING = Encode::find_encoding($ENCODING)->name;
         warn "Your locale is not set to a known Unicode encoding (such as 'UTF-8') but to '$ENCODING'. Please report your use case to the Angel PS1 developers.\n"
+    }
+
+    if ($RUN_TEST) {
+        reduce(expand({ '?' => 0, PWD => $ENV{PWD} }, @PS1));
+        exit 0;
     }
 
     #print "${RED}Red!${NO_COLOR}\n";
