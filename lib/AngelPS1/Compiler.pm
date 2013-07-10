@@ -14,10 +14,10 @@ sub expand
 {
     my $state = shift;
     my @args = @_;
-    for(my $i=0; $i<=$#args; $i++) {
+    LOOP: for(my $i=0; $i<=$#args; $i++) {
         if (ref($args[$i]) eq 'CODE') {
             splice @args, $i, 1, expand($state, $args[$i]->($state));
-            redo; # A dynamic part can return dynamic parts!
+            redo LOOP; # A dynamic part can return dynamic parts!
         }
     }
     return @args
