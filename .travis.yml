@@ -7,7 +7,7 @@ perl:
 #before_install:
 #    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
 install:
-    - cpanm --notest App::FatPacker Git::Sub || { cat ~/.cpanm/build.log ; false ; }
+    - cpanm --notest App::FatPacker Git::Sub Test::MockTime || { cat ~/.cpanm/build.log ; false ; }
     - perl build.pl
 script:
     - echo "TERM=$TERM"
