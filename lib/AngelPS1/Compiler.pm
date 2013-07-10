@@ -64,8 +64,8 @@ sub reduce
         } else {
             $v = AngelPS1::Shell->ps1_escape($v);
         }
-        if (@out && ref($out[$#out]) eq 'SCALAR') {
-            ${$out[$#out]} .= $v
+        if (@out && ref($out[-1]) eq 'SCALAR') {
+            ${$out[-1]} .= $v
         } else {  # CODE refs (and anything else) are preserved
             push @out, \$v;
         }
