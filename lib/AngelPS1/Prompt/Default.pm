@@ -24,19 +24,20 @@ return () unless AngelPS1::Shell->can('WorkingDir')
         AngelPS1::Shell->name eq 'fish'
         ? ()
         : TermTitle(
-            (
+            (%AngelPS1::DEBUG
+            ? (
                 AngelPS1::Shell->name,
+                ' ',
+                $TTYNAME,
                 ' (',
                 # Columns and lines are dynamic!
                 sub { "${COLUMNS}x${LINES}) " },
-            ) x!! %AngelPS1::DEBUG,
+            ) : ()),
             AngelPS1::Shell->WorkingDir,
         )
     ),
     # fish has its own special handling through the fish_title function
     [ $BLUE ], Time,
-    ' ',
-    $TTYNAME,
     ' ',
     # User name
     $< ? (scalar getpwuid $<) : (),
