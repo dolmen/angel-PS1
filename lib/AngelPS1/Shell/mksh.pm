@@ -15,6 +15,7 @@ sub ps1_escape
 
 sub ps1_invisible
 {
+    return if @_ == 1;
     shift; # $class
     (\INVIS_CHAR, @_, \INVIS_CHAR)
 }
@@ -25,7 +26,7 @@ sub ps1_finalize
     if (index($PS1, INVIS_CHAR) >= 0) {
         # Remove useless leave/enter invisible mode
         my $inv = INVIS_CHAR;
-        $PS1 =~ s/$inv$inv//g;
+        $PS1 =~ s/\Q$inv$inv//g;
         # Insert the special sequence that tells the invisible mode marker
         substr $PS1, 0, 0, INVIS_CHAR . "\r";
     }
