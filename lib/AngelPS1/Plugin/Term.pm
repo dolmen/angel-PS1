@@ -8,6 +8,8 @@ our $VERSION = $AngelPS1::VERSION;
 use Exporter 5.57 'import';
 our @EXPORT = qw(TermTitle);
 
+use AngelPS1::Shell;
+
 use constant {
     TITLE_BEGIN => "\e]0;",
     TITLE_END   => "\a",
