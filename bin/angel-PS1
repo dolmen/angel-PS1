@@ -389,8 +389,14 @@ angel-PS1 - The Angel's Prompt
 
 =head1 SYNOPSIS
 
-    eval `angel-PS1 [--name <name>] [-p <prompt> | -c <config>]
-                    [-I <dir>]`
+Install a prompt:
+
+    eval `angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>]`
+
+Test a prompt definition:
+
+    angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>]
+              [--shell <shell>] --test
 
 =head1 SHELLS
 
