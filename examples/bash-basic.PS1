@@ -1,3 +1,5 @@
+#!perl
+#
 # Basic bash example: same as PS1='\w\$ '
 #
 # It uses bash-specific sequences, bypassing the cross-shell portability
