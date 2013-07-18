@@ -220,7 +220,7 @@ if ($RUN_TEST || -t STDOUT) {
     }
 
     if ($RUN_TEST) {
-        reduce(expand({ '?' => 0, PWD => $ENV{PWD} }, @PS1));
+        () = reduce(expand({ '?' => 0, PWD => $ENV{PWD} }, @PS1));
         exit 0;
     }
 
