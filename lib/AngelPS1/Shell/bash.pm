@@ -30,8 +30,14 @@ sub ps1_finalize
     "$PS1\n"
 }
 
+sub shell_code_static
+{
+    my ($class, $PS1, %options) = @_;
+    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n}
+}
+
 # Returns the code to send to the shell
-sub shell_code
+sub shell_code_dynamic
 {
     my ($class, %options) = @_;
     my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =

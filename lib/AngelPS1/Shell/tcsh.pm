@@ -35,7 +35,7 @@ sub ps1_finalize
     qq{set prompt = '$prompt'};
 }
 
-sub shell_code
+sub shell_code_dynamic
 {
     my ($class, %options) = @_;
     my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =

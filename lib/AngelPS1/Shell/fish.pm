@@ -23,7 +23,7 @@ sub ps1_finalize
 }
 
 
-sub shell_code
+sub shell_code_dynamic
 {
     my ($class, %options) = @_;
     my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =

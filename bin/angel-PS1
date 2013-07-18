@@ -257,9 +257,17 @@ exit 0 unless -t STDIN && exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 # If the prompt is static after reduce(), just output it and don't install the
 # angel. This allows the user to use the power of the angel-PS1 prompt compiler
 # and plugins without the runtime cost.
-if (ps1_is_static(\@PS1) && AngelPS1::Shell->name !~ /csh$/) {
+if (ps1_is_static(\@PS1)
+    and my $shell_code_static = AngelPS1::Shell->can('shell_code_static')) {
+
     (my $PS1 = ${$PS1[0]}) =~ s/'/'\\''/g;
-    print qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n};
+
+    print AngelPS1::Shell->$shell_code_static(
+        $PS1,
+        name  => $NAME,
+        debug => \%DEBUG,
+    );
+
     exit 0
 }
 
@@ -272,7 +280,7 @@ POSIX::mkfifo($FIFO_OUT, 0600) or die "Can't create fifo $FIFO_OUT: $!";
 my $child = fork();
 die if $child == -1;
 if ($child) {
-    print AngelPS1::Shell->shell_code(
+    print AngelPS1::Shell->shell_code_dynamic(
         name  => $NAME,
         debug => \%DEBUG,
         in    => $FIFO_IN,
