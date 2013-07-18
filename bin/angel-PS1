@@ -410,6 +410,55 @@ Test a prompt definition:
     angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>]
               [--shell <shell>] --test
 
+=head1 CONFIGURATION
+
+The default prompt definition comes from C<AngelPS1::Prompt::Default> that is
+embeded in C<angel-PS1>.
+
+You can use your own prompt definition defined in a file.
+
+The prompt definition is searched as a file in perl's standard C<@INC> to which
+F<$HOME/.config/angel-PS1> and F</etc/angel-PS1> have been preprended. See
+option C<-I> to prepend more paths.
+
+The following settings are used to determine the path/name of the file relative
+to an C<@INC> directory (I<C<$ANGEL>> is the name of the angel (see the
+C<--name> option, C<angel> is the default):
+
+=over 4
+
+=item *
+
+if I<C<$PROMPT>> is set with the C<--prompt> option:
+
+=over 4
+
+=item -
+
+the C<AngelPS1::Prompt::I<$PROMPT>> perl module:
+F<AngelPS1/Prompt/I<$PROMPT>.pm>
+
+=item -
+
+the F<I<$PROMPT>.PS1> file
+
+=back
+
+=item *
+
+if C<--config I<$CONFIG>> option is given, the F<I<$CONFIG>> file
+
+=item *
+
+the C<AngelPS1::Prompt::I<$NAME>> perl module:
+F<AngelPS1/Prompt/I<$NAME>.pm>
+
+=item *
+
+the F<I<$NAME>.PS1> file
+
+=back
+
 =head1 SHELLS
 
 angel-PS1 is compatible with:
