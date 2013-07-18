@@ -397,9 +397,13 @@ angel-PS1 - The Angel's Prompt
 
 =head1 SYNOPSIS
 
-Install a prompt:
+Install a prompt (bash/mksh/dash):
 
     eval `angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>]`
+
+Install a prompt (fish):
+
+    eval (angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>])
 
 Test a prompt definition:
 
@@ -419,6 +423,14 @@ bash
 =item *
 
 mksh
+
+=item *
+
+dash
+
+=item *
+
+fish
 
 =back
 
