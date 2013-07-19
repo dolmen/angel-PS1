@@ -234,7 +234,7 @@ if ($RUN_TEST || -t STDOUT) {
           "This is free software, and you are welcome to redistribute it\n",
           "under certain conditions;\n",
           "Run \"sed -n '2,19{s/.//;p}' $script | iconv -f UTF-8\" for details.\n\n";
-    print STDERR "usage: eval `$0`\n";
+    print STDERR "usage: eval `$0`\n\nSee 'perldoc angel-PS1' for detailed help.\n";
 
     #print 'Running as an app: ', $APP, "\n";
     #print "\$Bin: $FindBin::Bin\n";
@@ -485,9 +485,11 @@ fish
 
 =head1 SUPPORT
 
+Announces of new releases: L<https://twitter.com/nglPS1>
+
 Bug tracker: L<https://github.com/dolmen/angel-PS1/issues>
 
-Announces of new releases: L<https://twitter.com/nglPS1>
+Interactive support using IRC: L<irc://irc.perl.org#angel-PS1>
 
 =head1 AUTHOR
 
