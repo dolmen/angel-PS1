@@ -34,11 +34,11 @@ sub use
             # TODO try to distinguish load errors (file not found) from compile errors
             # by pushing a sub on @INC that will be called.
             die "$shell is not a supported shell.\n" unless eval { require $src };
-            my $pkg = "${class}::$shell";
-            # Make AngelPS1::Shell a sub class of $pkg
-            our @ISA = ($pkg);
-            $name = $shell;
         }
+
+        # Make AngelPS1::Shell a sub class of the loaded module
+        our @ISA = ("${class}::$shell");
+        $name = $shell;
     }
 }
 
