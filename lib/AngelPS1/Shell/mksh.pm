@@ -55,7 +55,7 @@ sub shell_code_dynamic
 APS1_PS1="\$PS1";
 $function_name()
 {
-    local err=\$?;
+    typeset err=\$?;
     [[ -e '$IN' ]] || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
     printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
     cat $OUT || $NAME leave ;
