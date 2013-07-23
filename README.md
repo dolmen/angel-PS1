@@ -30,7 +30,7 @@ settings:
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
 
-[`bash`](https://www.gnu.org/software/bash/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`tcsh`](http://tcsh.org/):
+[`bash`](https://www.gnu.org/software/bash/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
     eval `./angel-PS1`
 [`fish`](http://fishshell.com):
     eval (./angel-PS1)
@@ -45,6 +45,7 @@ recommend to *not yet* load it from `~/.bashrc`.
 - `bash`
 - `mksh`
 - `dash`
+- `ksh`
 
 #### Experimental
 
@@ -53,7 +54,6 @@ recommend to *not yet* load it from `~/.bashrc`.
   function](http://fishshell.com/docs/2.0/index.html#title).
   - [issue #2][3] / [fish-shell #380][4] (minor issue, no workaround)
   - [fish-shell #908][5] (workaround implemented)
-- `ksh`: implemented, but not yet tested
 - `tcsh`: see [issue #1][2] (major issue)
 
     [2]: https://github.com/dolmen/angel-PS1/issues/1
