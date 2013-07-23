@@ -5,9 +5,9 @@ package AngelPS1::Shell;
 
 my %ALIASES = (
     dash  => 'POSIX',
-    ksh   => 'mksh',
-    ksh88 => 'mksh',
-    ksh93 => 'mksh',
+    ksh   => 'ksh93',
+    # Not tested
+    ksh88 => 'POSIX',
 );
 
 
