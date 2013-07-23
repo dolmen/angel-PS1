@@ -33,12 +33,18 @@ sub ps1_finalize
     $PS1
 }
 
+sub ps1_function_name
+{
+    '-angel-PS1'
+}
+
 sub shell_code_dynamic
 {
     my ($class, %options) = @_;
     my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
         @options{qw<debug name in out pid env>};
 
+    my $function_name = $class->ps1_function_name($NAME);
     my $time_debug = $DEBUG->{'time'} ? q|time -- | : '';
 
     # The shell code will be evaluated with eval as a single line
@@ -47,14 +53,14 @@ sub shell_code_dynamic
     <<EOF;
 [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
--angel-PS1()
+$function_name()
 {
     local err=\$?;
     [[ -e '$IN' ]] || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
     printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
     cat $OUT || $NAME leave ;
 } ;
-PS1='\$(${time_debug}-angel-PS1)' ;
+PS1='\$($time_debug$function_name)' ;
 APS1_NAME=$NAME ;
 APS1_PID=$PID ;
 $NAME()
@@ -65,11 +71,11 @@ $NAME()
         kill \$APS1_PID 2>/dev/null ;
         rm -f -- '$IN' '$OUT' ;
         unset APS1_PS1 APS1_PID APS1_NAME ;
-        unset -f -- $NAME -angel-PS1 ;;
+        unset -f -- $NAME $function_name ;;
     mute|off)
         PS1="\$APS1_PS1" ;;
     unmute|on)
-        PS1='\$(${time_debug}-angel-PS1)' ;;
+        PS1='\$($time_debug$function_name)' ;;
     *)
         echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
