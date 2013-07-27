@@ -22,5 +22,42 @@ sub loadavg
     $loadavg
 }
 
+sub _slurp_line
+{
+    open my $f, '<', $_[0]
+        or return;
+    my $line = readline $f;
+    chomp $line;
+    $line
+}
+
+# If batteries found, returns a closure that returns 2 values:
+# - the battery level as a float between 0 and 1
+# - a boolean; 1 if charging, else discharging
+sub fetch_battery
+{
+    # List devices
+    opendir my $power_devices, '/sys/class/power_supply'
+        or return;
+    my @batteries =
+        map { "/sys/class/power_supply/$_" }
+        grep { index($_, 'BAT') == 0 }
+        readdir $power_devices;
+    close $power_devices;
+    return unless @batteries;
+    if (@batteries != 1) {
+        warn "only one battery supported. Patch welcome!"
+    }
+    my $bat = shift @batteries;
+
+    # Sub that will query the battery status
+    return sub {
+        my $charge_full = _slurp_line("$bat/charge_full") or return;
+        my $charge_now = _slurp_line("$bat/charge_now") or return;
+        my $status = _slurp_line("$bat/status") or return;
+        return ($charge_now / $charge_full, $status ne 'Discharging');
+    }
+}
+
 '$';
 # vim:set et ts=8 sw=4 sts=4:
