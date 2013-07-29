@@ -6,25 +6,18 @@ use warnings;
 use Test::More;
 use File::Spec ();
 
-opendir my $shells_dir, File::Spec->catdir(qw< lib AngelPS1 Shell >)
-    or die;
-
-my @shells = map { /^([a-z].*)\.pm$/ ? ($1) : () }
-             readdir($shells_dir);
-
-closedir $shells_dir;
+my @shells =
+    map { substr($_, 1+rindex($_, '/'), -3) }
+    <lib/AngelPS1/Shell/*.pm>;
 
 my $shell_specific_re = do {
     my $re = join('|', @shells);
     qr/^($re)-/
 };
 
-opendir my $examples_dir, File::Spec->catdir(qw< examples >)
-    or die;
-my @examples = map { File::Spec->catfile('examples', $_) }
-               grep { /\.PS1$/ && ! /^(\.|die\W)/ }
-               readdir $examples_dir;
-closedir $examples_dir;
+my @examples =
+    grep { $_ ne 'examples/die.PS1' }
+    <examples/*.PS1>;
 
 foreach my $ex (@examples) {
     note $ex;
