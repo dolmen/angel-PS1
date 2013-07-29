@@ -5,6 +5,7 @@ use Test::More;
 
 my @shells =
     map {
+        substr($_, 0, 4, ''); # remove 'lib/'
         require $_;
         s{^.*/([^/]*)\.pm$}{AngelPS1::Shell::$1};
         $_
