@@ -3,6 +3,7 @@ use warnings;
 
 package AngelPS1::Shell::tcsh;
 
+
 sub ps1_escape
 {
     # csh special symbols
@@ -106,6 +107,11 @@ EOF
 sub WorkingDir
 {
     \'%~'
+}
+
+sub Hostname
+{
+    \'%h'
 }
 
 sub UserPrivSymbol

@@ -95,6 +95,11 @@ sub WorkingDir
     \'\w'
 }
 
+sub Hostname
+{
+    \'h'
+}
+
 sub UserPrivSymbol
 {
     \'\$'

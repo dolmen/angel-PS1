@@ -19,6 +19,7 @@ my @methods = qw<
     ps1_finalize
 
     WorkingDir
+    Hostname
     UserPrivSymbol
 >;
 

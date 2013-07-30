@@ -101,6 +101,12 @@ sub WorkingDir
     }
 }
 
+sub Hostname
+{
+    require Sys::Hostname;
+    Sys::Hostname::hostname()
+}
+
 sub UserPrivSymbol
 {
     \( $< ? '$' : '#' )
