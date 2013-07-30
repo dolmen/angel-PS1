@@ -3,20 +3,27 @@ use warnings;
 
 package AngelPS1::Shell::ksh93;
 
-use AngelPS1::Shell::mksh ();
-our @ISA = ('AngelPS1::Shell::mksh');
+use AngelPS1::Shell::POSIX ();
+our @ISA = ('AngelPS1::Shell::POSIX');
 
-sub ps1_function_name
+# ksh93 doesn't have 'local'
+sub shell_local
 {
-    '_angel_PS1'
+    'typeset'
 }
 
-sub ps1_invisible
+# Contrary to mksh documentation, ks93 (at least as packaged on
+# Ubuntu as version 93u-1) does not support the "\001\r" trick
+# So we do not overload ps1_invisible
+
+
+sub shell_code_dynamic
 {
-    shift;
-    # Contrary to mksh documentation, ks93 (at least as packaged on
-    # Ubuntu as version 93u-1) does not support the "\001\r" trick
-    @_
+    my $class = shift;
+    my $shell_code = $class->SUPER::shell_code_dynamic(@_);
+    # Replace [ ... ] (external 'test' command) with [[ ... ]] (internal)
+    $shell_code =~ s{([\[\]])}{$1$1}g;
+    return $shell_code
 }
 
 '$';
