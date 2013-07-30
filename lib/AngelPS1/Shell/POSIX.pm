@@ -36,6 +36,13 @@ sub ps1_time_debug
     ''
 }
 
+# The shell keyword used to declare a local variable
+# (ksh doesn't have 'local')
+sub shell_local
+{
+    'local'
+}
+
 sub shell_code_dynamic
 {
     my ($class, %options) = @_;
@@ -44,6 +51,7 @@ sub shell_code_dynamic
 
     my $function_name = $class->ps1_function_name($NAME);
     my $time_debug = $DEBUG->{'time'} ? $class->ps1_time_debug : '';
+    my $local = $class->shell_local;
 
     # The shell code will be evaluated with eval as a single line
     # so statements must be properly terminated with ';'
@@ -53,7 +61,7 @@ sub shell_code_dynamic
 APS1_PS1="\$PS1";
 $function_name()
 {
-    local err=\$?;
+    $local err=\$?;
     [ -e '$IN' ] || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
     printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
     cat $OUT || $NAME leave ;
