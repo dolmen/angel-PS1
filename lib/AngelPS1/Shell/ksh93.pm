@@ -17,6 +17,13 @@ sub shell_local
 # So we do not overload ps1_invisible
 
 
+# Called from AngelPS1::Shell::POSIX->shell_code_dynamic
+sub ps1_time_debug
+{
+    # Note that "time -- " doesn't work (/usr/bin/time is used in that case)
+    q|time |;
+}
+
 sub shell_code_dynamic
 {
     my $class = shift;
