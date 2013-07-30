@@ -3,6 +3,10 @@ use warnings;
 
 package AngelPS1::Shell::mksh;
 
+use AngelPS1::Shell::POSIX ();
+our @ISA = ('AngelPS1::Shell::POSIX');
+
+
 use constant INVIS_CHAR => "\x01";
 
 sub ps1_escape
@@ -47,64 +51,11 @@ sub ps1_time_debug
 
 sub shell_code_dynamic
 {
-    my ($class, %options) = @_;
-    my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
-        @options{qw<debug name in out pid env>};
-
-    my $function_name = $class->ps1_function_name($NAME);
-    my $time_debug = $DEBUG->{'time'} ? $class->ps1_time_debug : '';
-
-    # The shell code will be evaluated with eval as a single line
-    # so statements must be properly terminated with ';'
-    # No shell comments allowed
-    <<EOF;
-[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
-APS1_PS1="\$PS1";
-$function_name()
-{
-    typeset err=\$?;
-    [[ -e '$IN' ]] || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
-    printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
-    cat $OUT || $NAME leave ;
-} ;
-PS1='\$($time_debug$function_name)' ;
-APS1_NAME=$NAME ;
-APS1_PID=$PID ;
-$NAME()
-{
-    case "\$1" in
-    leave|quit|go-away)
-        PS1="\$APS1_PS1" ;
-        kill \$APS1_PID 2>/dev/null ;
-        rm -f -- '$IN' '$OUT' ;
-        unset APS1_PS1 APS1_PID APS1_NAME ;
-        unset -f -- $NAME $function_name ;;
-    mute|off)
-        PS1="\$APS1_PS1" ;;
-    unmute|on)
-        PS1='\$($time_debug$function_name)' ;;
-    *)
-        echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
-        return 1 ;;
-    esac ;
-} ;
-trap '$NAME leave' EXIT ;
-EOF
-}
-
-sub WorkingDir
-{
-    my $home = $ENV{'HOME'};
-    sub {
-        my $pwd = $_[0]->{'PWD'};
-        $pwd =~ s{^$home(/|$)}{~$1}s;
-        $pwd
-    }
-}
-
-sub UserPrivSymbol
-{
-    \( $< ? '$' : '#' )
+    my $class = shift;
+    my $shell_code = $class->SUPER::shell_code_dynamic(@_);
+    # Replace [ ... ] (external 'test' command) with [[ ... ]] (internal)
+    $shell_code =~ s{([\[\]])}{$1$1}g;
+    return $shell_code
 }
 
 '$';
