@@ -40,6 +40,11 @@ sub ps1_function_name
     '-angel-PS1'
 }
 
+sub ps1_time_debug
+{
+    q|time -- |;
+}
+
 sub shell_code_dynamic
 {
     my ($class, %options) = @_;
@@ -47,7 +52,7 @@ sub shell_code_dynamic
         @options{qw<debug name in out pid env>};
 
     my $function_name = $class->ps1_function_name($NAME);
-    my $time_debug = $DEBUG->{'time'} ? q|time -- | : '';
+    my $time_debug = $DEBUG->{'time'} ? $class->ps1_time_debug : '';
 
     # The shell code will be evaluated with eval as a single line
     # so statements must be properly terminated with ';'
