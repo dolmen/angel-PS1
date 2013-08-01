@@ -15,6 +15,9 @@ use AngelPS1::Compiler;
 sub MarginLeft ($;$)
 {
     my $code = pop;
+    if (!ref($code)) {
+        return length($code) ? " $code" : $code;
+    }
     die 'MarginLeft: not a CODEREF' unless ref($code) eq 'CODE';
     my @margin = @_;
     @margin = (' ') unless @margin;
