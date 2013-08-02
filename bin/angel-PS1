@@ -397,7 +397,7 @@ angel-PS1 - The Angel's Prompt
 
 =head1 SYNOPSIS
 
-Install a prompt (bash/mksh/dash):
+Install a prompt (bash/mksh/dash/tcsh/ksh93):
 
     eval `angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>]`
 
