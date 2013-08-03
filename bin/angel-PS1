@@ -405,7 +405,7 @@ Install a prompt (fish):
 
     eval (angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>])
 
-Test a prompt definition:
+Test a prompt definition (check that it can be compiled):
 
     angel-PS1 [--name <name>] [-I <dir>] [-p <prompt> | -c <config>]
               [--shell <shell>] --test
