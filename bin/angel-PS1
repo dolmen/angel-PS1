@@ -344,9 +344,13 @@ sub main_loop
     my $FIFO;
     my %prompt_state;
     my ($k, $v);
+    my ($open_in, $open_out) = (
+        "<:encoding($ENCODING)",
+        ">:encoding($ENCODING)",
+    );
 
     for (;;) {
-        unless (open $FIFO, "<:encoding($ENCODING)", $FIFO_IN) {
+        unless (open $FIFO, $open_in, $FIFO_IN) {
             redo if -e $FIFO_IN && -p _;
             last;
         }
@@ -370,7 +374,7 @@ sub main_loop
             $PS1 = $PS1_fallback->(\%prompt_state);
         }
 
-        open $FIFO, ">:encoding($ENCODING)", $FIFO_OUT;
+        open $FIFO, $open_out, $FIFO_OUT;
         print $FIFO AngelPS1::Shell->ps1_finalize($PS1);
         close $FIFO;
 
