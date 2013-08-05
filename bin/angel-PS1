@@ -343,6 +343,8 @@ sub main_loop
 
     my $FIFO;
     my %prompt_state;
+    require Cwd;
+    my $old_cwd = Cwd::getcwd();
     my ($k, $v);
     my ($open_in, $open_out) = (
         "<:encoding($ENCODING)",
@@ -365,7 +367,7 @@ sub main_loop
             $prompt_state{$k} = $v;
         }
 
-        chdir $prompt_state{'PWD'};
+        chdir $prompt_state{'PWD'} if $prompt_state{'PWD'} ne $old_cwd;
 
         my $PS1 = eval { reduce(expand(\%prompt_state, @PS1)) };
         unless (defined $PS1) {
