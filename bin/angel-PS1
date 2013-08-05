@@ -310,10 +310,7 @@ open STDOUT, '>', '/dev/null';
 
 
 # Ignore ^C sent to the terminal
-$SIG{INT} = sub {
-    print STDERR "Ctrl+C !\n";
-    #exit 0;
-};
+$SIG{INT} = 'IGNORE';
 # Clean exits that will call our END block
 $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
