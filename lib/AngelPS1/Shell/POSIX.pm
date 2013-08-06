@@ -93,6 +93,13 @@ EOF
 
 sub WorkingDir
 {
+    sub {
+        $_[0]->{'PWD'}
+    }
+}
+
+sub WorkingDir_Tilde
+{
     my $home = $ENV{'HOME'};
     sub {
         my $pwd = $_[0]->{'PWD'};
