@@ -92,6 +92,11 @@ EOF
 
 sub WorkingDir
 {
+    \'$PWD'
+}
+
+sub WorkingDir_Tilde
+{
     \'\w'
 }
 
