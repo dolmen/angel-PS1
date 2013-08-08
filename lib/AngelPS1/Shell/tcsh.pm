@@ -106,6 +106,11 @@ EOF
 
 sub WorkingDir
 {
+    \'%/'
+}
+
+sub WorkingDir_Tilde
+{
     \'%~'
 }
 

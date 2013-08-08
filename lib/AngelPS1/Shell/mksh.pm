@@ -58,5 +58,11 @@ sub shell_code_dynamic
     return $shell_code
 }
 
+sub shell_code_static
+{
+    my ($class, $PS1, %options) = @_;
+    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n}
+}
+
 '$';
 # vim:set et ts=8 sw=4 sts=4:
