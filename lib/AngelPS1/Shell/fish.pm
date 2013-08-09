@@ -85,7 +85,9 @@ EOF
 
 sub WorkingDir
 {
-    $_[0]->{'PWD'}
+    sub {
+        $_[0]->{'PWD'}
+    }
 }
 
 sub WorkingDir_Tilde
