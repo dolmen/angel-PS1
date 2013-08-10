@@ -124,7 +124,7 @@ if (-t STDERR) {
 my @INCLUDES;
 
 GetOptions(
-    'version' => sub { print "angel-PS1 version $VERSION\n"; exit 0 },
+    'version' => sub { print "angel-PS1 $VERSION\n"; exit 0 },
     'test'    => \$RUN_TEST,
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
