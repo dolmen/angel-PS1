@@ -38,7 +38,9 @@ use AngelPS1::Shell ();
 use AngelPS1::Compiler;
 use AngelPS1::Color;
 
-use lib "$ENV{HOME}/.config/angel-PS1", '/etc/angel-PS1';
+# http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+use lib (exists $ENV{XDG_CONFIG_HOME} ? "$ENV{XDG_CONFIG_HOME}/angel-PS1" : "$ENV{HOME}/.config/angel-PS1"),
+        '/etc/xdg/angel-PS1';
 
 
 # Extract encoding name from the locale
@@ -421,8 +423,9 @@ embeded in C<angel-PS1>.
 You can use your own prompt definition defined in a file.
 
 The prompt definition is searched as a file in perl's standard C<@INC> to which
-F<$HOME/.config/angel-PS1> and F</etc/angel-PS1> have been preprended. See
-option C<-I> to prepend more paths.
+F<$XDG_CONFIG_DIR/angel-PS1> (with fallback to F<$HOME/.config/angel-PS1>)
+and F</etc/xdg/angel-PS1> have been preprended. See option C<-I> to prepend
+more paths.
 
 The following settings are used to determine the path/name of the file relative
 to an C<@INC> directory (I<C<$ANGEL>> is the name of the angel (see the
