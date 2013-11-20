@@ -131,6 +131,8 @@ sub plus
 package # no index: private package
     AngelPS1::Chrome::Color;
 
+our @ISA = (AngelPS1::Chrome::);
+
 use overload
     '""' => 'term',
     '/' => 'over',
@@ -154,6 +156,8 @@ sub term
 
 package # no index: private package
     AngelPS1::Chrome::Flags;
+
+our @ISA = (AngelPS1::Chrome::);
 
 use overload
     '""' => 'term',
