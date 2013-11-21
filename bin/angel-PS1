@@ -36,7 +36,7 @@ use FindBin;
 # TODO build.pl should inline those modules
 use AngelPS1::Shell ();
 use AngelPS1::Compiler;
-use AngelPS1::Color;
+use AngelPS1::Chrome qw<Red Yellow Bold Reset>;
 
 # http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
 use lib (exists $ENV{XDG_CONFIG_HOME} ? "$ENV{XDG_CONFIG_HOME}/angel-PS1" : "$ENV{HOME}/.config/angel-PS1"),
@@ -107,17 +107,19 @@ $SIG{__DIE__} = sub {
     if (-t STDERR) {
         my $last = pop @_;
         $last =~ s/(\n)$//s;
-        die "$RED$FindBin::Script: ", @_, $last, $NO_COLOR, ($1 ? ($1) : ());
+        die((Red+Reset), "$FindBin::Script: ", @_, $last, Reset, ($1 ? ($1) : ()));
     } else {
         die "$FindBin::Script: ", @_;
     }
 };
 
 if (-t STDERR) {
+    my $YellowBold = "".(Yellow+Bold);
+    my $Reset = "".Reset;
     $SIG{__WARN__} = sub {
         my $last = pop;
         $last =~ s/(\n)$//s;
-        warn "$YELLOW$BOLD", @_, $last, $NO_COLOR, ($1 ? ($1) : ());
+        warn $YellowBold, @_, $last, $Reset, ($1 ? ($1) : ());
     };
 }
 
@@ -226,7 +228,7 @@ if ($RUN_TEST || -t STDOUT) {
         exit 0;
     }
 
-    #print "${RED}Red!${NO_COLOR}\n";
+    #print Red, "Red!", Reset, "\n";
 
     print "angel-PS1 $VERSION\n";
 
@@ -371,7 +373,7 @@ sub main_loop
         my $PS1 = eval { reduce(expand(\%prompt_state, @PS1)) };
         unless (defined $PS1) {
             (my $err = $@) =~ s/\s*$//s;
-            print STDERR "$RED$BOLD$NAME PS1 eval: $err$NO_COLOR\n";
+            print STDERR Red + Bold, $NAME, " PS1 eval: ", $err, Reset, "\n";
             $PS1 = $PS1_fallback->(\%prompt_state);
         }
 
