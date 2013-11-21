@@ -10,7 +10,7 @@ BEGIN {
 }
 
 use AngelPS1::Util qw< which run one_line >;
-use AngelPS1::Color;
+use AngelPS1::Chrome;
 
 my $git = eval { which 'git' };
 sub git
@@ -75,26 +75,26 @@ sub GitInfo
             my ($del) = ($shortstat =~ /([0-9]+) deletions?\(/);
 
             push @out,
-                [ $RED ], $branch,
+                Red, [ $branch ],
                 '(',
-                    [ $MAGENTA ],
-                    ($ins ? ("+$ins" . ($del ? "/" : '')) : '') . ($del ? "-$del" : ''),
-                    ($local_commits ? (',', [ $YELLOW ], $local_commits) : ()),
+                    Magenta,
+                    [ ($ins ? ("+$ins" . ($del ? "/" : '')) : '') . ($del ? "-$del" : '') ],
+                    ($local_commits ? (',', Yellow, [ $local_commits ]) : ()),
                 ')';
         } elsif ($local_commits) {
             push @out,
-                [ $YELLOW ], $branch,
-                '(', [ $YELLOW ], $local_commits, ')';
+                Yellow, [ $branch ],
+                '(', Yellow, [ $local_commits ], ')';
         } else {
-            push @out, [ $GREEN ], $branch;
+            push @out, Green, [ $branch ];
         }
 
         if (-f "$git_dir/refs/stash") {
-            push @out, [ $RED ], '+';
+            push @out, Red, [ '+' ];
         }
 
         if ($untracked) {
-            push @out, [ $RED ], '*';
+            push @out, Red, [ '*' ];
         }
 
         # TODO Git mark

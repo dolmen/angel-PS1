@@ -4,7 +4,7 @@ use warnings;
 package AngelPS1::Prompt::Default;
 
 use AngelPS1::Shell ();
-use AngelPS1::Color;
+use AngelPS1::Chrome;
 use AngelPS1::Plugin::Core;
 use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term;
@@ -37,17 +37,17 @@ return () unless AngelPS1::Shell->can('WorkingDir')
         )
     ),
     # fish has its own special handling through the fish_title function
-    [ $BLUE ], Time,
+    Blue, [ Time ],
     ' ',
     # User name
     $< ? (scalar getpwuid $<) : (),
-    sub { ((-w $_[0]->{PWD} ? [ $GREEN ] : [ $RED ]), ':') },
+    sub { ((-w $_[0]->{PWD} ? Green : Red), [ ':' ]) },
     AngelPS1::Shell->WorkingDir,
     ' ',
     GitInfo,
-    sub { my $err = $_[0]->{'?'}; $err == 0 ? () : ([ $RED ], $err, ' ') },
+    sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (Red, [ $err ], ' ') },
     # User mark: root => #    else  $
-    ($< ? ([ $BOLD ], AngelPS1::Shell->UserPrivSymbol) : ([ "$BOLD$RED" ], '#')),
+    ($< ? (Bold, [ AngelPS1::Shell->UserPrivSymbol ]) : (Red + Bold, [ '#' ])),
     ' ',
 )
 # vim:set et ts=8 sw=4 sts=4:

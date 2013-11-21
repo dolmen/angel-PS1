@@ -7,7 +7,8 @@ use Exporter 'import';
 our @EXPORT = qw< reduce expand ps1_is_static >;
 
 use AngelPS1::Shell ();
-use AngelPS1::Color '$NO_COLOR';
+use AngelPS1::Chrome ();
+use Scalar::Util ();
 
 
 sub expand
@@ -30,7 +31,7 @@ sub expand
     return @args
 }
 
-
+sub reduce;
 
 # Reduce a @PS1 definition:
 # - bare scalar are expanded to their escaped result
@@ -47,27 +48,37 @@ sub reduce
     while (@template) {
         my $v = shift @template;
         my $r = ref $v;
-        if ($r eq 'CODE') {
-            push @out, $v;
-            next;
-        }
-        # ARRAY followed by a scalar or scalar ref
-        # => replace by the colored expanded result
-        if ($r eq 'ARRAY' && @template) {
-            $r = ref(my $content = shift @template);
-            if ($r && $r ne 'SCALAR') {
-                push @out, $v, $content;
+        if ($r) {
+            # Keep subs as they must be explicitely expanded using expand()
+            if ($r eq 'CODE') {
+                push @out, $v;
+                next;
+            # Scalar refs are for raw (non-escaped) strings
+            } elsif ($r eq 'SCALAR') {
+                $v = $$v;
+            # Array refs are only expanded after a chrome spec. See below
+            } elsif ($r eq 'ARRAY') {
+                warn "ARRAY unexpected in reduced prompt\n" unless wantarray;
+                push @out, [ reduce(@$v) ];
                 next;
             }
-            # Expand the color
-            unshift @template,
-                AngelPS1::Shell->ps1_invisible($v->[0]),
-                $content,
-                AngelPS1::Shell->ps1_invisible($NO_COLOR);
-            redo;
-        }
-        if ($r) {
-            $v = $$v;
+            # => replace by the colored expanded result
+            elsif (Scalar::Util::blessed($v) && $v->isa('AngelPS1::Chrome')) {
+                if (@template && ref($template[0]) eq 'ARRAY') {
+                    unshift @template,
+                        AngelPS1::Shell->ps1_invisible("$v"),
+                        # flatten the ARRAY
+                        @{ shift @template },
+                        AngelPS1::Shell->ps1_invisible(AngelPS1::Chrome::Reset->term);
+                } else {
+                    # Expand the color
+                    unshift @template, AngelPS1::Shell->ps1_invisible("$v");
+                }
+                redo;
+            } else {
+                warn "unexpected $r item in prompt";
+                next;
+            }
         } else {
             $v = AngelPS1::Shell->ps1_escape($v);
         }
@@ -79,7 +90,7 @@ sub reduce
     }
     return @out if wantarray;
     return '' unless @out;
-    die "invalid state after reduce" if @out != 1 || ref $out[0] ne 'SCALAR';
+    die "invalid state after reduce: @out" if @out != 1 || ref $out[0] ne 'SCALAR';
     ${pop @out}
 }
 

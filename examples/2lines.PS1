@@ -5,10 +5,10 @@
 use strict;
 use warnings;
 
-use AngelPS1::Color;
+use AngelPS1::Chrome;
 
 (
-    [ $GREEN ], "Line1\n",
-    [ $BLUE ], AngelPS1::Shell->WorkingDir,
+    Green, [ "Line1\n" ],
+    Blue, [ AngelPS1::Shell->WorkingDir ],
     AngelPS1::Shell->UserPrivSymbol, ' ',
 )
