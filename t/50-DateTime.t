@@ -5,18 +5,17 @@ use warnings FATAL => 'all';
 use Test::More;
 
 BEGIN {
-    unless (eval { require Test::MockTime }) {
-        plan skip_all => 'Test::MockTime not installed';
-    }
-
+    eval { require Test::MockTime }
+        or plan skip_all => 'Test::MockTime not installed';
 }
 BEGIN {
-    plan tests => 4;
     Test::MockTime->import 'set_fixed_time';
 }
 
 use AngelPS1::Plugin::DateTime;
 
+
+plan tests => 4;
 
 my @Time = Time;
 isa_ok($Time[0], 'CODE');
