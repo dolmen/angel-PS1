@@ -2,8 +2,18 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 4;
-use Test::MockTime 'set_fixed_time';
+use Test::More;
+
+BEGIN {
+    unless (eval { require Test::MockTime }) {
+        plan skip_all => 'Test::MockTime not installed';
+    }
+
+}
+BEGIN {
+    plan tests => 4;
+    Test::MockTime->import 'set_fixed_time';
+}
 
 use AngelPS1::Plugin::DateTime;
 
