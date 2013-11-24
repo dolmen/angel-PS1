@@ -24,9 +24,9 @@ use 5.008003;  # 5.010 is the sane minimum
 use strict;
 use warnings;
 
-package AngelPS1;
+use AngelPS1; # Load $VERSION
 
-our $VERSION = '0.03';
+package AngelPS1;
 
 use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 use POSIX ();
@@ -67,7 +67,7 @@ if ($ENCODING) {
 }
 
 our $APP = !defined scalar caller;  # Running as command or include
-$main::VERSION = $VERSION if $APP;
+$main::VERSION = our $VERSION if $APP;
 
 our %DEBUG;
 # Initialize from $ENV{APS1_DEBUG}
