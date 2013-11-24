@@ -1,11 +1,10 @@
 use strict;
 use warnings;
 
-package AngelPS1::Color;
+package AngelPS1::TermInfo;
 
 use Exporter 'import';
-our @EXPORT = (qw($BLACK $RED $GREEN $YELLOW $BLUE $MAGENTA $CYAN $GRAY),
-               qw($NO_COLOR $BOLD));
+our @EXPORT_OK = qw<terminfo setaf>;
 
 use AngelPS1::Util 'run';
 
@@ -44,10 +43,10 @@ sub terminfo ($;@)
 
 sub setaf ($) { terminfo [ qw(setaf AF) ], $_[0] }
 
-our ($BLACK, $RED, $GREEN, $YELLOW, $BLUE, $MAGENTA, $CYAN, $GRAY) =
-    map { setaf $_ } 0..7;
-our $BOLD = terminfo [ qw(bold md) ];
-our $NO_COLOR = terminfo [ qw(sgr0 me) ];
+# our ($BLACK, $RED, $GREEN, $YELLOW, $BLUE, $MAGENTA, $CYAN, $GRAY) =
+#    map { setaf $_ } 0..7;
+# our $BOLD = terminfo [ qw(bold md) ];
+# our $NO_COLOR = terminfo [ qw(sgr0 me) ];
 
-'$';
+1;
 # vim:set et ts=8 sw=4 sts=4:
