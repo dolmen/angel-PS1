@@ -24,12 +24,16 @@ but he is there. Always around, but always discreet.
 
 ### Basic usage
 
-Try this in `bash`/`mksh`/`tcsh` to get a fancy prompt with the default
+Try this in your Unix/Linux shell to get a fancy prompt with the default
 settings:
 
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
+
+[`bash`](https://www.gnu.org/software/bash/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
     eval `./angel-PS1`
+[`fish`](http://fishshell.com):
+    eval (./angel-PS1)
 
 **Note:** this project is still very young and is constantly evolving. I
 recommend to *not yet* load it from `~/.bashrc`.
@@ -40,12 +44,22 @@ recommend to *not yet* load it from `~/.bashrc`.
 
 - `bash`
 - `mksh`
+- `dash`
+- `ksh`
 
 #### Experimental
 
-- `tcsh`: see [issue #1][1]
+- `fish`:
+  - incompatibility with the TermTitle plugin. Define instead the [`fish_title`
+  function](http://fishshell.com/docs/2.0/index.html#title).
+  - [issue #2][3] / [fish-shell #380][4] (minor issue, no workaround)
+  - [fish-shell #908][5] (workaround implemented)
+- `tcsh`: see [issue #1][2] (major issue)
 
-    [1]: https://github.com/dolmen/angel-PS1/issues/1
+    [2]: https://github.com/dolmen/angel-PS1/issues/1
+    [3]: https://github.com/dolmen/angel-PS1/issues/2
+    [4]: https://github.com/fish-shell/fish-shell/issues/380
+    [5]: https://github.com/fish-shell/fish-shell/issues/908
 
 #### TODO
 
@@ -87,7 +101,7 @@ Follow <a href="https://twitter.com/nglPS1">@nglPS1</a> on Twitter.
 Copyright 2013 Olivier Mengué.
 
 `angel-PS1` itself is distributed under the GNU Affero General Public License
-version 3 or later. See [LICENSE](LICENSE) for details.
+version 3 or later. See [COPYING](COPYING) for details.
 
 `angel-PS1` plugins must be distributed under the
 [Artistic License 2.0](http://opensource.org/licenses/Artistic-2.0).
