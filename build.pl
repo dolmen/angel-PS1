@@ -63,10 +63,10 @@ unless ($make_release) {
 
 
 (my $version = do {
-    open my $version_output, '-|', 'perl angel-PS1 --version' or die $!;
+    open my $version_output, '-|', "$^X angel-PS1 --version" or die $!;
     my $line = <$version_output>;
     chomp $line;
-    (split / /, $line)[2]
+    (split / /, $line)[1]
 }) or die "Can't get version!\n";
 print "Building release $version...\n";
 
