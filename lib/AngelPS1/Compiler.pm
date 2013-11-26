@@ -56,14 +56,14 @@ sub reduce
             elsif (Scalar::Util::blessed($v) && $v->isa('AngelPS1::Chrome')) {
                 if (@template && ref($template[0]) eq 'ARRAY') {
                     unshift @template,
-                        AngelPS1::Shell->ps1_invisible("$v"),
+                        AngelPS1::Shell->ps1_invisible($v->term),
                         # flatten the ARRAY
                         @{ shift @template },
                         # close the colored part with a Reset
                         AngelPS1::Shell->ps1_invisible(AngelPS1::Chrome::Reset->term);
                 } else {
                     # Expand the color
-                    unshift @template, AngelPS1::Shell->ps1_invisible("$v");
+                    unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
                 }
                 redo;
             } else {

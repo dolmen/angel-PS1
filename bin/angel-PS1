@@ -107,15 +107,15 @@ $SIG{__DIE__} = sub {
     if (-t STDERR) {
         my $last = pop @_;
         $last =~ s/(\n)$//s;
-        die((Red+Reset), "$FindBin::Script: ", @_, $last, Reset, ($1 ? ($1) : ()));
+        die((Red+Reset)->term, "$FindBin::Script: ", @_, $last, Reset->term, ($1 ? ($1) : ()));
     } else {
         die "$FindBin::Script: ", @_;
     }
 };
 
 if (-t STDERR) {
-    my $YellowBold = "".(Yellow+Bold);
-    my $Reset = "".Reset;
+    my $YellowBold = (Yellow+Bold)->term;
+    my $Reset = Reset->term;
     $SIG{__WARN__} = sub {
         my $last = pop;
         $last =~ s/(\n)$//s;
@@ -373,7 +373,7 @@ sub main_loop
         my $PS1 = eval { reduce(expand(\%prompt_state, @PS1)) };
         unless (defined $PS1) {
             (my $err = $@) =~ s/\s*$//s;
-            print STDERR Red + Bold, $NAME, " PS1 eval: ", $err, Reset, "\n";
+            print STDERR ((Red + Bold)->term, $NAME, " PS1 eval: ", $err, Reset->term, "\n");
             $PS1 = $PS1_fallback->(\%prompt_state);
         }
 
