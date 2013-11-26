@@ -9,7 +9,7 @@ BEGIN {
         or plan skip_all => 'Test::MockTime not installed';
 }
 BEGIN {
-    Test::MockTime->import 'set_fixed_time';
+    Test::MockTime->import('set_fixed_time');
 }
 
 use AngelPS1::Plugin::DateTime;
