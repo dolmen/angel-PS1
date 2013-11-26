@@ -27,7 +27,7 @@ my %fatpacked;
 $fatpacked{"AngelPS1.pm"} = <<'ANGELPS1';
   package AngelPS1;
   
-  our $VERSION = '0.90';
+  our $VERSION = '0.91';
   
   1;
   __END__
@@ -363,14 +363,14 @@ $fatpacked{"AngelPS1/Compiler.pm"} = <<'ANGELPS1_COMPILER';
               elsif (Scalar::Util::blessed($v) && $v->isa('AngelPS1::Chrome')) {
                   if (@template && ref($template[0]) eq 'ARRAY') {
                       unshift @template,
-                          AngelPS1::Shell->ps1_invisible("$v"),
+                          AngelPS1::Shell->ps1_invisible($v->term),
                           # flatten the ARRAY
                           @{ shift @template },
                           # close the colored part with a Reset
                           AngelPS1::Shell->ps1_invisible(AngelPS1::Chrome::Reset->term);
                   } else {
                       # Expand the color
-                      unshift @template, AngelPS1::Shell->ps1_invisible("$v");
+                      unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
                   }
                   redo;
               } else {
@@ -1765,15 +1765,15 @@ $SIG{__DIE__} = sub {
     if (-t STDERR) {
         my $last = pop @_;
         $last =~ s/(\n)$//s;
-        die((Red+Reset), "$FindBin::Script: ", @_, $last, Reset, ($1 ? ($1) : ()));
+        die((Red+Reset)->term, "$FindBin::Script: ", @_, $last, Reset->term, ($1 ? ($1) : ()));
     } else {
         die "$FindBin::Script: ", @_;
     }
 };
 
 if (-t STDERR) {
-    my $YellowBold = "".(Yellow+Bold);
-    my $Reset = "".Reset;
+    my $YellowBold = (Yellow+Bold)->term;
+    my $Reset = Reset->term;
     $SIG{__WARN__} = sub {
         my $last = pop;
         $last =~ s/(\n)$//s;
@@ -2031,7 +2031,7 @@ sub main_loop
         my $PS1 = eval { reduce(expand(\%prompt_state, @PS1)) };
         unless (defined $PS1) {
             (my $err = $@) =~ s/\s*$//s;
-            print STDERR Red + Bold, $NAME, " PS1 eval: ", $err, Reset, "\n";
+            print STDERR ((Red + Bold)->term, $NAME, " PS1 eval: ", $err, Reset->term, "\n");
             $PS1 = $PS1_fallback->(\%prompt_state);
         }
 
