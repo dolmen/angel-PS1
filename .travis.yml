@@ -10,7 +10,6 @@ perl:
 #    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
 install:
     - cpanm --notest App::FatPacker Git::Sub Test::MockTime || { cat ~/.cpanm/build.log ; false ; }
-    - perl build.pl
 script:
     - echo "TERM=$TERM"
     #- echo ====================================================================
@@ -20,6 +19,8 @@ script:
     #- fish --version
     #- tcsh --version
     #- echo ====================================================================
+    - prove -lv t
+    - perl build.pl
     - perl -c ./angel-PS1
     # Ensure that the script runs on a tty
     - script -q -c "perl ./angel-PS1 --shell=bash --test" /dev/null
@@ -27,4 +28,3 @@ script:
     - script -q -c "perl ./angel-PS1 --shell=mksh --test" /dev/null
     - script -q -c "perl ./angel-PS1 --shell=fish --test" /dev/null
     - script -q -c "perl ./angel-PS1 --shell=tcsh --test" /dev/null
-    - prove -lv t
