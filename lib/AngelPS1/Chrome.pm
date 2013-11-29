@@ -24,8 +24,7 @@ use Exporter 5.57 'import';  # perl 5.8.3
 #our @EXPORT_OK;
 #BEGIN { our @EXPORT_OK = ('color'); }
 
-use constant do {
-
+{
     my $mk_flag = sub { bless \(my $f = $_[0]), AngelPS1::Chrome::Flags:: };
 
     my %const = (
@@ -53,9 +52,16 @@ use constant do {
 
     our @EXPORT = ('color', keys %const);
 
-    \%const
-};
-
+    if ($^V lt v5.16.0) {
+        while (my ($name, $value) = each %const) {
+            no strict 'refs';
+            *$name = sub () { $value };
+        }
+    } else {
+        require constant;
+        constant->import(\%const);
+    }
+}
 
 use Carp ();
 
