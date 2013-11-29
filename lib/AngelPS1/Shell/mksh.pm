@@ -21,9 +21,8 @@ sub ps1_invisible
 {
     return if @_ == 1;
     shift; # $class
-    my $invis1 = INVIS_CHAR;
-    my $invis2 = INVIS_CHAR;
-    return (\$invis1, @_, \$invis2)
+    my $invis = INVIS_CHAR;
+    return (\$invis, @_, \$invis)
 }
 
 sub ps1_finalize
