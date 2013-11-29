@@ -84,7 +84,10 @@ my $Chrome = sub ($$$)
     Carp::croak 'invalid bg color' . ${$bg}
         if defined($bg) && ref($bg) ne AngelPS1::Chrome::Color::;
 
-    my @self = map { ref($_) ? ${$_} : undef } $fg, $bg;
+    my @self = (
+        ref($fg) ? (${$fg}) : (undef),
+        ref($bg) ? (${$bg}) : (undef),
+    );
 
     if (ref($flags)) {
         Carp::croak('invalid flag value: '.ref($flags))
