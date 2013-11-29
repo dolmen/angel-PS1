@@ -17,7 +17,8 @@ sub expand
     my @args = @_;
     LOOP: for(my $i=0; $i<=$#args; $i++) {
         #warn $i;
-        if (ref($args[$i]) eq 'CODE') {
+        my $r = ref $args[$i];
+        if ($r eq 'CODE') {
             #use B 'svref_2object';
             #my $GV = svref_2object($args[$i])->GV;
             #warn('expanding sub '.$GV->SAFENAME.' defined at '.$GV->FILE.' line '.$GV->LINE);
@@ -26,6 +27,8 @@ sub expand
             splice @args, $i, 1, $args[$i]->($state);
             #warn "OK";
             redo LOOP; # A dynamic part can return dynamic parts!
+        } elsif ($r eq 'ARRAY') {
+            $args[$i] = [ expand(@{$args[$i]}) ];
         }
     }
     return @args
