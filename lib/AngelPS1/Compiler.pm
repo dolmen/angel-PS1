@@ -23,8 +23,8 @@ sub expand
             #my $GV = svref_2object($args[$i])->GV;
             #warn('expanding sub '.$GV->SAFENAME.' defined at '.$GV->FILE.' line '.$GV->LINE);
             #undef $GV;
-
-            splice @args, $i, 1, $args[$i]->($state);
+            my @tmp = $args[$i]->($state);
+            splice @args, $i, 1, @tmp;
             #warn "OK";
             redo LOOP; # A dynamic part can return dynamic parts!
         } elsif ($r eq 'ARRAY') {
