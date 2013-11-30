@@ -48,7 +48,7 @@ sub reduce
 {
     my @template = @_;
     my @out;
-    while (@template) {
+    LOOP: while (@template) {
         my $v = shift @template;
         if (my $r = ref $v) {
             # Scalar refs are for raw (non-escaped) strings
@@ -68,21 +68,21 @@ sub reduce
                     # Expand the color
                     unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
                 }
-                redo;
+                redo LOOP;
             } else {
                 if (wantarray) {
                     # Keep subs as they must be explicitely expanded using expand()
                     if ($r eq 'CODE') {
                         push @out, $v;
-                        next;
+                        next LOOP;
                     # Array refs are only expanded after a chrome spec. See below
                     } elsif ($r eq 'ARRAY') {
                         push @out, [ reduce(@$v) ];
-                        next;
+                        next LOOP;
                     }
                 }
                 warn "unexpected $r item in prompt\n";
-                next;
+                next LOOP;
             }
         } else {
             $v = AngelPS1::Shell->ps1_escape($v);
