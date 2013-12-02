@@ -14,6 +14,7 @@ use Scalar::Util ();
 sub expand
 {
     my $state = shift;
+    die "expand(): invalid arg" unless ref($state) eq 'HASH';
     my @args = @_;
     LOOP: for(my $i=0; $i<=$#args; $i++) {
         #warn $i;
@@ -28,7 +29,7 @@ sub expand
             #warn "OK";
             redo LOOP; # A dynamic part can return dynamic parts!
         } elsif ($r eq 'ARRAY') {
-            $args[$i] = [ expand(@{$args[$i]}) ];
+            $args[$i] = [ expand($state, @{$args[$i]}) ];
         }
     }
     return @args
