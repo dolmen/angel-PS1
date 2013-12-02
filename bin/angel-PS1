@@ -129,7 +129,7 @@ my @INCLUDES;
 
 GetOptions(
     'version' => sub { print "angel-PS1 $VERSION\n"; exit 0 },
-    'test'    => \$RUN_TEST,
+    'test+'    => \$RUN_TEST,
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'c|config=s' => \$CONFIG,
@@ -224,7 +224,10 @@ if ($RUN_TEST || -t STDOUT) {
     }
 
     if ($RUN_TEST) {
-        () = reduce(expand({ '?' => 0, PWD => $ENV{PWD} }, @PS1));
+        require Cwd;
+        my @x = reduce(expand({ '?' => 0, PWD => Cwd::cwd() }, @PS1));
+        print AngelPS1::Shell->ps1_finalize(scalar reduce(@x)), "\n"
+            if $RUN_TEST > 1;
         exit 0;
     }
 
