@@ -2,7 +2,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 8;
+use Test::More 0.98 tests => 8;
 use AngelPS1::Chrome;
 
 is(Red->term, "\e[31m", 'Red');
@@ -16,8 +16,9 @@ isa_ok($BoldRed, 'AngelPS1::Chrome', 'Red+Bold')
 is((Red+Bold)->term, "\e[1;31m", 'Red+Bold->term');
 is("$BoldRed",       "\e[1;31m", "Red+Bold stringification");
 
-is("@{[ Blue / Green + Reset + Reverse ]}Text@{[ Reset ]}",
-    "\e[;7;34;42mText\e[m",
-    "Blue / Green + Reset + Reverse");
+note("@{[ Blue / Yellow + Reset + Reverse ]}Text@{[ Reset ]}");
+is("@{[ Blue / Yellow + Reset + Reverse ]}Text@{[ Reset ]}",
+    "\e[;7;34;43mText\e[m",
+    "Blue / Yellow + Reset + Reverse");
 
-#done_testing;
+done_testing;
