@@ -27,7 +27,7 @@ my %fatpacked;
 $fatpacked{"AngelPS1.pm"} = <<'ANGELPS1';
   package AngelPS1;
   
-  our $VERSION = '0.91';
+  our $VERSION = '0.92';
   
   1;
   __END__
@@ -148,8 +148,7 @@ $fatpacked{"AngelPS1/Chrome.pm"} = <<'ANGELPS1_CHROME';
   #our @EXPORT_OK;
   #BEGIN { our @EXPORT_OK = ('color'); }
   
-  use constant do {
-  
+  {
       my $mk_flag = sub { bless \(my $f = $_[0]), AngelPS1::Chrome::Flags:: };
   
       my %const = (
@@ -177,9 +176,16 @@ $fatpacked{"AngelPS1/Chrome.pm"} = <<'ANGELPS1_CHROME';
   
       our @EXPORT = ('color', keys %const);
   
-      \%const
-  };
-  
+      if ($^V lt v5.16.0) {
+          while (my ($name, $value) = each %const) {
+              no strict 'refs';
+              *$name = sub () { $value };
+          }
+      } else {
+          require constant;
+          constant->import(\%const);
+      }
+  }
   
   use Carp ();
   
@@ -202,7 +208,10 @@ $fatpacked{"AngelPS1/Chrome.pm"} = <<'ANGELPS1_CHROME';
       Carp::croak 'invalid bg color' . ${$bg}
           if defined($bg) && ref($bg) ne AngelPS1::Chrome::Color::;
   
-      my @self = map { ref($_) ? ${$_} : undef } $fg, $bg;
+      my @self = (
+          ref($fg) ? (${$fg}) : (undef),
+          ref($bg) ? (${$bg}) : (undef),
+      );
   
       if (ref($flags)) {
           Carp::croak('invalid flag value: '.ref($flags))
@@ -321,18 +330,22 @@ $fatpacked{"AngelPS1/Compiler.pm"} = <<'ANGELPS1_COMPILER';
   sub expand
   {
       my $state = shift;
+      die "expand(): invalid arg" unless ref($state) eq 'HASH';
       my @args = @_;
       LOOP: for(my $i=0; $i<=$#args; $i++) {
           #warn $i;
-          if (ref($args[$i]) eq 'CODE') {
+          my $r = ref $args[$i];
+          if ($r eq 'CODE') {
               #use B 'svref_2object';
               #my $GV = svref_2object($args[$i])->GV;
               #warn('expanding sub '.$GV->SAFENAME.' defined at '.$GV->FILE.' line '.$GV->LINE);
               #undef $GV;
-  
-              splice @args, $i, 1, $args[$i]->($state);
+              my @tmp = $args[$i]->($state);
+              splice @args, $i, 1, @tmp;
               #warn "OK";
               redo LOOP; # A dynamic part can return dynamic parts!
+          } elsif ($r eq 'ARRAY') {
+              $args[$i] = [ expand($state, @{$args[$i]}) ];
           }
       }
       return @args
@@ -352,7 +365,7 @@ $fatpacked{"AngelPS1/Compiler.pm"} = <<'ANGELPS1_COMPILER';
   {
       my @template = @_;
       my @out;
-      while (@template) {
+      LOOP: while (@template) {
           my $v = shift @template;
           if (my $r = ref $v) {
               # Scalar refs are for raw (non-escaped) strings
@@ -372,21 +385,21 @@ $fatpacked{"AngelPS1/Compiler.pm"} = <<'ANGELPS1_COMPILER';
                       # Expand the color
                       unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
                   }
-                  redo;
+                  redo LOOP;
               } else {
                   if (wantarray) {
                       # Keep subs as they must be explicitely expanded using expand()
                       if ($r eq 'CODE') {
                           push @out, $v;
-                          next;
+                          next LOOP;
                       # Array refs are only expanded after a chrome spec. See below
                       } elsif ($r eq 'ARRAY') {
                           push @out, [ reduce(@$v) ];
-                          next;
+                          next LOOP;
                       }
                   }
                   warn "unexpected $r item in prompt\n";
-                  next;
+                  next LOOP;
               }
           } else {
               $v = AngelPS1::Shell->ps1_escape($v);
@@ -1245,9 +1258,8 @@ $fatpacked{"AngelPS1/Shell/mksh.pm"} = <<'ANGELPS1_SHELL_MKSH';
   {
       return if @_ == 1;
       shift; # $class
-      my $invis1 = INVIS_CHAR;
-      my $invis2 = INVIS_CHAR;
-      return (\$invis1, @_, \$invis2)
+      my $invis = INVIS_CHAR;
+      return (\$invis, @_, \$invis)
   }
   
   sub ps1_finalize
@@ -1787,7 +1799,7 @@ my @INCLUDES;
 
 GetOptions(
     'version' => sub { print "angel-PS1 $VERSION\n"; exit 0 },
-    'test'    => \$RUN_TEST,
+    'test+'    => \$RUN_TEST,
     'shell=s' => \$SHELL,
     'name=s' => \$NAME,
     'c|config=s' => \$CONFIG,
@@ -1882,7 +1894,10 @@ if ($RUN_TEST || -t STDOUT) {
     }
 
     if ($RUN_TEST) {
-        () = reduce(expand({ '?' => 0, PWD => $ENV{PWD} }, @PS1));
+        require Cwd;
+        my @x = reduce(expand({ '?' => 0, PWD => Cwd::cwd() }, @PS1));
+        print AngelPS1::Shell->ps1_finalize(scalar reduce(@x)), "\n"
+            if $RUN_TEST > 1;
         exit 0;
     }
 
