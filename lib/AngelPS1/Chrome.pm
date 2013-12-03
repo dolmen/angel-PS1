@@ -186,4 +186,135 @@ sub term
 }
 
 1;
+__END__
+
+=head1 NAME
+
+AngelPS1::Chrome - DSL for colors and other terminal chrome
+
+=head1 SYNOPSIS
+
+    use AngelPS1::Chrome qw<Red Blue Bold Reset color>;
+
+    # Base color constant and attribute
+    say Red, 'red text', Reset;
+
+    # Composition, using operator overloading
+    say Red/Blue+Bold, 'red on blue', Reset;
+
+    # Extended xterm-256 colors
+    say color(125) + Underline, 'Purple', Reset
+
+    # Define your own constants
+    use constant Pink => color 213;
+
+    # Use stringification overload
+    say "normal ${[ Red ]} RED @{[ Reset ]} normal";
+
+=head1 DESCRIPTION
+
+C<AngelPS1::Chrome> is a domain-specific language (DSL) for terminal decoration
+(colors and other attributes).
+
+In the current implementation stringification to ANSI sequences for C<xterm>
+and C<xterm-256> is hard-coded (which means it doesn't use the L<terminfo(5)>
+database), but this gives optimized (short) strings.
+
+=head1 EXPORTS
+
+=head2 Functions
+
+C<color(I<0-255>)>
+
+Build a L<AngelPS1::Chrome> object with the given color number. You can use this
+constructor to create your own set of color constants.
+
+For example, C<color(0)> gives the same result as C<Black> (but not the same
+object).
+
+=head2 Colors
+
+=over 4
+
+=item *
+
+C<Black>
+
+=item *
+
+C<Red>
+
+=item *
+
+C<Green>
+
+=item *
+
+C<Yellow>
+
+=item *
+
+C<Blue>
+
+=item *
+
+C<Magenta>
+
+=item *
+
+C<Cyan>
+
+=item *
+
+C<White>
+
+=cut
+
+# Secret: Chartreuse
+
+=back
+
+=head2 Flags
+
+The exact rendering of each flag is dependent on how the terminal implements
+them. For example C<Underline> and C<Blink> may do nothing.
+
+=over 4
+
+=item *
+
+C<Reset> : reset all colors and flags
+
+=item *
+
+C<Bold>
+
+=item *
+
+C<Underline>
+
+=item *
+
+C<Blink>
+
+=item *
+
+C<Reverse>
+
+=back
+
+=head1 SEE ALSO
+
+L<AngelPS1::Compiler>: the C<angel-PS1> compiler has special support for
+C<AngelPS1::Chrome> values.
+
+=head1 TRIVIA
+
+Did you know that I<chartreuse> is one of the favorite color of Larry Wall?
+
+=head1 AUTHOR
+
+Olivier MenguE<eacute>, L<mailto:dolmen@cpan.org>
+
+=cut
 # vim:set et ts=8 sw=4 sts=4:
