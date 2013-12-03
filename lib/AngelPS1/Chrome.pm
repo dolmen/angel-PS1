@@ -7,15 +7,41 @@ package AngelPS1::Chrome;
 {
     package # no index: private package
         AngelPS1::Chrome::Color;
-    package # no index: private package
-        AngelPS1::Chrome::Flags;
 }
+
+use Carp ();
+
+our @CARP_NOT = qw<
+    AngelPS1::Chrome::Color
+>;
+
+# Private constructor for AngelPS1::Chrome objects. Lexical, so cross-packages.
+# Arguments:
+# - class name
+# - foreground color
+# - background color
+# - flags list
+my $Chrome = sub (*$$;@)
+{
+    my ($class, @self) = @_;
+
+    my $fg = $self[0];
+    Carp::croak "invalid fg color $fg"
+        if defined($fg) && ($fg < 0 || $fg > 255);
+    my $bg = $self[1];
+    Carp::croak "invalid bg color $bg"
+        if defined($bg) && ($bg < 0 || $bg > 255);
+    # TODO check flags
+
+    bless \@self, $class
+};
+
 
 sub color ($)
 {
     my $color = shift;
     die "invalid color" if ref $color;
-    bless \$color, AngelPS1::Chrome::Color::
+    $Chrome->(AngelPS1::Chrome::Color::, $color, undef);
 }
 
 
@@ -25,7 +51,7 @@ use Exporter 5.57 'import';  # perl 5.8.3
 #BEGIN { our @EXPORT_OK = ('color'); }
 
 {
-    my $mk_flag = sub { bless \(my $f = $_[0]), AngelPS1::Chrome::Flags:: };
+    my $mk_flag = sub { $Chrome->(AngelPS1::Chrome::, undef, undef, $_[0]) };
 
     my %const = (
         Reset      => $mk_flag->(''),
@@ -63,41 +89,6 @@ use Exporter 5.57 'import';  # perl 5.8.3
     }
 }
 
-use Carp ();
-
-our @CARP_NOT = qw<
-    AngelPS1::Chrome::Color
-    AngelPS1::Chrome::Flags
->;
-
-# Private constructor for AngelPS1::Chrome objects. Lexical, so cross-packages.
-# Arguments:
-# - foreground color
-# - background color
-# - flags
-my $Chrome = sub ($$$)
-{
-    my ($fg, $bg, $flags) = @_;
-
-    Carp::croak 'invalid fg color'
-        if defined($fg) && ref($fg) ne AngelPS1::Chrome::Color::;
-    Carp::croak 'invalid bg color' . ${$bg}
-        if defined($bg) && ref($bg) ne AngelPS1::Chrome::Color::;
-
-    my @self = (
-        ref($fg) ? (${$fg}) : (undef),
-        ref($bg) ? (${$bg}) : (undef),
-    );
-
-    if (ref($flags)) {
-        Carp::croak('invalid flag value: '.ref($flags))
-            if ref($flags) ne AngelPS1::Chrome::Flags::;
-        push @self, ${$flags};
-    }
-
-    bless \@self, __PACKAGE__
-};
-
 use overload
     '""' => 'term',
     '+'  => 'plus',
@@ -106,7 +97,7 @@ use overload
 sub term
 {
     my $self = shift;
-    my ($fg, $bg, $flg) = @{$self}[0, 1];
+    my ($fg, $bg) = @{$self}[0, 1];
     my $r = join(';', @{$self}[2 .. $#$self]);
     if (defined($fg) || defined($bg)) {
         $r .= ';' if $r;
@@ -128,13 +119,14 @@ sub plus
 {
     my ($self, $other, $swap) = @_;
 
-    if (ref($other) eq AngelPS1::Chrome::Color::) {
-        $self->[1] = ${$other};
-    } elsif (ref($other) eq AngelPS1::Chrome::Flags::) {
-        push @$self, ${$other};
-    }
+    die 'invalid value for +' unless $other->isa(__PACKAGE__);
 
-    $self
+    my @new = @$self;
+    $new[0] = $other->[0] if defined $other->[0];
+    $new[1] = $other->[1] if defined $other->[1];
+    push @new, @{$other}[2 .. $#$other];
+
+    bless \@new, __PACKAGE__
 }
 
 package # no index: private package
@@ -143,46 +135,22 @@ package # no index: private package
 our @ISA = (AngelPS1::Chrome::);
 
 use overload
-    '""' => 'term',
     '/' => 'over',
+    # Despites @ISA, we have to repeat overloading for old perls
+    '""' => 'term',
     '+' => 'plus',
 ;
 
 sub over
 {
-    $Chrome->($_[0], $_[1], undef)
+    die 'invalid bg color for /' unless ref($_[1]) eq AngelPS1::Chrome::Color::;
+    $Chrome->(AngelPS1::Chrome::, $_[0]->[0], $_[1]->[0])
 }
 
-sub plus
-{
-    $Chrome->($_[0], undef, $_[1])
-}
-
-sub term
-{
-    $Chrome->(shift, undef, undef)->term
-}
-
-package # no index: private package
-    AngelPS1::Chrome::Flags;
-
-our @ISA = (AngelPS1::Chrome::);
-
-use overload
-    '""' => 'term',
-    '+' => 'plus',
-;
-
-sub plus
-{
-    my ($left, $right) = @_;
-
-    $Chrome->(undef, undef, $left) + $right;
-}
-
-sub term
-{
-    $Chrome->(undef, undef, $_[0])->term
+BEGIN {
+    # Despites @ISA, we have to repeat methods for overloading for old perls
+    *term = \&AngelPS1::Chrome::term;
+    *plus = \&AngelPS1::Chrome::plus;
 }
 
 1;
