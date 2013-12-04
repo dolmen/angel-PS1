@@ -26,4 +26,13 @@ is("${ +Red }", "\e[31m", 'deref: ${ +Red }');
 is("${( Red )}", "\e[31m", 'deref: ${( Red )}');
 note("normal ${ Red+Bold } RED ${ +Reset } normal");
 
+note("${ Black / White }Black / White${ +Reset }");
+
+foreach my $name (qw<Red Green Yellow Blue Magenta Cyan White
+                     Bold Blink Reverse Underline>) {
+    no strict 'refs';
+    note(&{"AngelPS1::Chrome::$name"} . $name . Reset);
+}
+
+
 done_testing;
