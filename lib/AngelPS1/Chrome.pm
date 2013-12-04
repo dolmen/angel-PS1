@@ -141,22 +141,18 @@ package # no index: private package
 our @ISA = (AngelPS1::Chrome::);
 
 use overload
-    '""' => 'term',
-    '/' => 'over',
-    '+' => 'plus',
-    '${}' => 'deref',
+    '/'   => 'over',
+    # Despites @ISA we have to repeat overloading for old perls
+    # FIXME find which perls need this
+    '""'  => \&AngelPS1::Chrome::term,
+    '+'   => \&AngelPS1::Chrome::plus,
+    '${}' => \&AngelPS1::Chrome::deref,
 ;
 
 sub over
 {
     die 'invalid bg color for /' unless ref($_[1]) eq AngelPS1::Chrome::Color::;
     $Chrome->(AngelPS1::Chrome::, $_[0]->[0], $_[1]->[0])
-}
-
-BEGIN {
-    *term = \&AngelPS1::Chrome::term;
-    *plus = \&AngelPS1::Chrome::plus;
-    *deref = \&AngelPS1::Chrome::deref;
 }
 
 1;
