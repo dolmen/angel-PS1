@@ -92,6 +92,7 @@ use Exporter 5.57 'import';  # perl 5.8.3
 use overload
     '""' => 'term',
     '+'  => 'plus',
+    '${}' => 'deref',
 ;
 
 sub term
@@ -129,16 +130,21 @@ sub plus
     bless \@new, __PACKAGE__
 }
 
+sub deref
+{
+    \("$_[0]")
+}
+
 package # no index: private package
     AngelPS1::Chrome::Color;
 
 our @ISA = (AngelPS1::Chrome::);
 
 use overload
-    '/' => 'over',
-    # Despites @ISA, we have to repeat overloading for old perls
     '""' => 'term',
+    '/' => 'over',
     '+' => 'plus',
+    '${}' => 'deref',
 ;
 
 sub over
@@ -148,9 +154,9 @@ sub over
 }
 
 BEGIN {
-    # Despites @ISA, we have to repeat methods for overloading for old perls
     *term = \&AngelPS1::Chrome::term;
     *plus = \&AngelPS1::Chrome::plus;
+    *deref = \&AngelPS1::Chrome::deref;
 }
 
 1;
@@ -176,8 +182,8 @@ AngelPS1::Chrome - DSL for colors and other terminal chrome
     # Define your own constants
     use constant Pink => color 213;
 
-    # Use stringification overload
-    say "normal ${[ Red ]} RED @{[ Reset ]} normal";
+    # Use ${} around Chrome expression inside strings
+    say "normal ${ Red+Bold } RED ${ +Reset } normal";
 
 =head1 DESCRIPTION
 
