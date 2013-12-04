@@ -15,7 +15,7 @@ use POSIX ();
 
 (my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
 
-return () unless AngelPS1::Shell->can('WorkingDir')
+return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
               && AngelPS1::Shell->can('UserPrivSymbol');
 
 # The prompt is the list returned as the last statement
@@ -33,7 +33,7 @@ return () unless AngelPS1::Shell->can('WorkingDir')
                 # Columns and lines are dynamic!
                 sub { "${COLUMNS}x${LINES}) " },
             ) : ()),
-            AngelPS1::Shell->WorkingDir,
+            AngelPS1::Shell->WorkingDir_Tilde,
         )
     ),
     # fish has its own special handling through the fish_title function
@@ -42,7 +42,7 @@ return () unless AngelPS1::Shell->can('WorkingDir')
     # User name
     $< ? (scalar getpwuid $<) : (),
     sub { ((-w $_[0]->{PWD} ? Green : Red), [ ':' ]) },
-    AngelPS1::Shell->WorkingDir,
+    AngelPS1::Shell->WorkingDir_Tilde,
     ' ',
     GitInfo,
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (Red, [ $err ], ' ') },
