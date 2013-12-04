@@ -142,11 +142,16 @@ our @ISA = (AngelPS1::Chrome::);
 
 use overload
     '/'   => 'over',
-    # Despites @ISA we have to repeat overloading for old perls
-    # FIXME find which perls need this
-    '""'  => \&AngelPS1::Chrome::term,
-    '+'   => \&AngelPS1::Chrome::plus,
-    '${}' => \&AngelPS1::Chrome::deref,
+    # Even if overloading is set in the super class, we have to repeat it for old perls
+    (
+        $^V ge v5.18.0
+        ? ()
+        : (
+            '""'  => \&AngelPS1::Chrome::term,
+            '+'   => \&AngelPS1::Chrome::plus,
+            '${}' => \&AngelPS1::Chrome::deref,
+        )
+    ),
 ;
 
 sub over
