@@ -33,7 +33,7 @@ use POSIX ();
 use Encode ();
 use FindBin;
 
-# TODO build.pl should inline those modules
+# TODO ./dist should inline those modules
 use AngelPS1::Shell ();
 use AngelPS1::Compiler;
 use AngelPS1::Chrome qw<Red Yellow Bold Reset>;

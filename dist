@@ -84,7 +84,7 @@ my %ignored_file = map { ($_ => 1) } qw(
     bin
     lib
     t
-    build.pl
+    dist
     dist.ini
 );
 my %preserved_file = map { ($_ => 1) } qw(

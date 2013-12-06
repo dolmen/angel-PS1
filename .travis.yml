@@ -20,7 +20,7 @@ script:
     #- tcsh --version
     #- echo ====================================================================
     - prove -lv t
-    - perl build.pl
+    - perl ./dist
     - perl -c ./angel-PS1
     # Ensure that the script runs on a tty
     - script -q -c "perl ./angel-PS1 --shell=bash --test" /dev/null
