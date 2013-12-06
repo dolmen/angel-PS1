@@ -9,7 +9,7 @@ use AngelPS1::Plugin::Core;
 use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
-use AngelPS1::Plugin::Git;
+use AngelPS1::Plugin::VCS;
 
 use POSIX ();
 
@@ -44,7 +44,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
     sub { ((-w $_[0]->{PWD} ? Green : Red), [ ':' ]) },
     AngelPS1::Shell->WorkingDir_Tilde,
     ' ',
-    GitInfo,
+    VCSInfo,
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (Red, [ $err ], ' ') },
     # User mark: root => #    else  $
     ($< ? (Bold, [ AngelPS1::Shell->UserPrivSymbol ]) : (Red + Bold, [ '#' ])),
