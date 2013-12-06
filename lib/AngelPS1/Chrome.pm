@@ -55,6 +55,9 @@ use Exporter 5.57 'import';  # perl 5.8.3
 
     my %const = (
         Reset      => $mk_flag->(''),
+        ResetFg    => $mk_flag->(39),
+        ResetBg    => $mk_flag->(49),
+        ResetFlags => $mk_flag->(22),
         Standout   => $mk_flag->(7),
         Underline  => $mk_flag->(4),
         Reverse    => $mk_flag->(7),
