@@ -31,8 +31,11 @@ settings:
     chmod u+x angel-PS1
 
 [`bash`](https://www.gnu.org/software/bash/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
+
     eval `./angel-PS1`
+
 [`fish`](http://fishshell.com):
+
     eval (./angel-PS1)
 
 **Note:** this project is still very young and is constantly evolving. I

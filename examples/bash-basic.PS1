@@ -11,7 +11,7 @@
 # angel-PS1 prompt building works.
 
 (
-    \'\w',    # Same as AngelPS1::Shell->WorkingDir if shell is bash
+    \'\w',    # Same as AngelPS1::Shell->WorkingDir_Tilde if shell is bash
     \'\$',    # Same as AngelPS1::Shell->UserPrivSymbol
     ' ',
 )
