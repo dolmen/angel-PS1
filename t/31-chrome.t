@@ -2,7 +2,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More 0.98 tests => 11;
+use Test::More 0.98 tests => 12;
 use AngelPS1::Chrome;
 
 is(Red->term, "\e[31m", 'Red');
@@ -34,5 +34,7 @@ foreach my $name (qw<Red Green Yellow Blue Magenta Cyan White
     note(&{"AngelPS1::Chrome::$name"} . $name . Reset);
 }
 
+is(substr("${ (color(31) / color(240)) + Reset }", 1),
+	 "[;38;5;31;48;5;240m");
 
 done_testing;

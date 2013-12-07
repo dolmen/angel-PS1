@@ -104,7 +104,7 @@ sub term
     my ($fg, $bg) = @{$self}[0, 1];
     my $r = join(';', @{$self}[2 .. $#$self]);
     if (defined($fg) || defined($bg)) {
-        $r .= ';' if $r;
+        $r .= ';' if @$self > 2;
         if (defined $fg) {
             $r .= $fg < 8 ? (30+$fg) : $fg < 16 ? "9$fg" : "38;5;$fg";
             $r .= ';' if defined $bg;
