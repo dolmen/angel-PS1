@@ -25,7 +25,7 @@ return (
     ' ',
     $ENV{USER},
     ' ',
-    BG_USER / BG_PWD + ResetFlags,
+    BG_USER / BG_PWD + Reset,
     SEP_COLOR,
     FG_PWD,
     sub {
@@ -48,7 +48,7 @@ return (
         push @res, (FG_PWD_LAST + Bold, " $last ");
         @res
     },
-    BG_PWD + Reset + ResetFg,
+    BG_PWD + Reset,
     SEP_COLOR,
     Reset,
     ' ',
