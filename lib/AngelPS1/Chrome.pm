@@ -37,11 +37,16 @@ my $Chrome = sub (*$$;@)
 };
 
 
+# Cache for color objects
+my %COLOR_CACHE;
+
 sub color ($)
 {
     my $color = shift;
     die "invalid color" if ref $color;
-    $Chrome->(AngelPS1::Chrome::Color::, $color, undef);
+    #return $Chrome->(AngelPS1::Chrome::Color::, $color, undef);
+    $COLOR_CACHE{chr($color)} ||=
+        $Chrome->(AngelPS1::Chrome::Color::, $color, undef);
 }
 
 

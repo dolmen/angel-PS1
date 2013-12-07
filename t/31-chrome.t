@@ -2,8 +2,9 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More 0.98 tests => 12;
+use Test::More 0.98 tests => 15;
 use AngelPS1::Chrome;
+use Scalar::Util 'refaddr';
 
 is(Red->term, "\e[31m", 'Red');
 is(Bold->term, "\e[1m", 'Bold');
@@ -36,5 +37,16 @@ foreach my $name (qw<Red Green Yellow Blue Magenta Cyan White
 
 is(substr("${ (color(31) / color(240)) + Reset }", 1),
 	 "[;38;5;31;48;5;240m");
+
+# Test caching
+note "Scalar::Util $Scalar::Util::VERSION";
+is(refaddr(color 1), refaddr(color 1),
+    'Same object returned by multiple calls of "color 1"');
+# As we are using the ||= operator in the implementation of the cache, it is
+# better to also check that the value "0" doesn't do nasty things
+is(refaddr(color 0), refaddr(color 0),
+    'Same object returned by multiple calls of "color 0"');
+is(refaddr(color 0), refaddr(Black),
+    'Same object returned by call of "color 0" and "Black"');
 
 done_testing;
