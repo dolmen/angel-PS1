@@ -87,7 +87,7 @@ $NAME()
         return 1 ;;
     esac ;
 } ;
-trap '$NAME leave' EXIT ;
+trap 'command -v $NAME >/dev/null && $NAME leave' EXIT ;
 EOF
 }
 
