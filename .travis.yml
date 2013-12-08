@@ -10,7 +10,11 @@ notifications:
     #on_success: change
     on_success: always
     on_failure: always
-    irc: "irc.perl.org#angel-PS1"
+    irc:
+        channels:
+            - "irc.perl.org#angel-PS1"
+        template:
+            - "Build details: %{build_url}"
     email: false
 #before_install:
 #    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
