@@ -14,7 +14,7 @@ notifications:
         channels:
             - "irc.perl.org#angel-PS1"
         template:
-            - "%{build_url} - ${message}"
+            - "%{build_url} - %{message}"
     email: false
 #before_install:
 #    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
