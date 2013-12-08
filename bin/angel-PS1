@@ -155,6 +155,9 @@ unless ($SHELL) {
         $SHELL = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
     }
     $SHELL = AngelPS1::Util::one_line($SHELL);
+
+    # Login shells may begin with a '-': '-bash'
+    $SHELL =~ s/^-//;
 }
 
 # Dynamically load our shell plugin
