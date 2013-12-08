@@ -39,4 +39,4 @@ script:
     # Dump the environment, to see if we can have the Perl version...
     #- env
     # Test the build on perl 5.10+
-    - [[ "$TRAVIS_PERL_VERSION" = 5.8 ]] || { perl ./dist && perl -c ./angel-PS1 ; }
+    - test "$TRAVIS_PERL_VERSION" = 5.8 || { perl ./dist && perl -c ./angel-PS1 ; }'
