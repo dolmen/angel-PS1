@@ -37,6 +37,6 @@ script:
     - script -q -c "perl -Ilib bin/angel-PS1 --shell=fish --test" /dev/null
     - script -q -c "perl -Ilib bin/angel-PS1 --shell=tcsh --test" /dev/null
     # Dump the environment, to see if we can have the Perl version...
-    - env
+    #- env
     # Test the build on perl 5.10+
-    - perl ./dist && perl -c ./angel-PS1
+    - [[ "$TRAVIS_PERL_VERSION" = 5.8 ]] || { perl ./dist && perl -c ./angel-PS1 ; }
