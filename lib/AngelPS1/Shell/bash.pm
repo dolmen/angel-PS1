@@ -72,7 +72,7 @@ $NAME()
         PS1="\$APS1_PS1" ;
         kill \$APS1_PID 2>/dev/null ;
         rm -f -- '$IN' '$OUT' ;
-        unset APS1_PS1 APS1_PID APS1_NAME ;
+        unset APS1_PS1 APS1_PID APS1_NAME APS1_PROMPT_COMMAND ;
         unset -f -- $NAME -angel-PS1 ;;
     mute|off)
         PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
