@@ -4,6 +4,9 @@ tmp="${TMPDIR:-/tmp}/$$.tmp"
 mkdir -m 700 "$tmp"
 trap 'rm -Rf "$tmp"' EXIT
 touch "$tmp/.bash_profile" "$tmp/.bashrc"
+cat <<'EOF' >> "$tmp/.bash_profile"
+PS1='\u:\w\$ '
+EOF
 ln -s "$PWD" "$tmp/angel-PS1"
 
 out="$tmp/out"
