@@ -9,9 +9,11 @@ our @EXPORT = qw<VCSInfo>;
 sub _find_vcs_dir
 {
     my $dir = shift;
+    return if $dir eq '/';
     my @stat = stat $dir;
     my $dev = $stat[0];
-    while ($dir && $stat[0] == $dev) {
+    # Look up while we are on the same filesystem
+    while ($stat[0] == $dev) {
         if ($stat[3] > 3) {
             return (git => $dir) if -d "$dir/.git/objects";
             return (svn => $dir) if -f "$dir/.svn/entries";
@@ -20,7 +22,8 @@ sub _find_vcs_dir
             return ('git-bare' => $dir) if substr($dir, -4) eq '.git' && -d "$dir/objects"
         }
         # go up
-        substr($dir, 0, rindex($dir, '/'), '');
+        substr($dir, rindex($dir, '/'), length($dir), '');
+        $dir or last;
         @stat = stat $dir;
     }
     return
