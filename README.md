@@ -61,13 +61,10 @@ recommend to *not yet* load it from `~/.bashrc`.
 
 #### TODO
 
-- `zsh`: porting will be easy (very similar to bash), so that's not my
-      priority
+- `zsh`: porting is considered easy (very similar to bash), so that's not yet
+      at the top of my priority list
 
 ### Features
-
-**Note:** The API is not yet complete. So, some of this content is still
-pure vaporware marketing ;)
 
 Angel's Prompt is not just another new fancy prompt for your Unix shell.
 This is also:
@@ -76,10 +73,11 @@ This is also:
   you are not limited anymore by the speed of your shell and the cost of
   forking processes.
 * **Not just *my* prompt, but *your* prompt.** You can configure your own
-  look using plugins (TODO: publish an API).
+  look using plugins.
 * **A prompt written in Perl.** Perl is the powerful companion to your
   sysadmin tasks, but also an expressive general programming language that has
-  access the C Unix API.
+  access the C Unix API. Perl is available on every Unix-like operating system,
+  and usually installed among core packages.
 * **A prompt building framework.** The API will help you to easily build your
   own prompt using plugins, and to build plugins that you'll share with others.
   With a powerful engine that allows you to easily specify colors and to
@@ -88,7 +86,9 @@ This is also:
   you have access to the thousands of Perl modules on the CPAN to efficiently
   and/or portably retrieve information that you will show in the prompt.
 * **Write once, run anywhere.** Write your prompt configuration once, and use
-  it in any shell supported by `angel-PS1`.
+  it in any shell supported by `angel-PS1`. And `angel-PS1` is a single file,
+  easy to move from machine to machine and run with any Perl, from 5.8.3 to
+  5.18+.
 
 ### News
 
