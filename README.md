@@ -55,14 +55,9 @@ recommend to *not yet* load it from `~/.bashrc`.
 - `fish`:
   - incompatibility with the TermTitle plugin. Define instead the [`fish_title`
   function](http://fishshell.com/docs/2.0/index.html#title).
-  - [issue #2][3] / [fish-shell #380][4] (minor issue, no workaround)
-  - [fish-shell #908][5] (workaround implemented)
-- `tcsh`: see [issue #1][2] (major issue)
-
-    [2]: https://github.com/dolmen/angel-PS1/issues/1
-    [3]: https://github.com/dolmen/angel-PS1/issues/2
-    [4]: https://github.com/fish-shell/fish-shell/issues/380
-    [5]: https://github.com/fish-shell/fish-shell/issues/908
+  - [issue #2](https://github.com/dolmen/angel-PS1/issues/2) / [fish-shell #380](https://github.com/fish-shell/fish-shell/issues/380) (minor issue, no workaround)
+  - [fish-shell #908](https://github.com/fish-shell/fish-shell/issues/908) (workaround implemented)
+- `tcsh`: see [issue #1](https://github.com/dolmen/angel-PS1/issues/1) (major issue)
 
 #### TODO
 
