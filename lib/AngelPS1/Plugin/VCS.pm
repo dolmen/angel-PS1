@@ -50,6 +50,7 @@ sub VCSInfo
     sub {
         my $state = shift;
         my ($vcs, $dir) = _find_vcs_dir($state->{PWD});
+        return unless defined $vcs;
         my $vcs_plugin = $VCS{$vcs};
         return unless defined $vcs_plugin;
 
