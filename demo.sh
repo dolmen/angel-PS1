@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ ! -x angel-PS1 ]]; then
+	echo "./angel-PS1 not found!"
+	exit 1
+fi
+
+
 umask 0077
 
 if command -v mktemp >/dev/null ; then
