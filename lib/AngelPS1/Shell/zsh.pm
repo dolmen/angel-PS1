@@ -31,18 +31,16 @@ sub shell_code_static
 {
     my ($class, $PS1, %options) = @_;
     $PS1 =~ s/'/'\\''/g;
-    # Keeping \n is hard!
-    $PS1 =~ s/\n'/'`echo "\\n'"`'/gs;
-    $PS1 =~ s/\n`/'`echo '\\n\\`'`'/gs;
-    $PS1 =~ s/\n(.)/'`echo '\\n$1'`'/gs;
+    # Preserve \n
+    $PS1 =~ s/\n/'\$'\\n''/gs;
     # Look at:
     #    echo $(echo "ab   cd")  ->  "ab cd"
     # We are in this case with < eval $(angel-PS1) > (without quotes)
-    # so we replace consecutive spaces by an alternate structure
+    # so we replace consecutive spaces by an alternate representation
     $PS1 =~ s/  /'\\ \\ '/g;
     $PS1 = "'$PS1'";
     $PS1 =~ s/^''|[^ ]''$//gs;
-    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; n() {print '\\n'}; PS1=$PS1\n}
+    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
 }
 
 # Returns the code to send to the shell
