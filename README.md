@@ -30,7 +30,7 @@ settings:
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
 
-[`bash`](https://www.gnu.org/software/bash/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
+[`bash`](https://www.gnu.org/software/bash/)/[`zsh`](http://www.zsh.org/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
 
     eval `./angel-PS1`
 
@@ -49,6 +49,7 @@ recommend to *not yet* load it from `~/.bashrc`.
 - `mksh`
 - `dash`
 - `ksh`
+- `zsh`
 
 #### Experimental
 
@@ -58,11 +59,6 @@ recommend to *not yet* load it from `~/.bashrc`.
   - [issue #2](https://github.com/dolmen/angel-PS1/issues/2) / [fish-shell #380](https://github.com/fish-shell/fish-shell/issues/380) (minor issue, no workaround)
   - [fish-shell #908](https://github.com/fish-shell/fish-shell/issues/908) (workaround implemented)
 - `tcsh`: see [issue #1](https://github.com/dolmen/angel-PS1/issues/1) (major issue)
-
-#### TODO
-
-- `zsh`: porting is considered easy (very similar to bash), so that's not yet
-      at the top of my priority list
 
 ### Features
 
@@ -88,7 +84,8 @@ This is also:
 * **Write once, run anywhere.** Write your prompt configuration once, and use
   it in any shell supported by `angel-PS1`. And `angel-PS1` is a single file,
   easy to move from machine to machine and run with any Perl, from 5.8.3 to
-  5.18+.
+  5.18+. As your prompt definition is also written in Perl, it has the
+  same portability.
 
 ### News
 
