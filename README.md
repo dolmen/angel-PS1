@@ -91,6 +91,11 @@ This is also:
 
 Follow <a href="https://twitter.com/nglPS1">@nglPS1</a> on Twitter.
 
+### Support
+
+* IRC: [irc.perl.org, channel #angel-PS1](irc://irc.perl.org/angel-PS1)
+* [issues on Github](https://github.com/dolmen/angel-PS1/issues)
+
 ### Copyright & license
 
 Copyright 2013 Olivier Mengué.
