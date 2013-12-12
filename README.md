@@ -24,11 +24,17 @@ but he is there. Always around, but always discreet.
 
 ### Basic usage
 
-Try this in your Unix/Linux shell to get a fancy prompt with the default
-settings:
+#### Download and install
 
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
+
+That'it! Easy, isn't?
+
+#### Run
+
+Try this in your Unix/Linux shell to get a fancy prompt with the default
+settings:
 
 [`bash`](https://www.gnu.org/software/bash/)/[`zsh`](http://www.zsh.org/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
 
@@ -41,7 +47,19 @@ settings:
 **Note:** this project is still very young and is constantly evolving. I
 recommend to *not yet* load it from `~/.bashrc`.
 
-### Supported Shell
+You can also try other examples from the repository:
+
+    git clone https://github.com/dolmen/angel-PS1.git
+    cd angel-PS1
+    eval `./angel-PS1 -c examples/Powerline-basic.PS1`
+
+#### Documentation
+
+    perldoc ./angel-PS1
+
+Sorry, the documentation is quite light at the moment.
+
+### Supported shells
 
 #### First class
 

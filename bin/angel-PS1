@@ -425,10 +425,11 @@ Test a prompt definition (check that it can be compiled):
 
 =head1 CONFIGURATION
 
-The default prompt definition comes from C<AngelPS1::Prompt::Default> that is
-embeded in C<angel-PS1>.
+The default prompt definition comes from the C<AngelPS1::Prompt::Default>
+Perl module that is embeded in C<angel-PS1>.
 
-You can use your own prompt definition defined in a file.
+You can use also your own prompt definition defined in a separate file.
+I<No documentation yet>.
 
 The prompt definition is searched as a file in perl's standard C<@INC> to which
 F<$XDG_CONFIG_DIR/angel-PS1> (with fallback to F<$HOME/.config/angel-PS1>)
