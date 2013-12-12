@@ -438,7 +438,7 @@ more paths.
 
 The following settings are used to determine the path/name of the file relative
 to an C<@INC> directory (I<C<$ANGEL>> is the name of the angel (see the
-C<--name> option, C<angel> is the default):
+C<--name> option, C<angel> is the default)):
 
 =over 4
 
@@ -499,6 +499,20 @@ dash
 =item *
 
 fish
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<Liquid Prompt|https://github.com/nojhan/liquidprompt>
+
+=item *
+
+L<Powerline-shell|https://github.com/milkbikis/powerline-shell>
 
 =back
 
