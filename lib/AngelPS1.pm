@@ -1,6 +1,6 @@
 package AngelPS1;
 
-our $VERSION = '0.93';
+our $VERSION = '0.94';
 
 1;
 __END__
