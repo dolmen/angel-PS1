@@ -5,9 +5,9 @@ package AngelPS1::Shell::POSIX;
 
 sub ps1_escape
 {
-    (my $s = $_[1]) =~ s/!/!!/gs;
-    $s =~ s{([\\\$`])}{\\$1}gs;
-    $s
+    #(my $s = $_[1]) =~ s{([\\\$`])}{\\$1}gs;
+    #$s
+    $_[1]
 }
 
 sub ps1_invisible
