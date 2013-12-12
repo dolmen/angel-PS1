@@ -66,16 +66,12 @@ Sorry, the documentation is quite light at the moment.
 - `bash`
 - `mksh`
 - `dash`
-- `ksh`
+- `ksh93`
 - `zsh`
+- `fish`
 
 #### Experimental
 
-- `fish`:
-  - incompatibility with the TermTitle plugin. Define instead the [`fish_title`
-  function](http://fishshell.com/docs/2.0/index.html#title).
-  - [issue #2](https://github.com/dolmen/angel-PS1/issues/2) / [fish-shell #380](https://github.com/fish-shell/fish-shell/issues/380) (minor issue, no workaround)
-  - [fish-shell #908](https://github.com/fish-shell/fish-shell/issues/908) (workaround implemented)
 - `tcsh`: see [issue #1](https://github.com/dolmen/angel-PS1/issues/1) (major issue)
 
 ### Features
