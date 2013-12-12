@@ -30,7 +30,8 @@ sub ps1_finalize
 sub shell_code_static
 {
     my ($class, $PS1, %options) = @_;
-    $PS1 =~ s/'/'\\''/g;
+    pos($PS1) = 0;
+    $PS1 =~ s/\G'/'\\''/g;
     # Preserve \n
     $PS1 =~ s/\n/'\$'\\n''/gs;
     # Look at:
@@ -39,6 +40,7 @@ sub shell_code_static
     # so we replace consecutive spaces by an alternate representation
     $PS1 =~ s/  /'\\ \\ '/g;
     $PS1 = "'$PS1'";
+    $PS1 =~ s/'''/'/g;
     $PS1 =~ s/^''|[^ ]''$//gs;
     qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
 }
