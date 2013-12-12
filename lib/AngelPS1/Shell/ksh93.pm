@@ -6,6 +6,14 @@ package AngelPS1::Shell::ksh93;
 use AngelPS1::Shell::POSIX ();
 our @ISA = ('AngelPS1::Shell::POSIX');
 
+
+sub ps1_finalize
+{
+    (my $s = $_[1]) =~ s/!/!!/gs;
+    $s
+}
+
+
 # ksh93 doesn't have 'local'
 sub shell_local
 {
