@@ -19,7 +19,7 @@ sub TermTitle
 {
     if (AngelPS1::Shell->name eq 'fish') {
         require Carp;
-        Carp::carp("TermTitle is not supported on fish. See instead fish_title in the fish manual");
+        Carp::carp("TermTitle is not supported on fish. See instead fish_title in the fish manual http://fishshell.com/docs/2.0/index.html#title");
         return
     }
     # TODO use tsl/fsl from terminfo, if the terminfo definition has them
