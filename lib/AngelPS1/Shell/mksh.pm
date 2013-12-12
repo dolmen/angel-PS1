@@ -60,7 +60,20 @@ sub shell_code_dynamic
 sub shell_code_static
 {
     my ($class, $PS1, %options) = @_;
-    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n}
+    $PS1 = $class->ps1_finalize($PS1);
+    pos($PS1) = 0;
+    $PS1 =~ s/\G'/'\\''/g;
+    # Preserve \n
+    $PS1 =~ s/\n/'\$'\\n''/gs;
+    # Look at:
+    #    echo $(echo "ab   cd")  ->  "ab cd"
+    # We are in this case with < eval $(angel-PS1) > (without quotes)
+    # so we replace consecutive spaces by an alternate representation
+    $PS1 =~ s/  /'\\ \\ '/g;
+    $PS1 = "'$PS1'";
+    $PS1 =~ s/'''/'/g;
+    $PS1 =~ s/^''|[^ ]''$//gs;
+    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1=$PS1\n}
 }
 
 '$';
