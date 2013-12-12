@@ -1,11 +1,20 @@
 language: perl
 perl:
+    - "5.8"
     - "5.10"
     - "5.12"
     - "5.14"
     - "5.16"
-    # Not yet available
-    #- "5.18"
+    - "5.18"
+notifications:
+    on_success: always
+    on_failure: always
+    irc:
+        channels:
+            - "irc.perl.org#angel-PS1"
+        template:
+            - "%{branch}: %{message} %{build_url}"
+    email: false
 install:
     # No install (Travis has a default)
     - echo No install.
@@ -14,3 +23,9 @@ script:
     - perl -c ./angel-PS1
     # Ensure that the script runs on a tty
     - script -q -c "perl angel-PS1" /dev/null
+    - script -q -c "perl angel-PS1 --shell=bash --test" /dev/null
+    - script -q -c "perl angel-PS1 --shell=zsh  --test" /dev/null
+    - script -q -c "perl angel-PS1 --shell=dash --test" /dev/null
+    - script -q -c "perl angel-PS1 --shell=mksh --test" /dev/null
+    - script -q -c "perl angel-PS1 --shell=fish --test" /dev/null
+    - script -q -c "perl angel-PS1 --shell=tcsh --test" /dev/null
