@@ -24,13 +24,19 @@ but he is there. Always around, but always discreet.
 
 ### Basic usage
 
-Try this in your Unix/Linux shell to get a fancy prompt with the default
-settings:
+#### Download and install
 
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
 
-[`bash`](https://www.gnu.org/software/bash/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
+That'it! Easy, isn't?
+
+#### Run
+
+Try this in your Unix/Linux shell to get a fancy prompt with the default
+settings:
+
+[`bash`](https://www.gnu.org/software/bash/)/[`zsh`](http://www.zsh.org/)/[`mksh`](https://www.mirbsd.org/mksh.htm)/[`dash`](http://gondor.apana.org.au/~herbert/dash/)/[`ksh93`](http://www.kornshell.com/)/[`tcsh`](http://tcsh.org/):
 
     eval `./angel-PS1`
 
@@ -41,38 +47,34 @@ settings:
 **Note:** this project is still very young and is constantly evolving. I
 recommend to *not yet* load it from `~/.bashrc`.
 
-### Supported Shell
+You can also try other examples from the repository:
+
+    git clone https://github.com/dolmen/angel-PS1.git
+    cd angel-PS1
+    eval `./angel-PS1 -c examples/Powerline-basic.PS1`
+
+#### Documentation
+
+    perldoc ./angel-PS1
+
+Sorry, the documentation is quite light at the moment.
+
+### Supported shells
 
 #### First class
 
 - `bash`
 - `mksh`
 - `dash`
-- `ksh`
+- `ksh93`
+- `zsh`
+- `fish`
 
 #### Experimental
 
-- `fish`:
-  - incompatibility with the TermTitle plugin. Define instead the [`fish_title`
-  function](http://fishshell.com/docs/2.0/index.html#title).
-  - [issue #2][3] / [fish-shell #380][4] (minor issue, no workaround)
-  - [fish-shell #908][5] (workaround implemented)
-- `tcsh`: see [issue #1][2] (major issue)
-
-    [2]: https://github.com/dolmen/angel-PS1/issues/1
-    [3]: https://github.com/dolmen/angel-PS1/issues/2
-    [4]: https://github.com/fish-shell/fish-shell/issues/380
-    [5]: https://github.com/fish-shell/fish-shell/issues/908
-
-#### TODO
-
-- `zsh`: porting will be easy (very similar to bash), so that's not my
-      priority
+- `tcsh`: see [issue #1](https://github.com/dolmen/angel-PS1/issues/1) (major issue)
 
 ### Features
-
-**Note:** The API is not yet complete. So, some of this content is still
-pure vaporware marketing ;)
 
 Angel's Prompt is not just another new fancy prompt for your Unix shell.
 This is also:
@@ -81,10 +83,11 @@ This is also:
   you are not limited anymore by the speed of your shell and the cost of
   forking processes.
 * **Not just *my* prompt, but *your* prompt.** You can configure your own
-  look using plugins (TODO: publish an API).
+  look using plugins.
 * **A prompt written in Perl.** Perl is the powerful companion to your
   sysadmin tasks, but also an expressive general programming language that has
-  access the C Unix API.
+  access the C Unix API. Perl is available on every Unix-like operating system,
+  and usually installed among core packages.
 * **A prompt building framework.** The API will help you to easily build your
   own prompt using plugins, and to build plugins that you'll share with others.
   With a powerful engine that allows you to easily specify colors and to
@@ -93,11 +96,19 @@ This is also:
   you have access to the thousands of Perl modules on the CPAN to efficiently
   and/or portably retrieve information that you will show in the prompt.
 * **Write once, run anywhere.** Write your prompt configuration once, and use
-  it in any shell supported by `angel-PS1`.
+  it in any shell supported by `angel-PS1`. And `angel-PS1` is a single file,
+  easy to move from machine to machine and run with any Perl, from 5.8.3 to
+  5.18+. As your prompt definition is also written in Perl, it has the
+  same portability.
 
 ### News
 
 Follow <a href="https://twitter.com/nglPS1">@nglPS1</a> on Twitter.
+
+### Support
+
+* IRC: [irc.perl.org, channel #angel-PS1](irc://irc.perl.org/angel-PS1)
+* [issues on Github](https://github.com/dolmen/angel-PS1/issues)
 
 ### Copyright & license
 

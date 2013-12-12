@@ -27,7 +27,7 @@ my %fatpacked;
 $fatpacked{"AngelPS1.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1';
   package AngelPS1;
   
-  our $VERSION = '0.93';
+  our $VERSION = '0.94';
   
   1;
   __END__
@@ -751,7 +751,7 @@ $fatpacked{"AngelPS1/Plugin/Term.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   {
       if (AngelPS1::Shell->name eq 'fish') {
           require Carp;
-          Carp::carp("TermTitle is not supported on fish. See instead fish_title in the fish manual");
+          Carp::carp("TermTitle is not supported on fish. See instead fish_title in the fish manual http://fishshell.com/docs/2.0/index.html#title");
           return
       }
       # TODO use tsl/fsl from terminfo, if the terminfo definition has them
@@ -854,9 +854,11 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   sub _find_vcs_dir
   {
       my $dir = shift;
+      return if $dir eq '/';
       my @stat = stat $dir;
       my $dev = $stat[0];
-      while ($dir && $stat[0] == $dev) {
+      # Look up while we are on the same filesystem
+      while ($stat[0] == $dev) {
           if ($stat[3] > 3) {
               return (git => $dir) if -d "$dir/.git/objects";
               return (svn => $dir) if -f "$dir/.svn/entries";
@@ -865,7 +867,8 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
               return ('git-bare' => $dir) if substr($dir, -4) eq '.git' && -d "$dir/objects"
           }
           # go up
-          substr($dir, 0, rindex($dir, '/'), '');
+          substr($dir, rindex($dir, '/'), length($dir), '');
+          $dir or last;
           @stat = stat $dir;
       }
       return
@@ -892,6 +895,7 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       sub {
           my $state = shift;
           my ($vcs, $dir) = _find_vcs_dir($state->{PWD});
+          return unless defined $vcs;
           my $vcs_plugin = $VCS{$vcs};
           return unless defined $vcs_plugin;
   
@@ -1100,7 +1104,7 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
           return 1 ;;
       esac ;
   } ;
-  trap '$NAME leave' EXIT ;
+  trap 'command -v $NAME >/dev/null && $NAME leave' EXIT ;
   EOF
   }
   
@@ -1211,7 +1215,8 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
           PS1="\$APS1_PS1" ;
           kill \$APS1_PID 2>/dev/null ;
           rm -f -- '$IN' '$OUT' ;
-          unset APS1_PS1 APS1_PID APS1_NAME ;
+          unset APS1_PS1 APS1_PID APS1_NAME APS1_PROMPT_COMMAND ;
+          [[ "\$(trap -p EXIT)" = "trap -- '$NAME leave' EXIT" ]] && trap - EXIT ;
           unset -f -- $NAME -angel-PS1 ;;
       mute|off)
           PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
@@ -1312,7 +1317,7 @@ $fatpacked{"AngelPS1/Shell/fish.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
           set -e -g APS1_PID;
           set -e -g APS1_NAME;
           set -e -g aps1_prompt;
-          functions -e fish_prompt $NAME;
+          functions -e fish_prompt $NAME $NAME-EXIT;
           complete -c $NAME -e;
           eval "\$aps1_prompt_orig";
           set -e -g aps1_prompt_orig;
@@ -1332,6 +1337,9 @@ $fatpacked{"AngelPS1/Shell/fish.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
           echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2;
           return 1;
       end;
+  end;
+  function $NAME-EXIT --on-process %self;
+      kill $PID;
   end;
   complete -c $NAME -A -f -a 'quit off';
   set -g APS1_PID $PID;
@@ -1612,6 +1620,131 @@ $fatpacked{"AngelPS1/Shell/tcsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   '$';
   # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_TCSH
+
+$fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_ZSH';
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Shell::zsh;
+  
+  use AngelPS1::Shell::POSIX ();
+  
+  sub ps1_escape
+  {
+      (my $s = $_[1]) =~ s{%}{%%}gs;
+      $s
+  }
+  
+  sub ps1_invisible
+  {
+      shift; # $class
+      (\'%{', @_, \'%}')
+  }
+  
+  
+  sub ps1_finalize
+  {
+      # Escape the first and last space using zsh PS1 zero-length code because
+      # 'read' removes spaces at beginning and end of content
+      (my $PS1 = $_[1]) =~ s/^ /%{%} /s;
+      $PS1 =~ s/ $/ %{%}/s;
+      "$PS1\001"
+  }
+  
+  sub shell_code_static
+  {
+      my ($class, $PS1, %options) = @_;
+      $PS1 =~ s/'/'\\''/g;
+      # Preserve \n
+      $PS1 =~ s/\n/'\$'\\n''/gs;
+      # Look at:
+      #    echo $(echo "ab   cd")  ->  "ab cd"
+      # We are in this case with < eval $(angel-PS1) > (without quotes)
+      # so we replace consecutive spaces by an alternate representation
+      $PS1 =~ s/  /'\\ \\ '/g;
+      $PS1 = "'$PS1'";
+      $PS1 =~ s/^''|[^ ]''$//gs;
+      qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
+  }
+  
+  # Returns the code to send to the shell
+  sub shell_code_dynamic
+  {
+      my ($class, %options) = @_;
+      my ($DEBUG, $NAME, $IN, $OUT, $PID, $env) =
+          @options{qw<debug name in out pid env>};
+  
+      my $shell_debug = $DEBUG->{'in'} ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
+  
+      # The shell code will be evaluated with eval as a single line
+      # so statements must be properly terminated with ';'
+      # No shell comments allowed
+      # Consecutives raw spaces will be reduced to one
+      <<EOF;
+  [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
+  APS1_PS1="\$PS1";
+  precmd()
+  {
+      local err=\$?;
+      [[ -e '$IN' ]] || { $NAME leave ; return ; };
+      printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { $NAME leave ; return ; };
+      read -rd\001 PS1 < '$OUT' || $NAME leave ;
+      $shell_debug
+  } ;
+  set -o promptpercent ;
+  set -o nopromptbang ;
+  set -o nopromptsubst ;
+  APS1_NAME=$NAME ;
+  APS1_PID=$PID ;
+  $NAME()
+  {
+      case "\$1" in
+      leave|quit|go-away)
+          PS1="\$APS1_PS1" ;
+          kill \$APS1_PID 2>/dev/null ;
+          rm -f -- '$IN' '$OUT' ;
+          unset APS1_PS1 APS1_PID APS1_NAME ;
+          trap - EXIT ;
+          unset -f -- $NAME precmd ;;
+      mute|off)
+          PS1="\$APS1_PS1" ;;
+      unmute|on)
+          ;;
+      *)
+          echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
+          return 1 ;;
+      esac ;
+  } ;
+  trap '$NAME leave' EXIT ;
+  EOF
+  
+  }
+  
+  
+  sub WorkingDir
+  {
+      \'%d'
+  }
+  
+  sub WorkingDir_Tilde
+  {
+      \'%~'
+  }
+  
+  
+  sub Hostname
+  {
+      \'%m'
+  }
+  
+  sub UserPrivSymbol
+  {
+      $< ? '$' : '#'
+  }
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_SHELL_ZSH
 
 $fatpacked{"AngelPS1/System.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SYSTEM';
   use strict;
@@ -2015,6 +2148,9 @@ unless ($SHELL) {
         $SHELL = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
     }
     $SHELL = AngelPS1::Util::one_line($SHELL);
+
+    # Login shells may begin with a '-': '-bash'
+    $SHELL =~ s/^-//;
 }
 
 # Dynamically load our shell plugin
@@ -2282,10 +2418,11 @@ Test a prompt definition (check that it can be compiled):
 
 =head1 CONFIGURATION
 
-The default prompt definition comes from C<AngelPS1::Prompt::Default> that is
-embeded in C<angel-PS1>.
+The default prompt definition comes from the C<AngelPS1::Prompt::Default>
+Perl module that is embeded in C<angel-PS1>.
 
-You can use your own prompt definition defined in a file.
+You can use also your own prompt definition defined in a separate file.
+I<No documentation yet>.
 
 The prompt definition is searched as a file in perl's standard C<@INC> to which
 F<$XDG_CONFIG_DIR/angel-PS1> (with fallback to F<$HOME/.config/angel-PS1>)
@@ -2294,7 +2431,7 @@ more paths.
 
 The following settings are used to determine the path/name of the file relative
 to an C<@INC> directory (I<C<$ANGEL>> is the name of the angel (see the
-C<--name> option, C<angel> is the default):
+C<--name> option, C<angel> is the default)):
 
 =over 4
 
@@ -2342,6 +2479,10 @@ bash
 
 =item *
 
+zsh
+
+=item *
+
 mksh
 
 =item *
@@ -2351,6 +2492,20 @@ dash
 =item *
 
 fish
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<Liquid Prompt|https://github.com/nojhan/liquidprompt>
+
+=item *
+
+L<Powerline-shell|https://github.com/milkbikis/powerline-shell>
 
 =back
 
