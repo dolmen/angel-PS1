@@ -29,7 +29,7 @@ but he is there. Always around, but always discreet.
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
 
-That'it! Easy, isn't?
+That's it! Easy, isn't it?
 
 #### Run
 
