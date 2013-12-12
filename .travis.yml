@@ -32,6 +32,7 @@ script:
     - prove -lv t
     # Ensure that the script runs on a tty
     - script -q -c "perl -Ilib bin/angel-PS1 --shell=bash --test" /dev/null
+    - script -q -c "perl -Ilib bin/angel-PS1 --shell=zsh  --test" /dev/null
     - script -q -c "perl -Ilib bin/angel-PS1 --shell=dash --test" /dev/null
     - script -q -c "perl -Ilib bin/angel-PS1 --shell=mksh --test" /dev/null
     - script -q -c "perl -Ilib bin/angel-PS1 --shell=fish --test" /dev/null
