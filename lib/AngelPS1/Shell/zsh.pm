@@ -43,7 +43,7 @@ sub shell_code_static
     $PS1 = "'$PS1'";
     $PS1 =~ s/'''/'/g;
     $PS1 =~ s/^''|[^ ]''$//gs;
-    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
+    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; [[ -n "\$prompt_theme" ]] && prompt off ; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
 }
 
 # Returns the code to send to the shell
@@ -62,7 +62,8 @@ sub shell_code_dynamic
     <<EOF;
 [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
-precmd()
+[[ -n "\$prompt_theme" ]] && { APS1_prompt="prompt '\$prompt_theme'"; prompt off; };
+-angel-PS1()
 {
     local err=\$?;
     [[ -e '$IN' ]] || { $NAME leave ; return ; };
@@ -73,6 +74,7 @@ precmd()
 set -o promptpercent ;
 set -o nopromptbang ;
 set -o nopromptsubst ;
+add-zsh-hook precmd -angel-PS1 ;
 APS1_NAME=$NAME ;
 APS1_PID=$PID ;
 $NAME()
@@ -80,11 +82,13 @@ $NAME()
     case "\$1" in
     leave|quit|go-away)
         PS1="\$APS1_PS1" ;
+        eval \$APS1_prompt ;
         kill \$APS1_PID 2>/dev/null ;
         rm -f -- '$IN' '$OUT' ;
-        unset APS1_PS1 APS1_PID APS1_NAME ;
-        trap - EXIT ;
-        unset -f -- $NAME precmd ;;
+        unset APS1_PS1 APS1_PID APS1_NAME APS1_prompt ;
+        add-zsh-hook -d precmd -angel-PS1 ;
+        add-zsh-hook -d zshexit -angel-PS1-exit ;
+        unset -f -- $NAME -angel-PS1 -angel-PS1-exit ;;
     mute|off)
         PS1="\$APS1_PS1" ;;
     unmute|on)
@@ -94,7 +98,8 @@ $NAME()
         return 1 ;;
     esac ;
 } ;
-trap '$NAME leave' EXIT ;
+-angel-PS1-exit() { $NAME leave ; } ;
+add-zsh-hook zshexit -angel-PS1-exit ;
 EOF
 
 }
