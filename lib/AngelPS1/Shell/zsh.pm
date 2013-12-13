@@ -34,6 +34,7 @@ sub shell_code_static
     $PS1 =~ s/\G'/'\\''/g;
     # Preserve \n
     $PS1 =~ s/\n/'\$'\\n''/gs;
+    $PS1 =~ s/\t/'\$'\\t''/gs;
     # Look at:
     #    echo $(echo "ab   cd")  ->  "ab cd"
     # We are in this case with < eval $(angel-PS1) > (without quotes)
