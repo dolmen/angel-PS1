@@ -147,11 +147,17 @@ undef @INCLUDES;
 unless ($SHELL) {
     require AngelPS1::Util;
     # Extract the name of $PPID
-    my $comm_file = "/proc/$SHELL_PID/comm";
-    if (-f $comm_file && -r _) { # Linux shortcut
-        open my $comm, '<', $comm_file;
-        $SHELL = <$comm>
-    } else {
+
+    GET_CMD: {
+        # Linux/cygwin shortcut
+        for my $comm_file ("/proc/$SHELL_PID/comm", "/proc/$SHELL_PID/cmdline") {
+            next unless -f $comm_file && -r _;
+            open my $comm, '<', $comm_file or next;
+            $SHELL = <$comm>;
+            $SHELL =~ s/\0.*$//s;  # /proc/*/cmdline under cygwin
+            last GET_CMD if length $SHELL;
+        }
+        # Other platforms
         $SHELL = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
     }
     $SHELL = AngelPS1::Util::one_line($SHELL);
