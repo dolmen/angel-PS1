@@ -33,7 +33,8 @@ sub use
         unless (exists $INC{$src}) {
             # TODO try to distinguish load errors (file not found) from compile errors
             # by pushing a sub on @INC that will be called.
-            die "$shell is not a supported shell.\n" unless eval { require $src };
+            eval { require $src }
+                or die "$shell is not a supported shell: $@.\n";
         }
 
         # Make AngelPS1::Shell a sub class of the loaded module
