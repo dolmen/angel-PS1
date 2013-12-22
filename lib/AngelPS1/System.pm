@@ -3,7 +3,9 @@ use warnings;
 
 package AngelPS1::System;
 
-my %ALIASES;
+my %ALIASES = (
+    cygwin => 'linux',
+);
 
 sub use
 {
