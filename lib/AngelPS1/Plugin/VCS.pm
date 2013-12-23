@@ -35,12 +35,24 @@ sub _find_vcs_dir
 my %VCS = (
     git => [
         'AngelPS1/Plugin/Git.pm',
-        sub {
-            my ($state, $dir) = @_;
-            $state->{GIT_DIR} = $dir;
-            my @res = AngelPS1::Plugin::Git::GitInfo($state);
-            delete $state->{GIT_DIR};
-            @res
+        do {
+            require AngelPS1::Plugin::Git;
+            my @gitinfo = AngelPS1::Plugin::Git::GitInfo();
+
+            sub {
+                my ($state, $dir) = @_;
+                return (
+                    sub {
+                        $state->{GIT_DIR} = $dir;
+                        ()
+                    },
+                    @gitinfo,
+                    sub {
+                        delete $state->{GIT_DIR};
+                        ()
+                    },
+                )
+            }
         }
     ],
 );
