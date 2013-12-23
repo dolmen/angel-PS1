@@ -34,7 +34,8 @@ sub GitInfo
     sub {
         my $shell_state = shift;
 
-        my $git_dir = "$shell_state->{'PWD'}/.git";
+        my $git_dir = $shell_state->{GIT_DIR};
+        $git_dir = "$shell_state->{'PWD'}/.git" unless defined $git_dir;
         unless (-d $git_dir) {
             ($git_dir = git qw(rev-parse --git-dir))
                 or return;
