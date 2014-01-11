@@ -8,6 +8,8 @@ AngelPS1::Plugin::Term::screen - Utilities for C<GNU screen>
 
 Static C<screen> title:
 
+    use AngelPS1::Plugin::Term::screen;
+
     my @prompt = (
 	...
 	ScreenTitle($title),
@@ -15,6 +17,8 @@ Static C<screen> title:
     )
 
 Dynamic C<screen> title:
+
+    use AngelPS1::Plugin::Term::screen;
 
     my @prompt = (
 	...
