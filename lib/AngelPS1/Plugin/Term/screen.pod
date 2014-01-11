@@ -1,0 +1,57 @@
+=encoding UTF-8
+
+=head1 NAME
+
+AngelPS1::Plugin::Term::screen - Utilities for C<GNU screen>
+
+=head1 SYNOPSIS
+
+Static C<screen> title:
+
+    my @prompt = (
+	...
+	ScreenTitle($title),
+	...
+    )
+
+Dynamic C<screen> title:
+
+    my @prompt = (
+	...
+	ScreenTitle(sub {
+	    return scalar localtime
+	}),
+	...
+    )
+
+=head1 DESCRIPTION
+
+Set the title of the C<GNU screen> session every time the
+prompt is displayed.
+
+The C<ScreenTitle> takes a list as arguments and wraps it to direct the
+expanded content as the name of the screen session.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<screen(1)>
+
+=item *
+
+L<AngelPS1::Plugin::Term::tmux>
+
+=item *
+
+L<AngelPS1::Plugin::Term>
+
+=back
+
+=head1 AUTHOR
+
+Olivier MENGUÉ, L<mailto:dolmen@cpan.org>
+
+=cut
