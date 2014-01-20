@@ -18,9 +18,9 @@ but he is there. Always around, but always discreet.
 
 ### Build status
 
-`release`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=release)](https://travis-ci.org/dolmen/angel-PS1)
+[`release`](https://github.com/dolmen/angel-PS1/tree/release): [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=release)](https://travis-ci.org/dolmen/angel-PS1)
 
-`devel`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=devel)](https://travis-ci.org/dolmen/angel-PS1)
+[`devel`](https://github.com/dolmen/angel-PS1/tree/devel): [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=devel)](https://travis-ci.org/dolmen/angel-PS1)
 
 ### Basic usage
 
