@@ -14,6 +14,10 @@ use AngelPS1::Shell;
 use AngelPS1::System;
 use AngelPS1::Chrome qw<Red Green>;
 
+# Globals (to allow override)
+our $SYMBOL_CHARGING = '⏚';
+our $SYMBOL_DISCHARGING = '⌁';
+
 sub BatteryPercent
 {
     return unless AngelPS1::System->can('fetch_battery');
@@ -31,7 +35,8 @@ sub BatteryPercent
 	    ),
 	    [
 		sprintf '%s%d',
-		    ($status[1] ? '⌁' : '⏚'),
+		    ($status[1] ? $SYMBOL_CHARGING
+				: $SYMBOL_DISCHARGING),
 		    100 * $status[0]
 	    ]
 	)
