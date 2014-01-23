@@ -18,5 +18,10 @@ sub use
     our @ISA = ("${class}::$system");
 }
 
+sub import
+{
+    goto &use;
+}
+
 '$';
 # vim:set et ts=8 sw=4 sts=4:
