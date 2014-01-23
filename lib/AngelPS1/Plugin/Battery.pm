@@ -31,7 +31,7 @@ sub BatteryPercent
 	    ),
 	    [
 		sprintf '%s%d',
-		    ($status[1] eq 'charging' ? '⏚' : '⌁'),
+		    ($status[1] ? '⌁' : '⏚'),
 		    100 * $status[0]
 	    ]
 	)
