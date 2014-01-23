@@ -10,7 +10,7 @@ use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::VCS;
-use AngelPS1::Plugin::Battery 'BatteryPercent';
+use AngelPS1::Plugin::Battery 'BatteryGauge';
 
 use POSIX ();
 
@@ -39,7 +39,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
     ),
     # fish has its own special handling through the fish_title function
     Blue, [ Time ],
-    MarginLeft(' ', BatteryPercent),
+    MarginLeft(' ', BatteryGauge),
     ' ',
     # User name
     $< ? (scalar getpwuid $<) : (),
