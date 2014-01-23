@@ -55,7 +55,8 @@ sub fetch_battery
         defined(my $charge_full = _slurp_line "$bat/charge_full") or return;
         defined(my $charge_now = _slurp_line "$bat/charge_now") or return;
         defined(my $status = _slurp_line "$bat/status") or return;
-        return ($charge_now / $charge_full, $status eq 'Charging');
+        # 'Charging', 'Discharging', 'Full'
+        return ($charge_now / $charge_full, $status ne 'Discharging');
     }
 }
 
