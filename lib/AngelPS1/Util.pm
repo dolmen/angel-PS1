@@ -56,8 +56,7 @@ sub run
 
 sub one_line
 {
-    # chop
-    (my $result = shift) =~ s{\n$}{}s;
+    chomp(my $result = shift);
     $result
 }
 
