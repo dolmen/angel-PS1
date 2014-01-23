@@ -5,7 +5,7 @@ package AngelPS1::Prompt::Default;
 
 use AngelPS1::Shell ();
 use AngelPS1::Chrome;
-use AngelPS1::Plugin::Core;
+use AngelPS1::Plugin::Core 'MarginLeft';
 use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
@@ -39,6 +39,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
     ),
     # fish has its own special handling through the fish_title function
     Blue, [ Time ],
+    MarginLeft(' ', BatteryPercent),
     ' ',
     # User name
     $< ? (scalar getpwuid $<) : (),
