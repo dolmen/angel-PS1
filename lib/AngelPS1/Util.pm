@@ -48,7 +48,7 @@ sub run
         $command,
         @_
     );
-    my $result = do { undef $/; readline $out };
+    my $result = do { local $/; readline $out };
     # TODO UTF-8 decoding
     waitpid($pid, 0);
     return $result
