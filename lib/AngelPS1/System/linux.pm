@@ -52,10 +52,10 @@ sub fetch_battery
 
     # Sub that will query the battery status
     return sub {
-        my $charge_full = _slurp_line("$bat/charge_full") or return;
-        my $charge_now = _slurp_line("$bat/charge_now") or return;
-        my $status = _slurp_line("$bat/status") or return;
-        return ($charge_now / $charge_full, $status ne 'Discharging');
+        defined(my $charge_full = _slurp_line "$bat/charge_full") or return;
+        defined(my $charge_now = _slurp_line "$bat/charge_now") or return;
+        defined(my $status = _slurp_line "$bat/status") or return;
+        return ($charge_now / $charge_full, $status eq 'Charging');
     }
 }
 
