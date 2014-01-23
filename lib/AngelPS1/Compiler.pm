@@ -40,7 +40,10 @@ sub reduce;
 # Reduce a @PS1 definition:
 # - bare scalar are expanded to their escaped result
 # - scalar refs are concatenated
-# - colors (ARRAY) are expanded
+# - AngelPS1::Chrome are expanded to their ANSI sequence representation
+# - AngelPS1::Chrome followed by ARRAY are expanded to the ANSI sequence,
+#   the recursive reduce of the flattened array, and a Chrome reset
+# - undef are skipped
 # - CODE refs are preserved as is (for multiple step compilation)
 # In scalar context the result of that process is expected to be a single
 # scalar ref (which implies that no CODE appeared in the original arguments)
