@@ -6,7 +6,7 @@ package AngelPS1::Plugin::Core;
 our $VERSION = $AngelPS1::VERSION;
 
 use Exporter 5.57 'import';
-our @EXPORT = qw(Escape MarginLeft);
+our @EXPORT = qw(MarginLeft);
 
 use AngelPS1::Compiler;
 
