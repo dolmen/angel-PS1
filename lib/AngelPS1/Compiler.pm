@@ -52,6 +52,8 @@ sub reduce
     LOOP: while (@template) {
         my $v = shift @template;
         if (my $r = ref $v) {
+            # Skip if undef
+            next unless $r;
             # Scalar refs are for raw (non-escaped) strings
             if ($r eq 'SCALAR') {
                 $v = $$v;
