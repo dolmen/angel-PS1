@@ -16,6 +16,7 @@ use AngelPS1::Chrome qw<Red Green>;
 
 sub BatteryPercent
 {
+    return unless AngelPS1::System->can('fetch_battery');
     my $fetch_battery = AngelPS1::System->fetch_battery
 	or return;
 
