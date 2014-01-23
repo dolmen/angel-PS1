@@ -10,6 +10,7 @@ use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::VCS;
+use AngelPS1::Plugin::Battery 'BatteryPercent';
 
 use POSIX ();
 

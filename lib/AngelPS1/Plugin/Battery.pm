@@ -8,13 +8,13 @@ package AngelPS1::Plugin::Battery;
 our $VERSION = $AngelPS1::VERSION;
 
 use Exporter 5.57 'import';
-our @EXPORT = qw(BatteryStatus);
+our @EXPORT = qw(BatteryPercent);
 
 use AngelPS1::Shell;
 use AngelPS1::System;
 use AngelPS1::Chrome qw<Red Green>;
 
-sub BatteryStatus
+sub BatteryPercent
 {
     my $fetch_battery = AngelPS1::System->fetch_battery
 	or return;
