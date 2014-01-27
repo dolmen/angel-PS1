@@ -24,7 +24,7 @@ use 5.008003;  # 5.010 is the sane minimum
 use strict;
 use warnings;
 
-use AngelPS1; # Load $VERSION
+use AngelPS1; # Load globals ($VERSION, $VERBOSE...)
 
 package AngelPS1;
 
@@ -94,7 +94,7 @@ BEGIN {
 
 our $SHELL;
 our $NAME = 'angel';
-our $VERBOSE = 0;
+our $VERBOSE; # Initialized in AngelPS1.pm
 our $SHELL_PID = getppid();
 our $TERM = $ENV{TERM};
 my ($CONFIG, $PROMPT);

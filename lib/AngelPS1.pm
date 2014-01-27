@@ -2,6 +2,9 @@ package AngelPS1;
 
 our $VERSION = '0.94';
 
+# Verbosity level: boolean
+our $VERBOSE = 0;
+
 1;
 __END__
 
