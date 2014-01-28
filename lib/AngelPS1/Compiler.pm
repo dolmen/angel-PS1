@@ -55,8 +55,6 @@ sub reduce
     LOOP: while (@template) {
         my $v = shift @template;
         if (my $r = ref $v) {
-            # Skip if undef
-            next unless $r;
             # Scalar refs are for raw (non-escaped) strings
             if ($r eq 'SCALAR') {
                 $v = $$v;
@@ -91,6 +89,9 @@ sub reduce
                 next LOOP;
             }
         } else {
+            # Skip if undef
+            next unless defined $v;
+
             $v = AngelPS1::Shell->ps1_escape($v);
         }
         if (@out && ref($out[-1]) eq 'SCALAR') {
