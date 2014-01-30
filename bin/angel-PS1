@@ -92,7 +92,7 @@ BEGIN {
         if defined $ENV{APS1_DEBUG} && length $ENV{APS1_DEBUG};
 }
 
-our $SHELL;
+my $shell;
 our $NAME = 'angel';
 our $VERBOSE; # Initialized in AngelPS1.pm
 our $SHELL_PID = getppid();
@@ -130,7 +130,7 @@ my @INCLUDES;
 GetOptions(
     'version' => sub { print "angel-PS1 $VERSION\n"; exit 0 },
     'test+'    => \$RUN_TEST,
-    'shell=s' => \$SHELL,
+    'shell=s' => \$shell,
     'name=s' => \$NAME,
     'c|config=s' => \$CONFIG,
     'p|prompt=s' => \$PROMPT,
@@ -144,7 +144,7 @@ GetOptions(
 lib->import(@INCLUDES);
 undef @INCLUDES;
 
-unless ($SHELL) {
+unless ($shell) {
     require AngelPS1::Util;
     # Extract the name of $PPID
 
@@ -153,21 +153,21 @@ unless ($SHELL) {
         for my $comm_file ("/proc/$SHELL_PID/comm", "/proc/$SHELL_PID/cmdline") {
             next unless -f $comm_file && -r _;
             open my $comm, '<', $comm_file or next;
-            $SHELL = <$comm>;
-            $SHELL =~ s/\0.*$//s;  # /proc/*/cmdline under cygwin
-            last GET_CMD if length $SHELL;
+            $shell = <$comm>;
+            $shell =~ s/\0.*$//s;  # /proc/*/cmdline under cygwin
+            last GET_CMD if length $shell;
         }
         # Other platforms
-        $SHELL = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
+        $shell = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
     }
-    $SHELL = AngelPS1::Util::one_line($SHELL);
+    $shell = AngelPS1::Util::one_line($shell);
 
     # Login shells may begin with a '-': '-bash'
-    $SHELL =~ s/^-//;
+    $shell =~ s/^-//;
 }
 
 # Dynamically load our shell plugin
-AngelPS1::Shell->use($SHELL);
+AngelPS1::Shell->use($shell);
 
 # The angel name must be a valid shell function identifier
 # Note that '-' is allowed, even as a first char
