@@ -93,7 +93,7 @@ BEGIN {
 }
 
 my $shell;
-our $NAME = 'angel';
+our $NAME;    # Initialized in AngelPS1.pm
 our $VERBOSE; # Initialized in AngelPS1.pm
 our $TERM = $ENV{TERM};
 my ($CONFIG, $PROMPT);
