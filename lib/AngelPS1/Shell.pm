@@ -43,5 +43,34 @@ sub use
     }
 }
 
+
+sub detect
+{
+    require AngelPS1::Util;
+    # Extract the name of $PPID
+
+    my $ppid = getppid;
+    my $shell;
+
+    GET_CMD: {
+        # Linux/cygwin shortcut
+        for my $comm_file ("/proc/$ppid/comm", "/proc/$ppid/cmdline") {
+            next unless -f $comm_file && -r _;
+            open my $comm, '<', $comm_file or next;
+            $shell = <$comm>;
+            $shell =~ s/\0.*$//s;  # /proc/*/cmdline under cygwin
+            last GET_CMD if length $shell;
+        }
+        # Other platforms
+        $shell = AngelPS1::Util::run(ps => qw(-o comm=), $ppid)
+    }
+    $shell = AngelPS1::Util::one_line($shell);
+
+    # Login shells may begin with a '-': '-bash'
+    $shell =~ s/^-//;
+
+    return $shell
+}
+
 '$';
 # vim:set et ts=8 sw=4 sts=4:

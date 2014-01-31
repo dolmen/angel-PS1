@@ -95,7 +95,6 @@ BEGIN {
 my $shell;
 our $NAME = 'angel';
 our $VERBOSE; # Initialized in AngelPS1.pm
-our $SHELL_PID = getppid();
 our $TERM = $ENV{TERM};
 my ($CONFIG, $PROMPT);
 my $RUN_TEST;
@@ -144,30 +143,8 @@ GetOptions(
 lib->import(@INCLUDES);
 undef @INCLUDES;
 
-unless ($shell) {
-    require AngelPS1::Util;
-    # Extract the name of $PPID
-
-    GET_CMD: {
-        # Linux/cygwin shortcut
-        for my $comm_file ("/proc/$SHELL_PID/comm", "/proc/$SHELL_PID/cmdline") {
-            next unless -f $comm_file && -r _;
-            open my $comm, '<', $comm_file or next;
-            $shell = <$comm>;
-            $shell =~ s/\0.*$//s;  # /proc/*/cmdline under cygwin
-            last GET_CMD if length $shell;
-        }
-        # Other platforms
-        $shell = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
-    }
-    $shell = AngelPS1::Util::one_line($shell);
-
-    # Login shells may begin with a '-': '-bash'
-    $shell =~ s/^-//;
-}
-
 # Dynamically load our shell plugin
-AngelPS1::Shell->use($shell);
+AngelPS1::Shell->use(defined($shell) ? $shell : AngelPS1::Shell->detect);
 
 # The angel name must be a valid shell function identifier
 # Note that '-' is allowed, even as a first char
