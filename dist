@@ -53,6 +53,8 @@ close $script;
 
 chmod 0755, 'angel-PS1';
 
+system($^X => '-c', '-w', 'angel-PS1') == 0 or die;
+
 unless ($make_release) {
     say 'Done.';
     exit 0
