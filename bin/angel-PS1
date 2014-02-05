@@ -192,11 +192,6 @@ print STDERR "${NAME}'s config: $CONFIG\n" if $DEBUG{config};
 @PS1 = reduce @PS1;
 
 
-# Build the FIFO paths
-my $FIFO_PATH = POSIX::tmpnam().".$NAME-$$";
-my $FIFO_IN = "$FIFO_PATH.in";
-my $FIFO_OUT = "$FIFO_PATH.out";
-
 if ($RUN_TEST || -t STDOUT) {
     die "TERM is not set\n" unless exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 
@@ -262,6 +257,12 @@ if (ps1_is_static(\@PS1)
 
     exit 0
 }
+
+
+# Build the FIFO paths
+my $FIFO_PATH = POSIX::tmpnam().".$NAME-$$";
+my $FIFO_IN = "$FIFO_PATH.in";
+my $FIFO_OUT = "$FIFO_PATH.out";
 
 
 POSIX::mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
