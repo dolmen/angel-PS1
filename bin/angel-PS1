@@ -343,6 +343,7 @@ sub main_loop
 
     for (;;) {
         unless (open $FIFO, $open_in, $FIFO_IN) {
+            warn "Can't open $FIFO_IN: $!\n";
             redo if -e $FIFO_IN && -p _;
             last;
         }
