@@ -344,7 +344,6 @@ sub main_loop
     # Make all paths in @INC absolute because we will change cwd
     foreach (@INC) {
         next if ref $_;
-        say STDERR $_;
         $_ = File::Spec->rel2abs($_, $old_cwd);
     }
 
