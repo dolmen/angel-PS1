@@ -341,6 +341,13 @@ sub main_loop
         ">:encoding($ENCODING)",
     );
 
+    # Make all paths in @INC absolute because we will change cwd
+    foreach (@INC) {
+        next if ref $_;
+        say STDERR $_;
+        $_ = File::Spec->rel2abs($_, $old_cwd);
+    }
+
     for (;;) {
         unless (open $FIFO, $open_in, $FIFO_IN) {
             warn "Can't open $FIFO_IN: $!\n";
