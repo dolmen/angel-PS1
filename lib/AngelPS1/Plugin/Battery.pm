@@ -20,8 +20,7 @@ our $SYMBOL_DISCHARGING = '⌁';
 
 sub BatteryPercent
 {
-    return unless AngelPS1::System->can('fetch_battery');
-    my $fetch_battery = AngelPS1::System->fetch_battery
+    my $fetch_battery = AngelPS1::System->can('fetch_battery')
 	or return;
 
     return sub {
@@ -54,8 +53,7 @@ use constant {
 
 sub BatteryGauge
 {
-    return unless AngelPS1::System->can('fetch_battery');
-    my $fetch_battery = AngelPS1::System->fetch_battery
+    my $fetch_battery = AngelPS1::System->can('fetch_battery')
 	or return;
 
     require AngelPS1::Plugin::Gauges;
