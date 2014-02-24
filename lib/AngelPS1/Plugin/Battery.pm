@@ -25,7 +25,7 @@ sub BatteryPercent
 
     return sub {
 	my @status = $fetch_battery->();
-	return unless @status;
+	return if !@status || $status[0] >= 0.80;
 	(
 	    (
 		$status[0] > 0.20
@@ -60,7 +60,7 @@ sub BatteryGauge
 
     return sub {
 	my @status = $fetch_battery->();
-	return unless @status || $status[0] >= 0.8;
+	return if !@status || $status[0] >= 0.80;
 	my $green = $status[0] >= 0.3;
 	(
 	    (
