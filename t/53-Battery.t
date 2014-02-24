@@ -30,7 +30,9 @@ my @mock_battery = (1, 1);
 
     sub fetch_battery
     {
-	return @mock_battery
+	return sub {
+	    @mock_battery
+	}
     }
 }
 
