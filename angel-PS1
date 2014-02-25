@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-#    Copyright © 2013 Olivier Mengué
+#    Copyright © 2013,2014 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
 #
@@ -27,7 +27,13 @@ my %fatpacked;
 $fatpacked{"AngelPS1.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1';
   package AngelPS1;
   
-  our $VERSION = '0.94';
+  our $VERSION = '0.95';
+  
+  # The angel's name (which is used as the controller command)
+  our $NAME = 'angel';
+  
+  # Verbosity level: boolean
+  our $VERBOSE = 0;
   
   1;
   __END__
@@ -470,7 +476,10 @@ $fatpacked{"AngelPS1/Compiler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   # Reduce a @PS1 definition:
   # - bare scalar are expanded to their escaped result
   # - scalar refs are concatenated
-  # - colors (ARRAY) are expanded
+  # - AngelPS1::Chrome are expanded to their ANSI sequence representation
+  # - AngelPS1::Chrome followed by ARRAY are expanded to the ANSI sequence,
+  #   the recursive reduce of the flattened array, and a Chrome reset
+  # - undef are skipped
   # - CODE refs are preserved as is (for multiple step compilation)
   # In scalar context the result of that process is expected to be a single
   # scalar ref (which implies that no CODE appeared in the original arguments)
@@ -516,6 +525,9 @@ $fatpacked{"AngelPS1/Compiler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
                   next LOOP;
               }
           } else {
+              # Skip if undef
+              next unless defined $v;
+  
               $v = AngelPS1::Shell->ps1_escape($v);
           }
           if (@out && ref($out[-1]) eq 'SCALAR') {
@@ -554,6 +566,95 @@ $fatpacked{"AngelPS1/Plugin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN
 
+$fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_BATTERY';
+  
+  use utf8;
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Plugin::Battery;
+  
+  our $VERSION = $AngelPS1::VERSION;
+  
+  use Exporter 5.57 'import';
+  our @EXPORT = qw<BatteryPercent BatteryGauge>;
+  
+  use AngelPS1::Shell;
+  use AngelPS1::System;
+  use AngelPS1::Chrome qw<Red Green Bold color>;
+  
+  # Globals (to allow override)
+  our $SYMBOL_CHARGING = '⏚';
+  our $SYMBOL_DISCHARGING = '⌁';
+  
+  sub BatteryPercent
+  {
+      my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
+  	or return;
+      my $fetch_battery = $fetch_battery_gen->()
+          or return;
+  
+      return sub {
+  	my @status = $fetch_battery->();
+  	return if !@status || $status[0] >= 0.80;
+  	(
+  	    (
+  		$status[0] > 0.20
+  		? Green
+  		: Red
+  	    ),
+  	    [
+  		sprintf '%s%d',
+  		    ($status[1] ? $SYMBOL_CHARGING
+  				: $SYMBOL_DISCHARGING),
+  		    100 * $status[0]
+  	    ]
+  	)
+      }
+  }
+  
+  use constant {
+      SYMBOL_GREEN => Green,
+      SYMBOL_RED   => Red,
+      #GAUGE_GREEN => Green / Green + Bold,  # Bold green over green
+      #GAUGE_RED   => Green / Red,
+      GAUGE_GREEN  => color(22) / color(235),  # Dark green over dark gray
+      GAUGE_RED    => color(22) / color(124),  # Dark green over dark red
+  };
+  
+  sub BatteryGauge
+  {
+      my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
+  	or return;
+      my $fetch_battery = $fetch_battery_gen->()
+          or return;
+  
+      require AngelPS1::Plugin::Gauges;
+  
+      return sub {
+  	my @status = $fetch_battery->();
+  	return if !@status || $status[0] >= 0.80;
+  	my $green = $status[0] >= 0.3;
+  	(
+  	    (
+  		$green
+  		? SYMBOL_GREEN
+  		: SYMBOL_RED
+  	    ),
+  		($status[1] ? $SYMBOL_CHARGING
+  			    : $SYMBOL_DISCHARGING),
+  	    ($green ? GAUGE_GREEN : GAUGE_RED),
+  	    [
+  		&AngelPS1::Plugin::Gauges::CharGauge($status[0])
+  	    ],
+  	)
+      }
+  }
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_PLUGIN_BATTERY
+
 $fatpacked{"AngelPS1/Plugin/Core.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_CORE';
   use strict;
   use warnings;
@@ -563,7 +664,7 @@ $fatpacked{"AngelPS1/Plugin/Core.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   our $VERSION = $AngelPS1::VERSION;
   
   use Exporter 5.57 'import';
-  our @EXPORT = qw(Escape MarginLeft);
+  our @EXPORT = qw(MarginLeft);
   
   use AngelPS1::Compiler;
   
@@ -619,6 +720,65 @@ $fatpacked{"AngelPS1/Plugin/DateTime.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
   # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_DATETIME
 
+$fatpacked{"AngelPS1/Plugin/Gauges.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_GAUGES';
+  
+  use utf8;
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Plugin::Gauges;
+  
+  our $VERSION = $AngelPS1::VERSION;
+  
+  use Exporter 5.57 'import';
+  our @EXPORT_OK = qw<
+      CharGauge
+      ColoredGauge
+      StaticGauge
+      DynamicGauge
+  >;
+  
+  
+  # First char is underscore for 0%
+  # TODO 100% as <space> in reverse video
+  use constant GAUGE_VALUES => '_▁▂▃▄▅▆▇█';
+  use constant GAUGE_COUNT => length(GAUGE_VALUES);
+  
+  
+  sub CharGauge ($)
+  {
+      my $offset = int((shift)*GAUGE_COUNT);
+      substr(GAUGE_VALUES, $offset, 1)
+  }
+  
+  sub ColoredGauge ($$)
+  {
+      my $gauge = CharGauge(pop);
+      return @_, [ $gauge ];
+  }
+  
+  sub StaticGauge ($;$)
+  {
+      my $gauge = CharGauge(pop);
+      return $gauge unless @_;
+      return @_, [ $gauge ];
+  }
+  
+  sub DynamicGauge ($;$)
+  {
+      goto &StaticGauge if (!ref $_[$#_]);
+      my $generator = pop;
+      if (@_) {
+          return (@_, [ sub { CharGauge($generator->()) } ])
+      } else {
+          return sub { CharGauge($generator->()) }
+      }
+  }
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_PLUGIN_GAUGES
+
 $fatpacked{"AngelPS1/Plugin/Git.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_GIT';
   use strict;
   use warnings;
@@ -656,7 +816,8 @@ $fatpacked{"AngelPS1/Plugin/Git.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       sub {
           my $shell_state = shift;
   
-          my $git_dir = "$shell_state->{'PWD'}/.git";
+          my $git_dir = $shell_state->{GIT_DIR};
+          $git_dir = "$shell_state->{'PWD'}/.git" unless defined $git_dir;
           unless (-d $git_dir) {
               ($git_dir = git qw(rev-parse --git-dir))
                   or return;
@@ -728,6 +889,53 @@ $fatpacked{"AngelPS1/Plugin/Git.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   '$';
   # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_GIT
+
+$fatpacked{"AngelPS1/Plugin/LoadAvg.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_LOADAVG';
+  use utf8;
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Plugin::LoadAvg;
+  
+  our $VERSION = $AngelPS1::VERSION;
+  
+  use Exporter 5.57 'import';
+  our @EXPORT = qw<LoadAvgPercent>;
+  
+  use AngelPS1::Shell;
+  use AngelPS1::System;
+  use AngelPS1::Chrome qw<Red Green Bold color>;
+  
+  # Globals (to allow override)
+  our $SYMBOL_LOADAVG = '⏚';
+  
+  sub LoadAvgPercent
+  {
+      my $loadavg_gen = AngelPS1::System->can('load_avg')
+  	or return;
+      my $loadavg_func = $loadavg_gen->();
+  
+      return sub {
+  	my $loadavg = $loadavg_func->();
+  	return if !defined($loadavg);
+  	(
+  	    (
+  		$loadavg > 0.80
+  		? Green
+  		: Red
+  	    ),
+  	    [
+  		sprintf '%s%d',
+  		    $SYMBOL_LOADAVG,
+  		    100 * $loadavg,
+  	    ]
+  	)
+      }
+  }
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_PLUGIN_LOADAVG
 
 $fatpacked{"AngelPS1/Plugin/Term.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_TERM';
   use strict;
@@ -842,6 +1050,86 @@ $fatpacked{"AngelPS1/Plugin/Term/Size.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_TERM_SIZE
 
+$fatpacked{"AngelPS1/Plugin/Term/screen.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_TERM_SCREEN';
+  
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Plugin::Term::screen;
+  
+  our $VERSION = $AngelPS1::VERSION;
+  
+  use Exporter 5.57 ();
+  our @ISA = 'Exporter';
+  our @EXPORT = qw(ScreenTitle);
+  
+  use AngelPS1::Shell;
+  
+  sub ScreenTitle
+  {
+      return if $ENV{'TERM'} ne 'screen'
+          || exists $ENV{'TMUX'}
+          || !exists $ENV{'TERMCAP'};
+  
+      AngelPS1::Shell->ps1_invisible(
+  	"\ek",
+  	@_,
+  	"\e\\"
+      )
+  }
+  
+  # TODO add support for the 'search|name' feature of screen
+  # See "TITLES" section in screen(1)
+  
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_PLUGIN_TERM_SCREEN
+
+$fatpacked{"AngelPS1/Plugin/Term/tmux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_TERM_TMUX';
+  
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Plugin::Term::tmux;
+  
+  our $VERSION = $AngelPS1::VERSION;
+  
+  use Exporter 5.57 ();
+  our @ISA = 'Exporter';
+  our @EXPORT = qw(TmuxWindow TmuxTitle);
+  
+  use AngelPS1::Shell;
+  
+  # This requires the 'allow-rename' option to be enabled
+  sub TmuxWindow
+  {
+      return if !exists $ENV{'TMUX'}
+          || $ENV{'TERM'} ne 'screen';
+  
+      AngelPS1::Shell->ps1_invisible(
+  	"\ek",
+  	@_,
+  	"\e\\"
+      )
+  }
+  
+  sub TmuxTitle
+  {
+      return if !exists $ENV{'TMUX'}
+          || $ENV{'TERM'} ne 'screen';
+  
+      AngelPS1::Shell->ps1_invisible(
+  	"\e]2;",
+  	@_,
+  	"\e\\"
+      )
+  }
+  
+  '$';
+  # vim:set et ts=8 sw=4 sts=4:
+ANGELPS1_PLUGIN_TERM_TMUX
+
 $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_VCS';
   use strict;
   use warnings;
@@ -851,6 +1139,9 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   use Exporter 'import';
   our @EXPORT = qw<VCSInfo>;
   
+  # cygwin has this issue: it doesn't emulate hard links count to directories
+  use constant NO_DIR_STAT => (stat '..')[3] < 3;
+  
   sub _find_vcs_dir
   {
       my $dir = shift;
@@ -859,7 +1150,7 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       my $dev = $stat[0];
       # Look up while we are on the same filesystem
       while ($stat[0] == $dev) {
-          if ($stat[3] > 3) {
+          if (NO_DIR_STAT || $stat[3] > 3) {
               return (git => $dir) if -d "$dir/.git/objects";
               return (svn => $dir) if -f "$dir/.svn/entries";
               return (hg  => $dir) if -d "$dir/.hg/store";
@@ -877,12 +1168,24 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   my %VCS = (
       git => [
           'AngelPS1/Plugin/Git.pm',
-          sub {
-              my ($state, $dir) = @_;
-              $state->{GIT_DIR} = $dir;
-              my @res = AngelPS1::Plugin::Git::GitInfo($state);
-              delete $state->{GIT_DIR};
-              @res
+          do {
+              require AngelPS1::Plugin::Git;
+              my @gitinfo = AngelPS1::Plugin::Git::GitInfo();
+  
+              sub {
+                  my ($state, $dir) = @_;
+                  return (
+                      sub {
+                          $state->{GIT_DIR} = $dir;
+                          ()
+                      },
+                      @gitinfo,
+                      sub {
+                          delete $state->{GIT_DIR};
+                          ()
+                      },
+                  )
+              }
           }
       ],
   );
@@ -917,11 +1220,12 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   
   use AngelPS1::Shell ();
   use AngelPS1::Chrome;
-  use AngelPS1::Plugin::Core;
+  use AngelPS1::Plugin::Core 'MarginLeft';
   use AngelPS1::Plugin::DateTime;
   use AngelPS1::Plugin::Term;
   use AngelPS1::Plugin::Term::Size;
   use AngelPS1::Plugin::VCS;
+  use AngelPS1::Plugin::Battery 'BatteryGauge';
   
   use POSIX ();
   
@@ -950,6 +1254,7 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
       ),
       # fish has its own special handling through the fish_title function
       Blue, [ Time ],
+      MarginLeft(' ', BatteryGauge),
       ' ',
       # User name
       $< ? (scalar getpwuid $<) : (),
@@ -1001,13 +1306,43 @@ $fatpacked{"AngelPS1/Shell.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
           unless (exists $INC{$src}) {
               # TODO try to distinguish load errors (file not found) from compile errors
               # by pushing a sub on @INC that will be called.
-              die "$shell is not a supported shell.\n" unless eval { require $src };
+              eval { require $src }
+                  or die "$shell is not a supported shell: $@.\n";
           }
   
           # Make AngelPS1::Shell a sub class of the loaded module
           our @ISA = ("${class}::$shell");
           $name = $shell;
       }
+  }
+  
+  
+  sub detect
+  {
+      require AngelPS1::Util;
+      # Extract the name of $PPID
+  
+      my $ppid = getppid;
+      my $shell;
+  
+      GET_CMD: {
+          # Linux/cygwin shortcut
+          for my $comm_file ("/proc/$ppid/comm", "/proc/$ppid/cmdline") {
+              next unless -f $comm_file && -r _;
+              open my $comm, '<', $comm_file or next;
+              $shell = <$comm>;
+              $shell =~ s/\0.*$//s;  # /proc/*/cmdline under cygwin
+              last GET_CMD if length $shell;
+          }
+          # Other platforms
+          $shell = AngelPS1::Util::run(ps => qw(-o comm=), $ppid)
+      }
+      $shell = AngelPS1::Util::one_line($shell);
+  
+      # Login shells may begin with a '-': '-bash'
+      $shell =~ s/^-//;
+  
+      return $shell
   }
   
   '$';
@@ -1022,9 +1357,9 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   
   sub ps1_escape
   {
-      (my $s = $_[1]) =~ s/!/!!/gs;
-      $s =~ s{([\\\$`])}{\\$1}gs;
-      $s
+      #(my $s = $_[1]) =~ s{([\\\$`])}{\\$1}gs;
+      #$s
+      $_[1]
   }
   
   sub ps1_invisible
@@ -1388,6 +1723,14 @@ $fatpacked{"AngelPS1/Shell/ksh93.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   use AngelPS1::Shell::POSIX ();
   our @ISA = ('AngelPS1::Shell::POSIX');
   
+  
+  sub ps1_finalize
+  {
+      (my $s = $_[1]) =~ s/!/!!/gs;
+      $s
+  }
+  
+  
   # ksh93 doesn't have 'local'
   sub shell_local
   {
@@ -1482,7 +1825,21 @@ $fatpacked{"AngelPS1/Shell/mksh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   sub shell_code_static
   {
       my ($class, $PS1, %options) = @_;
-      qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n}
+      $PS1 = $class->ps1_finalize($PS1);
+      pos($PS1) = 0;
+      $PS1 =~ s/\G'/'\\''/g;
+      # Preserve \n
+      $PS1 =~ s/\n/'\$'\\n''/gs;
+      $PS1 =~ s/\t/'\$'\\t''/gs;
+      # Look at:
+      #    echo $(echo "ab   cd")  ->  "ab cd"
+      # We are in this case with < eval $(angel-PS1) > (without quotes)
+      # so we replace consecutive spaces by an alternate representation
+      $PS1 =~ s/  /'\\ \\ '/g;
+      $PS1 = "'$PS1'";
+      $PS1 =~ s/'''/'/g;
+      $PS1 =~ s/^''|[^ ]''$//gs;
+      qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1=$PS1\n}
   }
   
   '$';
@@ -1654,17 +2011,20 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   sub shell_code_static
   {
       my ($class, $PS1, %options) = @_;
-      $PS1 =~ s/'/'\\''/g;
+      pos($PS1) = 0;
+      $PS1 =~ s/\G'/'\\''/g;
       # Preserve \n
       $PS1 =~ s/\n/'\$'\\n''/gs;
+      $PS1 =~ s/\t/'\$'\\t''/gs;
       # Look at:
       #    echo $(echo "ab   cd")  ->  "ab cd"
       # We are in this case with < eval $(angel-PS1) > (without quotes)
       # so we replace consecutive spaces by an alternate representation
       $PS1 =~ s/  /'\\ \\ '/g;
       $PS1 = "'$PS1'";
+      $PS1 =~ s/'''/'/g;
       $PS1 =~ s/^''|[^ ]''$//gs;
-      qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
+      qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; [[ -n "\$prompt_theme" ]] && prompt off ; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
   }
   
   # Returns the code to send to the shell
@@ -1683,7 +2043,8 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       <<EOF;
   [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
   APS1_PS1="\$PS1";
-  precmd()
+  [[ -n "\$prompt_theme" ]] && { APS1_prompt="prompt '\$prompt_theme'"; prompt off; };
+  -angel-PS1()
   {
       local err=\$?;
       [[ -e '$IN' ]] || { $NAME leave ; return ; };
@@ -1694,6 +2055,7 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   set -o promptpercent ;
   set -o nopromptbang ;
   set -o nopromptsubst ;
+  add-zsh-hook precmd -angel-PS1 ;
   APS1_NAME=$NAME ;
   APS1_PID=$PID ;
   $NAME()
@@ -1701,11 +2063,13 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       case "\$1" in
       leave|quit|go-away)
           PS1="\$APS1_PS1" ;
+          eval \$APS1_prompt ;
           kill \$APS1_PID 2>/dev/null ;
           rm -f -- '$IN' '$OUT' ;
-          unset APS1_PS1 APS1_PID APS1_NAME ;
-          trap - EXIT ;
-          unset -f -- $NAME precmd ;;
+          unset APS1_PS1 APS1_PID APS1_NAME APS1_prompt ;
+          add-zsh-hook -d precmd -angel-PS1 ;
+          add-zsh-hook -d zshexit -angel-PS1-exit ;
+          unset -f -- $NAME -angel-PS1 -angel-PS1-exit ;;
       mute|off)
           PS1="\$APS1_PS1" ;;
       unmute|on)
@@ -1715,7 +2079,8 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
           return 1 ;;
       esac ;
   } ;
-  trap '$NAME leave' EXIT ;
+  -angel-PS1-exit() { $NAME leave ; } ;
+  add-zsh-hook zshexit -angel-PS1-exit ;
   EOF
   
   }
@@ -1752,10 +2117,20 @@ $fatpacked{"AngelPS1/System.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   package AngelPS1::System;
   
-  my %ALIASES;
+  my %ALIASES = (
+      cygwin => 'linux',
+  );
+  
+  my $name;
+  
+  sub name
+  {
+      $name
+  }
   
   sub use
   {
+      return if defined $name && @_ < 2;
       my ($class, $system) = @_;
       $system ||= $^O;
   
@@ -1763,7 +2138,10 @@ $fatpacked{"AngelPS1/System.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
       my $src = "AngelPS1/System/$system.pm";
       require $src;
       our @ISA = ("${class}::$system");
+      $name = $system;
   }
+  
+  *import = *use;
   
   '$';
   # vim:set et ts=8 sw=4 sts=4:
@@ -1824,9 +2202,10 @@ $fatpacked{"AngelPS1/System/linux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
   
       # Sub that will query the battery status
       return sub {
-          my $charge_full = _slurp_line("$bat/charge_full") or return;
-          my $charge_now = _slurp_line("$bat/charge_now") or return;
-          my $status = _slurp_line("$bat/status") or return;
+          defined(my $charge_full = _slurp_line "$bat/charge_full") or return;
+          defined(my $charge_now = _slurp_line "$bat/charge_now") or return;
+          defined(my $status = _slurp_line "$bat/status") or return;
+          # 'Charging', 'Discharging', 'Full'
           return ($charge_now / $charge_full, $status ne 'Discharging');
       }
   }
@@ -1941,7 +2320,7 @@ $fatpacked{"AngelPS1/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'A
           $command,
           @_
       );
-      my $result = do { undef $/; readline $out };
+      my $result = do { local $/; readline $out };
       # TODO UTF-8 decoding
       waitpid($pid, 0);
       return $result
@@ -1949,8 +2328,7 @@ $fatpacked{"AngelPS1/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'A
   
   sub one_line
   {
-      # chop
-      (my $result = shift) =~ s{\n$}{}s;
+      chomp(my $result = shift);
       $result
   }
   
@@ -1994,7 +2372,7 @@ unshift @INC, bless \%fatpacked, $class;
 
 use utf8;
 
-#    Copyright © 2013 Olivier Mengué
+#    Copyright © 2013,2014 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
 #
@@ -2017,7 +2395,7 @@ use 5.008003;  # 5.010 is the sane minimum
 use strict;
 use warnings;
 
-use AngelPS1; # Load $VERSION
+use AngelPS1; # Load globals ($VERSION, $VERBOSE...)
 
 package AngelPS1;
 
@@ -2085,11 +2463,9 @@ BEGIN {
         if defined $ENV{APS1_DEBUG} && length $ENV{APS1_DEBUG};
 }
 
-our $SHELL;
-our $NAME = 'angel';
-our $VERBOSE = 0;
-our $SHELL_PID = getppid();
-our $TERM = $ENV{TERM};
+my $shell;
+our $NAME;    # Initialized in AngelPS1.pm
+our $VERBOSE; # Initialized in AngelPS1.pm
 my ($CONFIG, $PROMPT);
 my $RUN_TEST;
 
@@ -2123,7 +2499,7 @@ my @INCLUDES;
 GetOptions(
     'version' => sub { print "angel-PS1 $VERSION\n"; exit 0 },
     'test+'    => \$RUN_TEST,
-    'shell=s' => \$SHELL,
+    'shell=s' => \$shell,
     'name=s' => \$NAME,
     'c|config=s' => \$CONFIG,
     'p|prompt=s' => \$PROMPT,
@@ -2137,24 +2513,8 @@ GetOptions(
 lib->import(@INCLUDES);
 undef @INCLUDES;
 
-unless ($SHELL) {
-    require AngelPS1::Util;
-    # Extract the name of $PPID
-    my $comm_file = "/proc/$SHELL_PID/comm";
-    if (-f $comm_file && -r _) { # Linux shortcut
-        open my $comm, '<', $comm_file;
-        $SHELL = <$comm>
-    } else {
-        $SHELL = AngelPS1::Util::run(ps => qw(-o comm=), $SHELL_PID)
-    }
-    $SHELL = AngelPS1::Util::one_line($SHELL);
-
-    # Login shells may begin with a '-': '-bash'
-    $SHELL =~ s/^-//;
-}
-
 # Dynamically load our shell plugin
-AngelPS1::Shell->use($SHELL);
+AngelPS1::Shell->use(defined($shell) ? $shell : AngelPS1::Shell->detect);
 
 # The angel name must be a valid shell function identifier
 # Note that '-' is allowed, even as a first char
@@ -2203,11 +2563,6 @@ print STDERR "${NAME}'s config: $CONFIG\n" if $DEBUG{config};
 @PS1 = reduce @PS1;
 
 
-# Build the FIFO paths
-my $FIFO_PATH = POSIX::tmpnam().".$NAME-$$";
-my $FIFO_IN = "$FIFO_PATH.in";
-my $FIFO_OUT = "$FIFO_PATH.out";
-
 if ($RUN_TEST || -t STDOUT) {
     die "TERM is not set\n" unless exists $ENV{'TERM'} && $ENV{'TERM'} ne '';
 
@@ -2232,7 +2587,7 @@ if ($RUN_TEST || -t STDOUT) {
     print "angel-PS1 $VERSION\n";
 
     my $script = index($0, '/') >= 0 ? $0 : "\$(which $FindBin::Script)";
-    print "Copyright (C) 2013  Olivier Mengué\n",
+    print "Copyright (C) 2013,2014  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
           "This is free software, and you are welcome to redistribute it\n",
           "under certain conditions;\n",
@@ -2273,6 +2628,12 @@ if (ps1_is_static(\@PS1)
 
     exit 0
 }
+
+
+# Build the FIFO paths
+my $FIFO_PATH = POSIX::tmpnam().".$NAME-$$";
+my $FIFO_IN = "$FIFO_PATH.in";
+my $FIFO_OUT = "$FIFO_PATH.out";
 
 
 POSIX::mkfifo($FIFO_IN, 0600) or die "Can't create fifo $FIFO_IN: $!";
@@ -2343,20 +2704,30 @@ sub main_loop
 
     my $FIFO;
     my %prompt_state;
-    require Cwd;
-    my $old_cwd = Cwd::getcwd();
     my ($k, $v);
     my ($open_in, $open_out) = (
         "<:encoding($ENCODING)",
         ">:encoding($ENCODING)",
     );
 
+    # Make all paths in @INC absolute because we will change cwd
+    require Cwd;
+    my $cwd = Cwd::getcwd();
+    foreach (@INC) {
+        next if ref $_;
+        $_ = File::Spec->rel2abs($_, $cwd);
+    }
+
     for (;;) {
+        # Move to a safe directory to avoid blocking fs unmount
+        chdir '/';
+
         unless (open $FIFO, $open_in, $FIFO_IN) {
+            warn "Can't open $FIFO_IN: $!\n";
             redo if -e $FIFO_IN && -p _;
             last;
         }
-        $_ = do { undef $/; <$FIFO> };
+        $_ = do { local $/; <$FIFO> };
         close $FIFO;
         printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG{'in'};
 
@@ -2367,7 +2738,7 @@ sub main_loop
             $prompt_state{$k} = $v;
         }
 
-        chdir $prompt_state{'PWD'} if $prompt_state{'PWD'} ne $old_cwd;
+        chdir $prompt_state{'PWD'} if $prompt_state{'PWD'};
 
         my $PS1 = eval { reduce(expand(\%prompt_state, @PS1)) };
         unless (defined $PS1) {

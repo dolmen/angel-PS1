@@ -18,9 +18,9 @@ but he is there. Always around, but always discreet.
 
 ### Build status
 
-`release`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=release)](https://travis-ci.org/dolmen/angel-PS1)
+[`release`](https://github.com/dolmen/angel-PS1/tree/release): [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=release)](https://travis-ci.org/dolmen/angel-PS1)
 
-`devel`: [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=devel)](https://travis-ci.org/dolmen/angel-PS1)
+[`devel`](https://github.com/dolmen/angel-PS1/tree/devel): [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=devel)](https://travis-ci.org/dolmen/angel-PS1)
 
 ### Basic usage
 
@@ -29,7 +29,7 @@ but he is there. Always around, but always discreet.
     wget https://github.com/dolmen/angel-PS1/raw/release/angel-PS1
     chmod u+x angel-PS1
 
-That'it! Easy, isn't?
+That's it! Easy, isn't it?
 
 #### Run
 
@@ -112,7 +112,7 @@ Follow <a href="https://twitter.com/nglPS1">@nglPS1</a> on Twitter.
 
 ### Copyright & license
 
-Copyright 2013 Olivier Mengué.
+Copyright 2013,2014 Olivier Mengué.
 
 `angel-PS1` itself is distributed under the GNU Affero General Public License
 version 3 or later. See [COPYING](COPYING) for details.
