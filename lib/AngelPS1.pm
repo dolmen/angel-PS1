@@ -1,6 +1,6 @@
 package AngelPS1;
 
-our $VERSION = '0.94';
+our $VERSION = '0.95';
 
 # The angel's name (which is used as the controller command)
 our $NAME = 'angel';
