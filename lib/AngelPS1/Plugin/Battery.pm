@@ -22,7 +22,8 @@ sub BatteryPercent
 {
     my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
 	or return;
-    my $fetch_battery = $fetch_battery_gen->();
+    my $fetch_battery = $fetch_battery_gen->()
+        or return;
 
     return sub {
 	my @status = $fetch_battery->();
@@ -56,7 +57,8 @@ sub BatteryGauge
 {
     my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
 	or return;
-    my $fetch_battery = $fetch_battery_gen->();
+    my $fetch_battery = $fetch_battery_gen->()
+        or return;
 
     require AngelPS1::Plugin::Gauges;
 
