@@ -5,13 +5,16 @@ use warnings;
 
 use Test::More;
 
+use lib 't/lib';
+
 use AngelPS1::Plugin::Gauges
     qw<ColoredGauge CharGauge>;
 use AngelPS1::Chrome qw<color Green Bold>;
-use AngelPS1::Shell;
+use AngelPS1::Shell ();
 use AngelPS1::Compiler qw<reduce>;
 
-AngelPS1::Shell->use('POSIX');
+# From t::lib
+AngelPS1::Shell->use('Raw');
 
 use Term::Encoding 'term_encoding';
 my $enc = term_encoding();

@@ -10,6 +10,8 @@ use warnings;
 use Test::More;
 use Test::More::UTF8;
 
+use lib 't/lib';
+
 =cut
 use Test::More;
 
@@ -41,7 +43,7 @@ use AngelPS1::System 'MockBattery';
 use AngelPS1::Compiler ();
 use AngelPS1::Plugin::Battery qw<BatteryPercent BatteryGauge>;
 
-AngelPS1::Shell->use('POSIX');
+AngelPS1::Shell->use('Raw');
 
 is(AngelPS1::System->name, 'MockBattery');
 ok(AngelPS1::System->can('fetch_battery'));
