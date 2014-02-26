@@ -347,12 +347,14 @@ sub main_loop
         $_ = File::Spec->rel2abs($_, $cwd);
     }
 
+    require Errno;
+
     for (;;) {
         # Move to a safe directory to avoid blocking fs unmount
         chdir '/';
 
         unless (open $FIFO, $open_in, $FIFO_IN) {
-            warn "Can't open $FIFO_IN: $!\n";
+            warn "Can't open $FIFO_IN (", 0+$!, "): $!\n" if $! != Errno::EINTR();
             redo if -e $FIFO_IN && -p _;
             last;
         }
