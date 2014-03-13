@@ -11,6 +11,7 @@ use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::VCS;
 use AngelPS1::Plugin::Battery 'BatteryGauge';
+use AngelPS1::Plugin::LoadAvg 'LoadAvgPercent';
 
 use POSIX ();
 
@@ -40,6 +41,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
     # fish has its own special handling through the fish_title function
     Blue, [ Time ],
     MarginLeft(' ', BatteryGauge),
+    MarginLeft(' ', LoadAvgPercent),
     ' ',
     # User name
     $< ? (scalar getpwuid $<) : (),
