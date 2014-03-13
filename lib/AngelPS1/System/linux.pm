@@ -14,12 +14,14 @@ sub nproc
     $nproc
 }
 
-sub loadavg
+sub gen_loadavg
 {
-    open my $proc_loadavg, '<', '/proc/loadavg' or die;
-    my $loadavg = readline $proc_loadavg;
-    substr($loadavg, index($loadavg, ' '), length $loadavg, '');
-    $loadavg
+    sub {
+        open my $proc_loadavg, '<', '/proc/loadavg' or die;
+        my $loadavg = readline $proc_loadavg;
+        substr($loadavg, index($loadavg, ' '), length $loadavg, '');
+        $loadavg
+    }
 }
 
 sub _slurp_line
