@@ -9,12 +9,13 @@ AngelPS1::System->use;
 
 my @capabilities =
     grep { AngelPS1::System->can($_) }
-         qw<nproc loadavg>;
+         qw<nproc gen_loadavg>;
 
 foreach my $sub (@capabilities) {
-    my $result = AngelPS1::System->$sub();
-    ok(defined $result, $sub);
-    diag "$sub: ", explain $result;
+    my $result;
+    ok(eval { $result = AngelPS1::System->$sub(); 1 }, "$sub runs ok")
+        or diag "$@";
+    # TODO check $result
 }
 
 done_testing;
