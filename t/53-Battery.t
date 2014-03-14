@@ -66,7 +66,7 @@ sub show_battery
 }
 
 foreach my $charging (0, 1) {
-    foreach my $percent (0..20) {
+    foreach my $percent (reverse 0..20) {
         show_battery($percent / 20, $charging);
     }
 }
