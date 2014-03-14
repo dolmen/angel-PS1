@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 2;
+use Test::More;
 
 use AngelPS1::System;
 
@@ -9,7 +9,7 @@ AngelPS1::System->use;
 
 my @capabilities =
     grep { AngelPS1::System->can($_) }
-         qw<nproc gen_loadavg>;
+         qw<nproc gen_loadavg fetch_battery>;
 
 foreach my $sub (@capabilities) {
     my $result;
