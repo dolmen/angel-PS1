@@ -45,12 +45,10 @@ sub BatteryPercent
 }
 
 use constant {
-    SYMBOL_GREEN => Green,
-    SYMBOL_RED   => Red,
-    #GAUGE_GREEN => Green / Green + Bold,  # Bold green over green
-    #GAUGE_RED   => Green / Red,
-    GAUGE_GREEN  => color(22) / color(235),  # Dark green over dark gray
-    GAUGE_RED    => color(22) / color(124),  # Dark green over dark red
+    SYMBOL_HIGH  => Green,
+    SYMBOL_LOW   => Red,
+    GAUGE_HIGH   => color(22) / color(235),  # Dark green over dark gray
+    GAUGE_LOW    => color(22) / color(124),  # Dark green over dark red
 };
 
 sub BatteryGauge
@@ -65,16 +63,16 @@ sub BatteryGauge
     return sub {
 	my @status = $fetch_battery->();
 	return if !@status || $status[0] >= 0.80;
-	my $green = $status[0] >= 0.3;
+	my $high = $status[0] >= 0.3;
 	(
 	    (
-		$green
-		? SYMBOL_GREEN
-		: SYMBOL_RED
+		$high
+		? SYMBOL_HIGH
+		: SYMBOL_LOW
 	    ),
 		($status[1] ? $SYMBOL_CHARGING
 			    : $SYMBOL_DISCHARGING),
-	    ($green ? GAUGE_GREEN : GAUGE_RED),
+	    ($high ? GAUGE_HIGH : GAUGE_LOW),
 	    [
 		&AngelPS1::Plugin::Gauges::CharGauge($status[0])
 	    ],
