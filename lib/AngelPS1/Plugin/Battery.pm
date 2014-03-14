@@ -12,7 +12,7 @@ our @EXPORT = qw<BatteryPercent BatteryGauge>;
 
 use AngelPS1::Shell;
 use AngelPS1::System;
-use AngelPS1::Chrome qw<Red Green Bold color>;
+use AngelPS1::Chrome qw<Red Green Blue Bold color>;
 
 # Globals (to allow override)
 our $SYMBOL_CHARGING = '⏚';
@@ -45,10 +45,13 @@ sub BatteryPercent
 }
 
 use constant {
-    SYMBOL_HIGH  => Green,
-    SYMBOL_LOW   => Red,
-    GAUGE_HIGH   => color(22) / color(235),  # Dark green over dark gray
-    GAUGE_LOW    => color(22) / color(124),  # Dark green over dark red
+    SYMBOL_CHARGING         => Blue + Bold,
+    SYMBOL_DISCHARGING_HIGH => Green,
+    SYMBOL_DISCHARGING_LOW  => Red,
+    GAUGE_DISCHARGING_HIGH  => color(22) / color(235),  # Dark green over dark gray
+    GAUGE_DISCHARGING_LOW   => color(22) / color(124),  # Dark green over dark red
+    GAUGE_CHARGING_HIGH     => Blue / color(235) + Bold,  # Light blue over dark red
+    GAUGE_CHARGING_LOW      => Blue / color(124) + Bold,  # Light blue over dark red
 };
 
 sub BatteryGauge
@@ -63,16 +66,19 @@ sub BatteryGauge
     return sub {
 	my @status = $fetch_battery->();
 	return if !@status || $status[0] >= 0.80;
+        my $charging = $status[1];
+        #$charging = 1;
 	my $high = $status[0] >= 0.3;
 	(
-	    (
-		$high
-		? SYMBOL_HIGH
-		: SYMBOL_LOW
-	    ),
-		($status[1] ? $SYMBOL_CHARGING
-			    : $SYMBOL_DISCHARGING),
-	    ($high ? GAUGE_HIGH : GAUGE_LOW),
+	    ($charging ? (
+                            SYMBOL_CHARGING, $SYMBOL_CHARGING,
+                            $high ? GAUGE_CHARGING_HIGH : GAUGE_CHARGING_LOW,
+                         )
+		       : (
+                            $high ? SYMBOL_DISCHARGING_HIGH : SYMBOL_DISCHARGING_LOW, $SYMBOL_DISCHARGING,
+                            $high ? GAUGE_DISCHARGING_HIGH : GAUGE_DISCHARGING_LOW,
+                         )
+            ),
 	    [
 		&AngelPS1::Plugin::Gauges::CharGauge($status[0])
 	    ],
