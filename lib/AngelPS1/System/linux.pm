@@ -36,7 +36,7 @@ sub _slurp_line
 # If batteries found, returns a closure that returns 2 values:
 # - the battery level as a float between 0 and 1
 # - a boolean; 1 if charging, else discharging
-sub fetch_battery
+sub gen_fetch_battery
 {
     # List devices
     opendir my $power_devices, '/sys/class/power_supply'

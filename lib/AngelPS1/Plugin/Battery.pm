@@ -20,7 +20,7 @@ our $SYMBOL_DISCHARGING = '⌁';
 
 sub BatteryPercent
 {
-    my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
+    my $fetch_battery_gen = AngelPS1::System->can('gen_fetch_battery')
 	or return;
     my $fetch_battery = $fetch_battery_gen->()
         or return;
@@ -55,7 +55,7 @@ use constant {
 
 sub BatteryGauge
 {
-    my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
+    my $fetch_battery_gen = AngelPS1::System->can('gen_fetch_battery')
 	or return;
     my $fetch_battery = $fetch_battery_gen->()
         or return;

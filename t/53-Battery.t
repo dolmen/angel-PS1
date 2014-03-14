@@ -30,7 +30,7 @@ my @mock_battery = (1, 1);
     BEGIN { $INC{'AngelPS1/System/MockBattery.pm'} = __FILE__ }
 
 
-    sub fetch_battery
+    sub gen_fetch_battery
     {
 	return sub {
 	    @mock_battery
@@ -46,7 +46,7 @@ use AngelPS1::Plugin::Battery qw<BatteryPercent BatteryGauge>;
 AngelPS1::Shell->use('Raw');
 
 is(AngelPS1::System->name, 'MockBattery');
-ok(AngelPS1::System->can('fetch_battery'));
+ok(AngelPS1::System->can('gen_fetch_battery'));
 
 my @PS1 = AngelPS1::Compiler::reduce(
     sub { sprintf ' (%.2f, %d) => ', @mock_battery },

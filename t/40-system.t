@@ -9,7 +9,7 @@ AngelPS1::System->use;
 
 my @capabilities =
     grep { AngelPS1::System->can($_) }
-         qw<nproc gen_loadavg fetch_battery>;
+         qw<nproc gen_loadavg gen_fetch_battery>;
 
 foreach my $sub (@capabilities) {
     my $result;
