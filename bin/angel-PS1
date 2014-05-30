@@ -142,8 +142,9 @@ GetOptions(
 lib->import(@INCLUDES);
 undef @INCLUDES;
 
+$shell = AngelPS1::Shell->detect unless defined $shell;
 # Dynamically load our shell plugin
-AngelPS1::Shell->use(defined($shell) ? $shell : AngelPS1::Shell->detect);
+AngelPS1::Shell->use($shell);
 
 # The angel name must be a valid shell function identifier
 # Note that '-' is allowed, even as a first char
