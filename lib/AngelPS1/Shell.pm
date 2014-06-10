@@ -21,6 +21,32 @@ sub name
     $name
 }
 
+# Exporter: allows to use AngelPS1::Shell plugins as functions
+# instead of only as methods of AngelPS1::Shell
+#
+# Ex:
+#    use AngelPS1::Shell qw<WorkingDir_Tilde>;
+sub import
+{
+    return unless @_ > 1;
+
+    no strict 'refs';
+    shift;
+    my $pkg = (caller)[0];
+    my @subs = @_;
+    foreach my $s (@subs) {
+        my $proto;
+        $s =~ s/(\(.*\))\z// and $proto = $1;
+
+        if (defined $name && ! AngelPS1::Shell->can($s) ) {
+            require Carp;
+            Carp::croak("can't import '$s'");
+        }
+
+        *{"$pkg\::$s"} = sub { AngelPS1::Shell->$s(@_) };
+    }
+}
+
 #
 # Call: AngelPS1::Shell->use('bash')
 #
