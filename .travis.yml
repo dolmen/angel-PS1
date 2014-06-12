@@ -19,7 +19,7 @@ notifications:
 #before_install:
 #    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
 install:
-    - cpanm --notest Test::More Test::More::UTF8 App::FatPacker Git::Sub Test::MockTime Env::PS1 Term::Encoding || { cat ~/.cpanm/build.log ; false ; }
+    - cpanm --notest Test::More Test::More::UTF8 App::FatPacker Perl::Strip Git::Sub Test::MockTime Env::PS1 Term::Encoding || { cat ~/.cpanm/build.log ; false ; }
 script:
     - echo "TERM=$TERM"
     #- echo ====================================================================

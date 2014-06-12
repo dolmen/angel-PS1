@@ -44,11 +44,13 @@ GetOptions(
 {
     package App::FatPacker::WithoutPod;
     our @ISA = 'App::FatPacker';
+    use Perl::Strip;
+    my $PerlStrip = Perl::Strip->new(optimise_size => 1);
     sub load_file
     {
         my ($self, $file) = @_;
 
-        say $file;
+        #return $PerlStrip->strip($self->SUPER::load_file($file));
         return $self->SUPER::load_file($file)
             unless index($file, '/lib/AngelPS1') > 0;
 
