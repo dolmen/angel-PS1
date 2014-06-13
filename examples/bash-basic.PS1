@@ -10,8 +10,10 @@
 # This example is useless in itself, but it may help you to understand how
 # angel-PS1 prompt building works.
 
+use AngelPS1::Chrome qw< Green >;
+
 (
-    \'\w',    # Same as AngelPS1::Shell->WorkingDir_Tilde if shell is bash
-    \'\$',    # Same as AngelPS1::Shell->UserPrivSymbol
+    \'\w',            # Same as AngelPS1::Shell->WorkingDir_Tilde if shell is bash
+    Green, [ \'\$' ], # Same as AngelPS1::Shell->UserPrivSymbol
     ' ',
 )
