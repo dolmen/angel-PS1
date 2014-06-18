@@ -58,6 +58,14 @@ use Exporter 5.57 'import';  # perl 5.8.3
 {
     my $mk_flag = sub { $Chrome->(AngelPS1::Chrome::, undef, undef, $_[0]) };
 
+    # This is a method
+    sub flags
+    {
+        my $self = shift;
+        return undef unless $#$self >= 2;
+        $Chrome->(AngelPS1::Chrome::, undef, undef, @{$self}[2..$#$self])
+    }
+
     my %const = (
         Reset      => $mk_flag->(''),
         ResetFg    => $mk_flag->(39),
@@ -143,6 +151,18 @@ sub deref
     \("$_[0]")
 }
 
+sub fg
+{
+    my $c = $_[0]->[0];
+    defined($c) ? color($c) : undef
+}
+
+sub bg
+{
+    my $c = $_[0]->[1];
+    defined($c) ? color($c) : undef
+}
+
 package # no index: private package
     AngelPS1::Chrome::Color;
 
@@ -193,6 +213,9 @@ AngelPS1::Chrome - DSL for colors and other terminal chrome
 
     # Use ${} around Chrome expression inside strings
     say "normal ${ Red+Bold } RED ${ +Reset } normal";
+
+    # Extract components
+    say( (Red/Blue)->bg, "blue text", (Green+Reset)->flags );
 
 =head1 DESCRIPTION
 

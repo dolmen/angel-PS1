@@ -2,7 +2,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More 0.98 tests => 15;
+use Test::More 0.98 tests => 20;
 use AngelPS1::Chrome;
 use Scalar::Util 'refaddr';
 
@@ -37,6 +37,13 @@ foreach my $name (qw<Red Green Yellow Blue Magenta Cyan White
 
 is(substr("${ (color(31) / color(240)) + Reset }", 1),
 	 "[;38;5;31;48;5;240m");
+
+# Test extracting components
+is(${ (Red/Blue)->fg }, ${ +Red }, '(Red/Blue)->fg');
+is(${ (Red/Blue)->bg }, ${ +Blue }, '(Red/Blue)->bg');
+is(${ Underline->flags }, ${ +Underline }, 'Underline->flags');
+is(${ (Red+Underline)->flags }, ${ +Underline }, '(Red+Underline)->flags');
+is(${ (Reset+Underline)->flags }, ${ Reset+Underline }, '(Reset+Underline)->flags');
 
 # Test caching
 note "Scalar::Util $Scalar::Util::VERSION";
