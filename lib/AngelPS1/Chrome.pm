@@ -206,7 +206,7 @@ AngelPS1::Chrome - DSL for colors and other terminal chrome
     say Red/Blue+Bold, 'red on blue', Reset;
 
     # Extended xterm-256 colors
-    say color(125) + Underline, 'Purple', Reset
+    say color(125) + Underline, 'Purple', Reset;
 
     # Define your own constants
     use constant Pink => color 213;
@@ -226,6 +226,9 @@ In the current implementation stringification to ANSI sequences for C<xterm>
 and C<xterm-256> is hard-coded (which means it doesn't use the L<terminfo(5)>
 database), but this gives optimized (short) strings.
 
+Colors and attributes are exposed as objects that have overloading for
+arithmetic operators.
+
 =head1 EXPORTS
 
 =head2 Functions
@@ -240,39 +243,41 @@ object).
 
 =head2 Colors
 
+Each of these function return a Chrome object.
+
 =over 4
 
 =item *
 
-C<Black>
+C<Black>: C<color 0>
 
 =item *
 
-C<Red>
+C<Red>: C<color 1>
 
 =item *
 
-C<Green>
+C<Green>: C<color 2>
 
 =item *
 
-C<Yellow>
+C<Yellow>: C<color 3>
 
 =item *
 
-C<Blue>
+C<Blue>: C<color 4>
 
 =item *
 
-C<Magenta>
+C<Magenta>: C<color 5>
 
 =item *
 
-C<Cyan>
+C<Cyan>: C<color 6>
 
 =item *
 
-C<White>
+C<White>: C<color 7>
 
 =cut
 
@@ -280,16 +285,12 @@ C<White>
 
 =back
 
-=head2 Flags
+=head2 Decoration flags
 
 The exact rendering of each flag is dependent on how the terminal implements
 them. For example C<Underline> and C<Blink> may do nothing.
 
 =over 4
-
-=item *
-
-C<Reset> : reset all colors and flags
 
 =item *
 
@@ -306,6 +307,64 @@ C<Blink>
 =item *
 
 C<Reverse>
+
+=back
+
+=head2 Special flags
+
+=over 4
+
+=item *
+
+C<Reset> : reset all colors and flags
+
+=back
+
+=head1 METHODS
+
+Here are the methods on C<AngelPS1::Chrome> objects:
+
+=over 4
+
+=item C<fg>
+
+Extract the Chrome object of just the foreground color. Maybe C<undef>.
+
+=item C<bg>
+
+Extract the Chrome object of the just background color. Maybe C<undef>.
+
+=item C<flags>
+
+Extract a Chrome object of just the decoration flags. Maybe C<undef>.
+
+=back
+
+=head1 OVERLOADED OPERATORS
+
+=over 4
+
+=item C</> (mnemonic: "over")
+
+Conmbine a foreground color (on the left) with a background color.
+
+=item C<+>
+
+Add decoration flags (on the right) to colors (on the left).
+
+=item C<""> (stringification)
+
+Transform the object into a sting of ANSI sequences. This is
+particularly useful to directly use a Chrome object in a double quoted string.
+
+=item C<${}> (scalar dereference)
+
+Same result as C<""> (stringification). This operator is overloaded because
+it is convenient to interpolate Chrome expressions in double-quoted strings.
+
+Example:
+
+    say "normal ${ Red } red ${ Reset }";
 
 =back
 
