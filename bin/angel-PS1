@@ -462,12 +462,12 @@ if C<--config I<$CONFIG>> option is given, the F<I<$CONFIG>> file
 
 =item *
 
-the C<AngelPS1::Prompt::I<$NAME>> perl module:
-F<AngelPS1/Prompt/I<$NAME>.pm>
+the C<AngelPS1::Prompt::I<$ANGEL>> perl module:
+F<AngelPS1/Prompt/I<$ANGEL>.pm>
 
 =item *
 
-the F<I<$NAME>.PS1> file
+the F<I<$ANGEL>.PS1> file
 
 =back
 
