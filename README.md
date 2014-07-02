@@ -44,14 +44,17 @@ settings:
 
     eval (./angel-PS1)
 
-**Note:** this project is still very young and is constantly evolving. I
-recommend to *not yet* load it from `~/.bashrc`.
+**Note:** this project is still very young and is constantly evolving. Use at
+your own risks.
+
 
 You can also try other examples from the repository:
 
     git clone https://github.com/dolmen/angel-PS1.git
     cd angel-PS1
-    eval `./angel-PS1 -c examples/Powerline-basic.PS1`
+    eval $(./angel-PS1 -c examples/Powerline-basic.PS1)
+
+
 
 #### Documentation
 
