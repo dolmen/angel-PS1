@@ -92,10 +92,13 @@ sub detect
     }
     $shell = AngelPS1::Util::one_line($shell);
 
+    # Keep only the basename
+    $shell =~ s{^.*/}{};
+
     # Login shells may begin with a '-': '-bash'
     $shell =~ s/^-//;
 
-    return $shell
+    $shell
 }
 
 '$';
