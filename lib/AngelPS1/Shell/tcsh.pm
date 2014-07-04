@@ -46,17 +46,19 @@ sub shell_code_dynamic
     # - http://www.grymoire.com/Unix/CshTop10.txt
     # - http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
 
+    # Note that because of bug http://bugs.gw.com/view.php?id=259
+    # we can not use if/else/endif in aps1_precmd because that
+    # pollutes the history, so we can't do check of existence of
+    # $IN (see previous implementation in the history)
+
     my $shell_code = <<EOF;
 if ( \${?aps1_name} ) then
     eval \$aps1_name leave
 endif
 set aps1_prompt = \$prompt:q
-set aps1_precmd = 'if ( -p $IN ) then\\
-    echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
-    eval "`cat $OUT`"\\
-else\\
-    $NAME leave\\
-endif'
+set aps1_precmd = '\\
+echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
+eval "`cat $OUT`"'
 alias precmd \$aps1_precmd:q
 alias $NAME 'switch ( \\!* )\\
     case leave:\\
