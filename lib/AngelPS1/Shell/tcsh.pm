@@ -56,10 +56,12 @@ if ( \${?aps1_name} ) then
     eval \$aps1_name leave
 endif
 set aps1_prompt = \$prompt:q
-set aps1_precmd = '\\
-echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
-eval "`cat $OUT`"'
-alias precmd \$aps1_precmd:q
+set aps1_precmd = 'set aps1_err = \$?\\
+if ( -p $IN ) then\\
+    echo -n "?=\$aps1_err:q\\0PWD=\$PWD:q" > $IN\\
+    eval "`cat $OUT`"\\
+endif'
+alias precmd 'eval \$aps1_precmd:q'
 alias $NAME 'switch ( \\!* )\\
     case leave:\\
     case quit:\\
