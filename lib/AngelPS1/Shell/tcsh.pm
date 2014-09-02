@@ -62,7 +62,7 @@ if ( -p $IN ) then\\
     eval "`cat $OUT`"\\
 endif'
 alias precmd 'eval \$aps1_precmd:q'
-alias $NAME 'switch ( \\!* )\\
+set aps1_angel = 'switch ( \$aps1_angel_arg:q )\\
     case leave:\\
     case quit:\\
         set prompt = "\$aps1_prompt:q"\\
@@ -86,6 +86,9 @@ alias $NAME 'switch ( \\!* )\\
         echo "usage: $NAME [quit|mute|off|unmute|on]"\\
         breaksw\\
 endsw'
+alias $NAME 'set aps1_angel_arg = \\!*\\
+echo \$aps1_angel_arg:q\\
+eval \$aps1_angel:q'
 set aps1_name = '$NAME'
 set aps1_pid = '$PID'
 EOF
