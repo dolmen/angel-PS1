@@ -40,6 +40,7 @@ my $TTYNAME;
 sub _update_from_stty
 {
     my $line = `stty -F $TTYNAME size`;
+    chomp $line;
     ($LINES, $COLUMNS) = split / /, $line;
 }
 
