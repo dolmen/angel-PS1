@@ -10,12 +10,11 @@ our @EXPORT = qw(MarginLeft);
 
 use AngelPS1::Compiler qw(expand);
 
-
+# Usages:
+#    MarginLeft(sub { ... })   # default margin: ' '
+#    MarginLeft($margin, sub { ... })
 sub MarginLeft ($;$)
 {
-    # If no $_[1], return an empty string
-    return unless @_ > 1;
-
     my $code = pop;
     if (!ref($code)) {
         return defined($code) && length($code) ? " $code" : ();
