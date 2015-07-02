@@ -8,8 +8,7 @@ our $VERSION = $AngelPS1::VERSION;
 use Exporter 5.57 'import';
 our @EXPORT = qw(MarginLeft);
 
-use AngelPS1::Compiler;
-
+use AngelPS1::Compiler qw(expand);
 
 
 sub MarginLeft ($;$)
