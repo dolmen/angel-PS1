@@ -13,8 +13,8 @@ sub gen_loadavg
 {
     sub {
         my $uptime = `uptime`;
-        $uptime =~ /load averages: (?<up>\d+\.\d+) /;
-        $+{up};
+        $uptime =~ /load averages: ([0-9]+\.[0-9]+) /;
+        $1
     }
 }
 
