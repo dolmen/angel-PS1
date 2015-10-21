@@ -7,7 +7,7 @@ use Exporter 'import';
 our @EXPORT = qw< reduce expand ps1_is_static >;
 
 use AngelPS1::Shell ();
-use AngelPS1::Chrome ();
+use Term::Chrome ();
 use Scalar::Util ();
 
 
@@ -60,14 +60,14 @@ sub reduce
                 $v = $$v;
             }
             # => replace by the colored expanded result
-            elsif (Scalar::Util::blessed($v) && $v->isa('AngelPS1::Chrome')) {
+            elsif (Scalar::Util::blessed($v) && $v->isa('Term::Chrome')) {
                 if (@template && ref($template[0]) eq 'ARRAY') {
                     unshift @template,
                         AngelPS1::Shell->ps1_invisible($v->term),
                         # flatten the ARRAY
                         @{ shift @template },
                         # close the colored part with a Reset
-                        AngelPS1::Shell->ps1_invisible(AngelPS1::Chrome::Reset->term);
+                        AngelPS1::Shell->ps1_invisible(Term::Chrome::Reset->term);
                 } else {
                     # Expand the color
                     unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
