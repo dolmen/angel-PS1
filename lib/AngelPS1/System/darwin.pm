@@ -5,9 +5,8 @@ package AngelPS1::System::darwin;
 
 sub nproc
 {
-    my $cpus = `sysctl -n hw.ncpu`;
-    chomp $cpus;
-    $cpus;
+    chomp(my $ncpu = `sysctl -n hw.ncpu`);
+    $ncpu
 }
 
 sub gen_loadavg
