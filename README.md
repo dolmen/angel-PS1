@@ -115,7 +115,7 @@ Follow <a href="https://twitter.com/nglPS1">@nglPS1</a> on Twitter.
 
 ### Copyright & license
 
-Copyright 2013,2014 Olivier Mengué.
+Copyright 2013-2015 Olivier Mengué.
 
 `angel-PS1` itself is distributed under the GNU Affero General Public License
 version 3 or later. See [COPYING](COPYING) for details.

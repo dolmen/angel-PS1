@@ -3,7 +3,7 @@ use utf8;
 
 use constant COPYRIGHT => <<END;
 
-#    Copyright © 2013,2014 Olivier Mengué
+#    Copyright © 2013-2015 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
 #
