@@ -54,6 +54,31 @@ GetOptions(
 ) or die;
 
 
+
+my @MODULES = qw<
+    Term/Chrome.pm
+>;
+
+use File::Copy 'copy';
+use File::Path qw'make_path remove_tree';
+
+-d 'fatlib' and (remove_tree 'fatlib' or die $!);
+(-d $_ or mkdir $_) for qw(lib fatlib);
+foreach my $m (@MODULES) {
+    (my $dir = $m) =~ s{/[^/]*$}{};
+    $dir = "fatlib/$dir";
+    make_path $dir;
+
+    foreach my $I (@INC) {
+	if (-f "$I/$m") {
+	    copy "$I/$m", "$dir" or die $!;
+	    last;
+	}
+    }
+}
+
+
+
 {
     package App::FatPacker::WithoutPod;
     our @ISA = 'App::FatPacker';
