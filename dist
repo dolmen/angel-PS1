@@ -48,16 +48,25 @@ use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 
 my ($make_release, $fake_release);
 
+# Modules that must be embedded
+my @MODULES = qw<
+    Term::Chrome
+>;
+
+
 GetOptions(
     'r|release' => \$make_release,
     'n' => \$fake_release,
+    # Embedd additional modules
+    'm' => \@MODULES,
 ) or die;
 
 
+for my $m (@MODULES) {
+    $m =~ s!::!/!g;
+    $m .= '.pm';
+}
 
-my @MODULES = qw<
-    Term/Chrome.pm
->;
 
 use File::Copy 'copy';
 use File::Path qw'make_path remove_tree';
