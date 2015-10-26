@@ -49,17 +49,21 @@ use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 my ($make_release, $fake_release);
 
 # Modules that must be embedded
-my @MODULES = qw<
+my @MODULES_FOR_RELEASE = qw<
     Term::Chrome
 >;
+my @MODULES = @MODULES_FOR_RELEASE;
 
 
 GetOptions(
     'r|release' => \$make_release,
     'n' => \$fake_release,
-    # Embedd additional modules
-    'm' => \@MODULES,
+    # Embedd additional modules, not for release
+    'm=s' => \@MODULES,
 ) or die;
+
+$make_release && @MODULES > @MODULES_FOR_RELEASE
+    and die "Additional modules (-m) must not be used for release.\n";
 
 
 for my $m (@MODULES) {
