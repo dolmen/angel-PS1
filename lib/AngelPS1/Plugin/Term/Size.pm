@@ -39,8 +39,11 @@ sub _update_from_ioctl
 my $TTYNAME;
 sub _update_from_stty
 {
-    my $line = `stty -F $TTYNAME size`;
-    chomp $line;
+    my $line = $^O eq 'linux'
+        ? `stty -F "$TTYNAME" size`
+        # darwin, *BSD have '-f', Solaris has neither
+        : `stty size <"$TTYNAME"`;
+    chomp($line);
     ($LINES, $COLUMNS) = split / /, $line;
 }
 
