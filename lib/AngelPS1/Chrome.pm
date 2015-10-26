@@ -3,11 +3,13 @@ use warnings;
 
 package AngelPS1::Chrome;
 
+# Fatpacked by the dist script
 use Term::Chrome 1.011;
 
 *EXPORT = *Term::Chrome::EXPORT;
 *import = *Term::Chrome::import;
 
+1
 __END__
 
 =head1 NAME
