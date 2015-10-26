@@ -77,7 +77,7 @@ use File::Path qw'make_path remove_tree';
 
 -d 'fatlib' and (remove_tree 'fatlib' or die $!);
 (-d $_ or mkdir $_) for qw(lib fatlib);
-foreach my $m (@MODULES) {
+COPY_MODULES: foreach my $m (@MODULES) {
     (my $dir = $m) =~ s{/[^/]*$}{};
     $dir = "fatlib/$dir";
     make_path $dir;
@@ -85,9 +85,10 @@ foreach my $m (@MODULES) {
     foreach my $I (@INC) {
 	if (-f "$I/$m") {
 	    copy "$I/$m", "$dir" or die $!;
-	    last;
+	    next COPY_MODULES;
 	}
     }
+    die "$m not found in \@INC!\n";
 }
 
 
