@@ -74,6 +74,7 @@ for my $m (@MODULES) {
 
 use File::Copy 'copy';
 use File::Path qw'make_path remove_tree';
+use Module::Metadata;
 
 -d 'fatlib' and (remove_tree 'fatlib' or die $!);
 (-d $_ or mkdir $_) for qw(lib fatlib);
@@ -83,10 +84,12 @@ COPY_MODULES: foreach my $m (@MODULES) {
     make_path $dir;
 
     foreach my $I (@INC) {
-	if (-f "$I/$m") {
-	    copy "$I/$m", "$dir" or die $!;
-	    next COPY_MODULES;
-	}
+        if (-f "$I/$m") {
+            my $info = Module::Metadata->new_from_file("$I/$m");
+            say $m, ' ', $info->version;
+            copy "$I/$m", "$dir" or die $!;
+            next COPY_MODULES;
+        }
     }
     die "$m not found in \@INC!\n";
 }
