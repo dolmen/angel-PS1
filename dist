@@ -26,6 +26,19 @@ use 5.010;
 use strict;
 use warnings;
 
+# In case of a missing dependency, help the user
+BEGIN {
+    push @INC, sub {
+        # die doesn't work as I expected in BEGIN blocks
+        print STDERR "Missing dependency $_[1].\n",
+                     "Run:\n",
+                     "  cpanm Module::CPANfile\n",
+                     "  cpanfile-dump --develop | cpanm\n";
+        exit 1
+    }
+}
+
+
 # Only to fail early if the tool is missing
 use App::FatPacker 0.010000 ();
 use Carp 'croak';
