@@ -25,6 +25,7 @@ requires 'Scalar::Util';
 on test => sub {
     requires 'Test::More' => '0.98';
     requires 'Test::More::UTF8';
+    recommends 'Test::MockTime';
     requires 'Term::Encoding';
     requires 'Env::PS1'; # examples/EnvPS1.PS1
 };
