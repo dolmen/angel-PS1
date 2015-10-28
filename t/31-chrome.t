@@ -11,8 +11,8 @@ is(Bold->term, "\e[1m", 'Bold');
 
 my $BoldRed = Red + Bold;
 ok(defined($BoldRed),'Red+Bold defined');
-is(ref($BoldRed), 'AngelPS1::Chrome', 'ref(Red+Bold)');
-isa_ok($BoldRed, 'AngelPS1::Chrome', 'Red+Bold')
+is(ref($BoldRed), 'Term::Chrome', 'ref(Red+Bold)');
+isa_ok($BoldRed, 'Term::Chrome', 'Red+Bold')
     or diag $BoldRed;
 is((Red+Bold)->term, "\e[1;31m", 'Red+Bold->term');
 is("$BoldRed",       "\e[1;31m", "Red+Bold stringification");
@@ -32,7 +32,7 @@ note("${ Black / White }Black / White${ +Reset }");
 foreach my $name (qw<Red Green Yellow Blue Magenta Cyan White
                      Bold Blink Reverse Underline>) {
     no strict 'refs';
-    note(&{"AngelPS1::Chrome::$name"} . $name . Reset);
+    note(&{"Term::Chrome::$name"} . $name . Reset);
 }
 
 is(substr("${ (color(31) / color(240)) + Reset }", 1),

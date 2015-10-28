@@ -48,10 +48,58 @@ use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 
 my ($make_release, $fake_release);
 
+# Modules that must be embedded
+my %MODULES = qw<
+    Term::Chrome          1.011
+>;
+my @MORE_MODULES;
+
+
 GetOptions(
     'r|release' => \$make_release,
     'n' => \$fake_release,
+    # Embedd additional modules, not for release
+    'm=s' => \@MORE_MODULES,
 ) or die;
+
+$make_release && @MORE_MODULES
+    and die "Additional modules (-m) must not be used for release.\n";
+
+$MODULES{$_} = 0 for @MORE_MODULES;
+
+
+
+use File::Copy 'copy';
+use File::Path qw'make_path remove_tree';
+use Module::Metadata ();
+use version ();
+
+-d 'fatlib' and (remove_tree 'fatlib' or die $!);
+(-d $_ or mkdir $_) for qw(lib fatlib);
+COPY_MODULES: foreach my $m (sort keys %MODULES) {
+    (my $file = $m) =~ s!::!/!g;
+    $file .= '.pm';
+    (my $dir = $file) =~ s{/[^/]*$}{/};
+    $dir = "fatlib/$dir";
+    make_path $dir;
+
+    foreach my $I (@INC) {
+        if (-f "$I/$file") {
+            my $info = Module::Metadata->new_from_file("$I/$file");
+            version->parse($info->version) >= version->parse($MODULES{$m})
+                or die sprintf("$m: found %s, requires %s\n",
+                            $info->version,
+                            $MODULES{$m},
+                        );
+
+            printf "%-20s %s\n", $m, $info->version;
+            copy "$I/$file", "$dir" or die $!;
+            next COPY_MODULES;
+        }
+    }
+    die "$file not found in \@INC!\n";
+}
+
 
 
 {
