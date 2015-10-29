@@ -217,7 +217,7 @@ if ($RUN_TEST || -t STDOUT) {
     print "angel-PS1 $VERSION\n";
 
     my $script = index($0, '/') >= 0 ? $0 : "\$(which $FindBin::Script)";
-    print "Copyright (C) 2013,2014  Olivier Mengué\n",
+    print "Copyright (C) 2013-2015  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
           "This is free software, and you are welcome to redistribute it\n",
           "under certain conditions;\n",
