@@ -36,7 +36,7 @@ on develop => sub {
     requires 'App::Prove';
     requires 'App::FatPacker';
     requires 'Perl::Strip';
-    requires 'PPI::XS';  # for Perl::Strip
+    recommends 'PPI::XS';  # optional for PPI which is loaded by Perl::Strip
     requires 'Module::CoreList';
     requires 'File::Copy';
     requires 'Git::Sub';

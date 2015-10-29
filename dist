@@ -29,6 +29,10 @@ use warnings;
 # In case of a missing dependency, help the user
 BEGIN {
     push @INC, sub {
+        #say((caller(1))[3]);
+        # Let pass if the require is in an eval: this is the loading of an
+        # optional module
+        return if (caller 1)[3] eq '(eval)';
         # die doesn't work as I expected in BEGIN blocks
         print STDERR "Missing dependency $_[1].\n",
                      "Run:\n",
@@ -38,6 +42,10 @@ BEGIN {
     }
 }
 
+# Testing the code above:
+# eval { require Toto1; 1 };
+# eval 'require Toto2; 1';
+# use Toto3;
 
 # Only to fail early if the tool is missing
 use App::FatPacker 0.010000 ();
