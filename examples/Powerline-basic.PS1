@@ -28,6 +28,10 @@ return (
     BG_USER / BG_PWD + Reset,
     SEP_COLOR,
     FG_PWD,
+    # Display of the current path
+    # '/' is replaced by SEP_THIN colored with FG_PWD_SEP
+    # Each element of the path is colored with FG_PWD
+    # The last element is colored with FG_PWD_LAST
     sub {
         my $dir = shift->{PWD};
         my $home = $ENV{HOME};
