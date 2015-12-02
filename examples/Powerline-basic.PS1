@@ -32,25 +32,29 @@ return (
     # '/' is replaced by SEP_THIN colored with FG_PWD_SEP
     # Each element of the path is colored with FG_PWD
     # The last element is colored with FG_PWD_LAST
-    sub {
-        my $dir = shift->{PWD};
-        my $home = $ENV{HOME};
-        my @cwd;
-        if ($dir eq '/') {
-            @cwd = '/';
-        } elsif ($dir =~ s{^$home(/|$)}{~$1}s) {
-            @cwd = split m!/!, $dir
-        } else {
-            @cwd = ('/', split m!/!, substr($dir, 1))
+    do {
+        # Build the regexp just once
+        my $home_regexp = qr{^\Q$ENV{HOME}\E(?:/|$)};
+        my $color_last = FG_PWD_LAST + Bold;
+
+        sub {
+            my $dir = shift->{PWD};
+            my @cwd;
+            # Below $HOME ?
+            if ($dir =~ s{$home_regexp}{}s) {
+                @cwd = ('~', split m!/!, $dir)
+            } else {
+                @cwd = split m!/!, $dir;
+                $cwd[0] = '/';
+            }
+            my @sep = (FG_PWD_SEP, SEP_THIN, FG_PWD);
+            my $last = pop @cwd;
+
+            (
+                ( map { (" $_ ", @sep) } @cwd ),
+                $color_last, " $last "
+            )
         }
-        my @sep = (FG_PWD_SEP, SEP_THIN, FG_PWD);
-        my $last = pop @cwd;
-        my @res;
-        foreach my $p (@cwd) {
-            push @res, " $p ", @sep;
-        }
-        push @res, (FG_PWD_LAST + Bold, " $last ");
-        @res
     },
     BG_PWD + Reset,
     SEP_COLOR,
