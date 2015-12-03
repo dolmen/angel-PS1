@@ -93,9 +93,10 @@ $NAME()
         add-zsh-hook -d zshexit -angel-PS1-exit ;
         unset -f -- $NAME -angel-PS1 -angel-PS1-exit ;;
     mute|off)
+        add-zsh-hook -d precmd -angel-PS1 ;
         PS1="\$APS1_PS1" ;;
     unmute|on)
-        ;;
+        add-zsh-hook precmd -angel-PS1 ;;
     *)
         echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
