@@ -45,6 +45,7 @@ sub shell_code_dynamic
 
     my $shell_debug = $DEBUG->{'in'} ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
     my $time_debug = $DEBUG->{'time'} ? q|time | : '';
+    my $argv = join(' ', map { (my $x=$_) =~ s/'/'\\''/g; qq<'$x'> } @AngelPS1::ARGV_BACKUP);
 
     # The shell code will be evaluated with eval as a single line
     # so statements must be properly terminated with ';'
@@ -67,6 +68,8 @@ APS1_PID=$PID ;
 $NAME()
 {
     case "\$1" in
+    reload)
+        eval \$($0 $argv) ;;
     leave|quit|go-away)
         PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
         PS1="\$APS1_PS1" ;
@@ -81,7 +84,7 @@ $NAME()
     unmute|on)
         PROMPT_COMMAND=-angel-PS1 ;;
     *)
-        echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
+        echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
     esac ;
 } ;

@@ -51,6 +51,7 @@ sub shell_code_dynamic
 
     my $function_name = $class->ps1_function_name($NAME);
     my $time_debug = $DEBUG->{'time'} ? $class->ps1_time_debug : '';
+    my $argv = join(' ', map { (my $x=$_) =~ s/'/'\\''/g; qq<'$x'> } @AngelPS1::ARGV_BACKUP);
     my $local = $class->shell_local;
 
     # The shell code will be evaluated with eval as a single line
@@ -72,6 +73,8 @@ APS1_PID=$PID ;
 $NAME()
 {
     case "\$1" in
+    reload)
+        eval \$($0 $argv) ;;
     leave|quit|go-away)
         PS1="\$APS1_PS1" ;
         kill \$APS1_PID 2>/dev/null ;
@@ -83,7 +86,7 @@ $NAME()
     unmute|on)
         PS1='\$($time_debug$function_name)' ;;
     *)
-        echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
+        echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
     esac ;
 } ;

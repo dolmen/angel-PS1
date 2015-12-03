@@ -66,6 +66,9 @@ if ($ENCODING) {
     binmode(STDERR, ":encoding($ENCODING)");
 }
 
+# Preserve a copy of @ARGV
+our @ARGV_BACKUP = @ARGV;
+
 our $APP = !defined scalar caller;  # Running as command or include
 $main::VERSION = our $VERSION if $APP;
 
