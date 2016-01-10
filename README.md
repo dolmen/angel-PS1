@@ -16,6 +16,9 @@ guardian angel, attached to the shell and who gives him precious
 information about the world around that you can't see. You'll not see him,
 but he is there. Always around, but always discreet.
 
+*There is absolutely no relation between this project and
+[AngelCode / AngelScript](http://www.angelcode.com/angelscript/).*
+
 ### Build status
 
 [`release`](https://github.com/dolmen/angel-PS1/tree/release): [![Build status](https://travis-ci.org/dolmen/angel-PS1.png?branch=release)](https://travis-ci.org/dolmen/angel-PS1)
