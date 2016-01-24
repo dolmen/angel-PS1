@@ -8,6 +8,26 @@ our $NAME = 'angel';
 # Verbosity level: boolean
 our $VERBOSE = 0;
 
+# Encoding name for the locale (LC_CTYPE)
+our $ENCODING;
+
+my $encoding;
+
+# This function is experimental.
+# Its name is subject to future change.
+sub _str_allowed
+{
+    my $str = shift;
+    $encoding ||= do {
+	require Encode;
+	Encode::find_encoding($ENCODING)
+    };
+    local $@;
+    eval { Encode::encode($encoding, $str, Encode::FB_CROAK()) };
+    # Return true if no exception was thrown
+    !$@
+}
+
 1;
 __END__
 

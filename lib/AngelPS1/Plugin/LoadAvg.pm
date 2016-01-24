@@ -9,6 +9,7 @@ our $VERSION = $AngelPS1::VERSION;
 use Exporter 5.57 'import';
 our @EXPORT = qw<LoadAvgPercent>;
 
+use AngelPS1;
 use AngelPS1::Shell;
 use AngelPS1::System;
 use AngelPS1::Chrome qw<Red Green Bold color>;
@@ -20,6 +21,10 @@ sub LoadAvgPercent
 {
     my $loadavg_gen = AngelPS1::System->can('gen_loadavg')
 	or return;
+
+    # Plugin disabled if the encoding doesn't support the symbol
+    AngelPS1::_str_allowed($SYMBOL_LOADAVG) or return;
+
     my $loadavg_func = $loadavg_gen->();
 
     return sub {
