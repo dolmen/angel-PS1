@@ -306,9 +306,15 @@ open STDIN, '+<', '/dev/null';
 close STDOUT;
 open STDOUT, '>', '/dev/null';
 
-
+# Signals handling
+# Reference: http://www.linusakesson.net/programming/tty/
+#
 # Ignore ^C sent to the terminal
 $SIG{INT} = 'IGNORE';
+# Let us keep writing to the terminal while in the background
+$SIG{TTOU} = 'IGNORE';
+# SIGWINCH is also handled in AngelPS1::Plugn::Term::Size
+#
 # Clean exits that will call our END block
 $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
