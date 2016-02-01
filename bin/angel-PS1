@@ -312,6 +312,7 @@ open STDOUT, '>', '/dev/null';
 # Ignore ^C sent to the terminal
 $SIG{INT} = 'IGNORE';
 # Let us keep writing to the terminal while in the background
+# This is the default when 'stty -tostop'
 $SIG{TTOU} = 'IGNORE';
 # SIGWINCH is also handled in AngelPS1::Plugn::Term::Size
 #
