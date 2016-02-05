@@ -75,6 +75,7 @@ APS1_PS1="\$PS1";
 set -o promptpercent ;
 set -o nopromptbang ;
 set -o nopromptsubst ;
+autoload -Uz add-zsh-hook ;
 add-zsh-hook precmd -angel-PS1 ;
 APS1_NAME=$NAME ;
 APS1_PID=$PID ;
