@@ -50,6 +50,8 @@ sub shell_code_dynamic
     # The shell code will be evaluated with eval as a single line
     # so statements must be properly terminated with ';'
     # No shell comments allowed
+    # No unquoted wildcards (*, ?) allowed (see GH #17). That's why we
+    # use the ''*)  trick in the 'case' block of the angel function.
     <<EOF;
 [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
@@ -83,7 +85,7 @@ $NAME()
         PS1="\$APS1_PS1" ;;
     unmute|on)
         PROMPT_COMMAND=-angel-PS1 ;;
-    *)
+    ''*)
         echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
     esac ;
