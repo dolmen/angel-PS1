@@ -98,7 +98,7 @@ $NAME()
         PS1="\$APS1_PS1" ;;
     unmute|on)
         add-zsh-hook precmd -angel-PS1 ;;
-    *)
+    ''*)
         echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
     esac ;
