@@ -57,6 +57,7 @@ sub shell_code_dynamic
     # The shell code will be evaluated with eval as a single line
     # so statements must be properly terminated with ';'
     # No shell comments allowed
+    # No unquoted wildcards (*, ?, []) allowed. See GH #17.
     <<EOF;
 [ -n "\$APS1_NAME" ] && \$APS1_NAME leave;
 APS1_PS1="\$PS1";
@@ -85,7 +86,7 @@ $NAME()
         PS1="\$APS1_PS1" ;;
     unmute|on)
         PS1='\$($time_debug$function_name)' ;;
-    *)
+    ''*)
         echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
         return 1 ;;
     esac ;
