@@ -2,6 +2,10 @@ package AngelPS1;
 
 our $VERSION = '0.95';
 
+# The process id of the shell
+# (this module must be loaded before forking)
+our $SHELL_PID = getppid;
+
 # The angel's name (which is used as the controller command)
 our $NAME = 'angel';
 

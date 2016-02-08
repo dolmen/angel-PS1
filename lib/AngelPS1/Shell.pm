@@ -72,10 +72,11 @@ sub use
 
 sub detect
 {
+    require AngelPS1;
     require AngelPS1::Util;
     # Extract the name of $PPID
 
-    my $ppid = getppid;
+    my $ppid = $AngelPS1::SHELL_PID;
     my $shell;
 
     GET_CMD: {
