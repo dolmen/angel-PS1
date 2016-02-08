@@ -1,8 +1,6 @@
 Contributing to The Angel's Prompt
 ==================================
 
-Contributing a patch
---------------------
 
 The public stable branch for end users is `release`.
 
