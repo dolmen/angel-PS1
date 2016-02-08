@@ -24,6 +24,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
 # The prompt is the list returned as the last statement
 (
     (
+        # fish has its own special handling through the fish_title function
         AngelPS1::Shell->name eq 'fish'
         ? ()
         : TermTitle(
@@ -39,8 +40,10 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
             WorkingDir_Tilde,
         )
     ),
-    # fish has its own special handling through the fish_title function
-    Blue, [ Time ],
+
+    # Disabled
+    #Blue, [ Time ],
+
     MarginLeft(' ', BatteryGauge),
     MarginLeft(' ', LoadAvgPercent),
     MarginLeft(' ', Jobs),
