@@ -12,6 +12,7 @@ use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::VCS;
 use AngelPS1::Plugin::Battery 'BatteryGauge';
 use AngelPS1::Plugin::LoadAvg 'LoadAvgPercent';
+use AngelPS1::Plugin::Jobs 'Jobs';
 
 use POSIX ();
 
@@ -42,6 +43,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
     Blue, [ Time ],
     MarginLeft(' ', BatteryGauge),
     MarginLeft(' ', LoadAvgPercent),
+    MarginLeft(' ', Jobs),
     ' ',
     # User name
     $< ? (scalar getpwuid $<) : (),
