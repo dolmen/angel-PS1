@@ -4,9 +4,9 @@ Contributing to The Angel's Prompt
 Contributing a patch
 --------------------
 
-The public stable branch for end users is `master`.
+The public stable branch for end users is `release`.
 
-On `master` the angel-PS1 file is the result of a build. The sources for
+On `release` the angel-PS1 file is the result of a build. The sources for
 the build are on the `devel` branch. This is on top of this branch that you
 must write your patches.
 
@@ -104,7 +104,7 @@ How to make a good pull request?
    For example use triple backquotes for code blocks.
 
 
-Never, ever, merge the branches `devel` or `master` of the main repo into one
+Never, ever, merge the branches `devel` or `release` of the main repo into one
 of your own branches. Instead, always rebase your own work on top the `devel`
 branch (`git rebase upstream/devel`).
 
