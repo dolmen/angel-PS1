@@ -70,5 +70,51 @@ sub gen_fetch_battery
     }
 }
 
+
+# Returns a sub that will return a list of:
+# - count of suspended childs of the shell
+# - count of background childs of the shell
+# TODO count detached screen/tmux sessions
+sub gen_count_jobs
+{
+    my $PPID = shift || $AngelPS1::SHELL_PID;
+
+    sub {
+        opendir my $proc_dir, '/proc' or die "/proc: $!";
+
+        my ($suspended, $background) = (0, 0);
+
+        for my $pid ((readdir $proc_dir)) {
+            next if $pid !~ /^[1-9]/;
+            # Skip ourself
+            next if $pid == $$;
+            -r "/proc/$pid/stat" or next;
+            open my $f, '<:raw', "/proc/$pid/stat" or next;
+            # TODO rewrite read with sysread
+            my $stat = <$f>;
+            close $f;
+            my ($comm, $state, $ppid, $pgrp, $sid) = $stat =~ /\((.*)\) (.) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) / or die $stat;
+            # Only childs of the shell
+            next if $ppid ne $PPID;
+            #printf "# %5d %5d %5d %5d %s %s\n", $pid, $ppid, $pgrp, $sid, $state, $comm;
+            die $stat unless defined $pgrp;
+            # Only process group leaders
+            next if $pgrp ne $pid;
+            if ($state eq 'T') {
+                $suspended++
+            } else {
+                $background++;
+            }
+            #printf "%4d %s %s\n", $pid, $state, $comm;
+        }
+
+        close $proc_dir;
+
+        return ($suspended, $background)
+    }
+}
+
+
+
 '$';
 # vim:set et ts=8 sw=4 sts=4:
