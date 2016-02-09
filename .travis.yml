@@ -45,7 +45,7 @@ script:
     - dpkg -l bash dash ksh fish mksh tcsh zsh
     - bash --version | head -n 1
     - fish --version
-    - ksh --version
+    - ksh --version || :
     - mksh -c 'echo $KSH_VERSION'
     - tcsh --version
     - zsh --version
