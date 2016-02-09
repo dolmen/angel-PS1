@@ -17,11 +17,12 @@ addons:
         - aspell-en
         # Shells
         - bash
-        - zsh
         - dash
-        - mksh
+        - ksh
         - fish
+        - mksh
         - tcsh
+        - zsh
 notifications:
     #on_success: change
     on_success: always
@@ -41,12 +42,13 @@ install:
 script:
     - echo "TERM=$TERM"
     - echo ====================================================================
-    - dpkg -l bash dash mksh fish tcsh zsh
+    - dpkg -l bash dash ksh fish mksh tcsh zsh
     - bash --version | head -n 1
-    - zsh --version
-    - mksh -c 'echo $KSH_VERSION'
     - fish --version
+    - ksh --version
+    - mksh -c 'echo $KSH_VERSION'
     - tcsh --version
+    - zsh --version
     - echo ====================================================================
     - prove -lv t
     # Ensure that the script runs on a tty
