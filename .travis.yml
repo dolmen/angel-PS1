@@ -8,6 +8,20 @@ perl:
     - "5.18"
     - "5.20"
     - "5.22"
+sudo: false
+addons:
+    apt:
+        packages:
+        # Spell checker for documentation
+        - aspell
+        - aspell-en
+        # Shells
+        - bash
+        - zsh
+        - dash
+        - mksh
+        - fish
+        - tcsh
 notifications:
     #on_success: change
     on_success: always
@@ -26,13 +40,14 @@ install:
     - test "$TRAVIS_PERL_VERSION" = 5.8 || cpanm --notest $(cpanfile-dump --develop) || { cat ~/.cpanm/build.log ; false ; }
 script:
     - echo "TERM=$TERM"
-    #- echo ====================================================================
-    #- dpkg -l bash dash mksh fish tcsh
-    #- bash --version | head -n 1
-    #- mksh -c 'echo $KSH_VERSION'
-    #- fish --version
-    #- tcsh --version
-    #- echo ====================================================================
+    - echo ====================================================================
+    - dpkg -l bash dash mksh fish tcsh zsh
+    - bash --version | head -n 1
+    - zsh --version
+    - mksh -c 'echo $KSH_VERSION'
+    - fish --version
+    - tcsh --version
+    - echo ====================================================================
     - prove -lv t
     # Ensure that the script runs on a tty
     - script -q -c "perl -Ilib bin/angel-PS1 --shell=bash --test" /dev/null
