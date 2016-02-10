@@ -190,6 +190,7 @@ my %ignored_file = map { ($_ => 1) } qw(
     corpus
     dist
     dist.ini
+    cpanfile
 );
 my %preserved_file = map { ($_ => 1) } qw(
     .gitignore
