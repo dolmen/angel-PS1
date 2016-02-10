@@ -79,6 +79,8 @@ sub gen_count_jobs
 {
     my $PPID = shift || $AngelPS1::SHELL_PID;
 
+    # TODO add an alternate implementation using ps
+    # ps -o pgid,pid,ppid,stat,cmd --sort pgid,ppid,pid
     sub {
         opendir my $proc_dir, '/proc' or die "/proc: $!";
 
@@ -91,6 +93,8 @@ sub gen_count_jobs
             -r "/proc/$pid/stat" or next;
             open my $f, '<:raw', "/proc/$pid/stat" or next;
             # TODO rewrite read with sysread
+            # FIXME read the whole file not just the first line
+            # because $comm may contain "\n"
             my $stat = <$f>;
             close $f;
             my ($comm, $state, $ppid, $pgrp, $sid) = $stat =~ /\((.*)\) (.) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) / or die $stat;
