@@ -6,6 +6,19 @@ perl:
     - "5.14"
     - "5.16"
     - "5.18"
+    - "5.20"
+    - "5.22"
+sudo: false
+addons:
+    apt:
+        packages:
+        - bash
+        - dash
+        - ksh
+        - fish
+        - mksh
+        - tcsh
+        - zsh
 notifications:
     on_success: always
     on_failure: always
@@ -26,6 +39,7 @@ script:
     - script -q -c "perl angel-PS1 --shell=bash --test" /dev/null
     - script -q -c "perl angel-PS1 --shell=zsh  --test" /dev/null
     - script -q -c "perl angel-PS1 --shell=dash --test" /dev/null
+    - script -q -c "perl angel-PS1 --shell=ksh  --test" /dev/null
     - script -q -c "perl angel-PS1 --shell=mksh --test" /dev/null
     - script -q -c "perl angel-PS1 --shell=fish --test" /dev/null
     - script -q -c "perl angel-PS1 --shell=tcsh --test" /dev/null
