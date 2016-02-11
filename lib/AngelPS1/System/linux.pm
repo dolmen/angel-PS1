@@ -77,7 +77,7 @@ sub gen_fetch_battery
 # - count of background childs of the shell
 # TODO count detached screen/tmux sessions
 sub _gen_count_jobs {
-    my $PPID = shift;
+    my $PPID = $_[1];
 
     return unless -r "/proc/$PPID/stat";
 

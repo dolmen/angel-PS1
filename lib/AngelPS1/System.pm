@@ -42,7 +42,7 @@ sub gen_count_jobs
     for my $name (qw< _gen_count_jobs _gen_count_jobs_ps >) {
         my $gen_sub = $self->can($name) or next;
         # Call the generator to get an implementation
-        my $sub = $gen_sub->($PPID) or next;
+        my $sub = $self->$gen_sub($PPID) or next;
         # Try it once
         my @result = $sub->();
         # Every check ok? We got the one!
