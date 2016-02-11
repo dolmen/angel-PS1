@@ -70,17 +70,17 @@ sub gen_fetch_battery
     }
 }
 
-
+# This sub is called by AngelPS1::System::gen_count_jobs
+#
 # Returns a sub that will return a list of:
 # - count of suspended childs of the shell
 # - count of background childs of the shell
 # TODO count detached screen/tmux sessions
-sub gen_count_jobs
-{
-    my $PPID = shift || $AngelPS1::SHELL_PID;
+sub _gen_count_jobs {
+    my $PPID = shift;
 
-    # TODO add an alternate implementation using ps
-    # ps -o pgid,pid,ppid,stat,cmd --sort pgid,ppid,pid
+    return unless -r "/proc/$PPID/stat";
+
     sub {
         opendir my $proc_dir, '/proc' or die "/proc: $!";
 

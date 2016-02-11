@@ -15,9 +15,7 @@ use AngelPS1::Chrome qw< Bold Yellow >;
 
 sub Jobs
 {
-    my $gen_count_jobs = AngelPS1::System->can('gen_count_jobs')
-	or return;
-    my $count_jobs = $gen_count_jobs->()
+    my $count_jobs = AngelPS1::System->gen_count_jobs()
 	or return;
     my $color_suspended  = $_[1] || (Yellow+Bold);
     my $color_background = $_[2] || (Yellow+Bold);
