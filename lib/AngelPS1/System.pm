@@ -57,8 +57,43 @@ sub gen_count_jobs
 #   ps -o pgid,pid,ppid,stat,cmd --sort pgid,ppid,pid
 sub _gen_count_jobs_ps
 {
-}
+    my $PPID = $_[1];
+    #chomp(my $SID = `ps -o sid= $$`);
+    my $regex = qr/^ *$PPID +([0-9]+) +(?:\1) +(.)/;
+    sub {
+        my ($suspended, $background) = (0, 0);
 
+        # We use a ps filter to avoid processing the whole table ourself
+        # The filter must not hide process owned by other users.
+        # Test with those commands:
+        #    sleep 30
+        #    kill -STOP %1
+        #    sudo sleep 30 &
+        #    sudo sleep 30
+        #    ^Z
+        #
+        # -g => select by sid
+        #open my $ps, "ps -g $SID -o ppid= -o pgid= -o pid= -o stat=|"
+        # --ppid => select by ppid
+        $? = -1;
+        open my $ps, "ps --ppid $PPID -o ppid= -o pgid= -o pid= -o stat=|"
+            or return;
+        # Check the return code if ever it is already finished
+        return if $? >= 256;
+
+        while (<$ps>) {
+            #warn $_;
+            next if !/$regex/ || $1 == $PPID;
+            if ($2 eq 'T') {
+                $suspended++;
+            } else {
+                $background++;
+            }
+        }
+        close $ps;
+        ($suspended, $background)
+    }
+}
 
 
 '$';
