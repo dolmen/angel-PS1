@@ -34,15 +34,18 @@ sub use
 # - count of suspended childs of the shell
 # - count of background childs of the shell
 # TODO count detached screen/tmux sessions
+#
+# See t/41-count_jobs.t for the test suite
+#
 sub gen_count_jobs
 {
     my $self = shift;
     my $PPID = shift || $AngelPS1::SHELL_PID;
 
-    for my $name (qw< _gen_count_jobs _gen_count_jobs_ps >) {
-        my $gen_sub = $self->can($name) or next;
+    # Try all implementations available on this system
+    for my $gen_impl ($self->_count_jobs_impl) {
         # Call the generator to get an implementation
-        my $sub = $self->$gen_sub($PPID) or next;
+        my $sub = $self->$gen_impl($PPID) or next;
         # Try it once
         my @result = $sub->();
         # Every check ok? We got the one!
@@ -50,10 +53,21 @@ sub gen_count_jobs
     }
 
     # None works :(
+    #warn "No count_jobs implementation!";
     undef
 }
 
-# TODO Implementation using ps:
+# Ordered list of the available implementations of the generators
+# Returns a list of methods that can be called on AngelPS1::System
+sub _count_jobs_impl
+{
+    my $self = shift;
+    # _gen_count_jobs can be implemented by an OS specific module
+    # _gen_count_jobs_ps is the default, portable (?) implementation
+    map { $self->can($_) || () } qw< _gen_count_jobs _gen_count_jobs_ps >
+}
+
+# Implementation using ps:
 #   ps -o pgid,pid,ppid,stat,cmd --sort pgid,ppid,pid
 sub _gen_count_jobs_ps
 {
