@@ -31,6 +31,7 @@ for my $impl (@gen_count_jobs_impl) {
 	    or skip 4, 'basic test failed';
 
 	if (my $child = fork) {
+	    select undef, undef, undef, 0.25; # Sleep 0.25 second
 	    system("ps --ppid $$ -o ppid -o pgid -o pid -o stat");
 	    is_deeply([ $count_jobs->() ], [ 0, 1 ], "Background: 1");
 	    kill TERM => $child;
