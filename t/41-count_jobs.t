@@ -26,15 +26,15 @@ for my $impl (@gen_count_jobs_impl) {
 
     SKIP: {
 	ok($count_jobs, "$impl_name works")
-	    or skip 5, "$impl_name doesn't work :(";
+	    or skip "$impl_name doesn't work :(" => 6;
 	is_deeply([ $count_jobs->() ], [ 0, 0 ], "First run")
-	    or skip 4, 'basic test failed';
+	    or skip 'basic test failed' => 5;
 
 	my ($in, $out);
 	ok(pipe($in, $out), "pipe")
 	    or do {
 	    diag "\$!: $!";
-	    skip "pipe failed", 3
+	    skip "pipe failed" => 4
 	};
 
 	if (my $child = fork) {
