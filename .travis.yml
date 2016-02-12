@@ -36,6 +36,7 @@ notifications:
 #before_install:
 #    - perl -e 'require "sys/ioctl.ph"; print $INC{"sys/ioctl.ph"}, $/, "TIOCGWINSZ=", &TIOCGWINSZ, $/, "\$^O=", $^O, $/' || :
 install:
+    - cpanm Term::Chrome || { cat ~/.cpanm/build.log ; false ; }
     - cpanm --notest Module::CPANfile || { cat ~/.cpanm/build.log ; false ; }
     - cpanm --notest $(cpanfile-dump) || { cat ~/.cpanm/build.log ; false ; }
     - test "$TRAVIS_PERL_VERSION" = 5.8 || cpanm --notest $(cpanfile-dump --develop) || { cat ~/.cpanm/build.log ; false ; }
