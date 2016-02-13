@@ -3,6 +3,7 @@ use warnings;
 
 package AngelPS1::Prompt::Default;
 
+use AngelPS1;
 use AngelPS1::Shell qw< WorkingDir_Tilde UserPrivSymbol >;
 use AngelPS1::Chrome;
 use AngelPS1::Plugin::Core 'MarginLeft';
@@ -15,8 +16,6 @@ use AngelPS1::Plugin::LoadAvg 'LoadAvgPercent';
 use AngelPS1::Plugin::Jobs 'Jobs';
 
 use POSIX ();
-
-(my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
 
 return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
               && AngelPS1::Shell->can('UserPrivSymbol');
@@ -32,7 +31,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
             ? (
                 AngelPS1::Shell->name,
                 ' ',
-                $TTYNAME,
+                $AngelPS1::TTYNAME,
                 ' (',
                 # Columns and lines are dynamic!
                 sub { "${COLUMNS}x${LINES}) " },
