@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More;
 
+use AngelPS1;
 use AngelPS1::System;
 
 use Sub::Util 1.40 ();   # subname
@@ -85,7 +86,7 @@ for my $impl (@gen_count_jobs_impl) {
     my $impl_name = Sub::Util::subname($impl);
 
     # We will count jobs child or our process
-    my $count_jobs = AngelPS1::System->$impl($$);
+    my $count_jobs = AngelPS1::System->$impl($$, $AngelPS1::TTYNAME);
 
     SKIP: {
 	ok($count_jobs, "$impl_name works")
@@ -100,6 +101,7 @@ for my $impl (@gen_count_jobs_impl) {
 
 if (ok(scalar @count_jobs_impl, "At least one implementation works")) {
     note "\$\$: $$";
+    note "tty: $AngelPS1::TTYNAME";
 
     # Count just suspended jobs
     test_jobs 1, 0, @count_jobs_impl;

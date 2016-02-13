@@ -35,17 +35,27 @@ sub use
 # - count of background childs of the shell
 # TODO count detached screen/tmux sessions
 #
+# Test manually with those commands:
+#    sleep 30
+#    kill -STOP %1
+#    sudo sleep 30 &
+#    sudo sleep 30
+#    ^Z
+#
 # See t/41-count_jobs.t for the test suite
 #
 sub gen_count_jobs
 {
     my $self = shift;
+    require AngelPS1;
     my $PPID = shift || $AngelPS1::SHELL_PID;
+    my $TTY  = shift || $AngelPS1::TTYNAME;
 
     # Try all implementations available on this system
     for my $gen_impl ($self->_count_jobs_impl) {
         # Call the generator to get an implementation
-        my $sub = $self->$gen_impl($PPID) or next;
+        my $sub = $self->$gen_impl($PPID, $TTY)
+            or next;
         # Try it once
         my @result = $sub->();
         # Every check ok? We got the one!
@@ -71,26 +81,38 @@ sub _count_jobs_impl
 #   ps -o pgid,pid,ppid,stat,cmd --sort pgid,ppid,pid
 sub _gen_count_jobs_ps
 {
-    my $PPID = $_[1];
-    #chomp(my $SID = `ps -o sid= $$`);
+    my (undef, $PPID, $ttyname) = @_;
+    #die unless $PPID;
+    #die unless $ttyname;
+
+    # We use a ps filter to avoid processing the whole table ourself
+    # The filter must not hide process owned by other users.
+    # This is the trickiest part because ps flags are not portable.
+    my @ps_filter;
+    TRY: {
+        #chomp(my $sid = `ps -o sid= $$`);
+        for my $try (
+            [ '--ppid' => $PPID ],  # select by ppid (Linux)
+            [ -t => $ttyname ],   # select by tty  (BSD, Linux)
+            #[ -g => $sid ],      # select by sid  (Linux)
+        ) {
+            warn "ps @$try >/dev/null 2>&1";
+            system("ps @$try >/dev/null 2>&1") >> 8
+                and next;
+            # Success
+            @ps_filter = @$try;
+            last TRY
+        }
+        # All tries failed :(
+        return
+    }
+
     my $regex = qr/^ *$PPID +([0-9]+) +(?:\1) +(.)/;
     sub {
         my ($suspended, $background) = (0, 0);
 
-        # We use a ps filter to avoid processing the whole table ourself
-        # The filter must not hide process owned by other users.
-        # Test with those commands:
-        #    sleep 30
-        #    kill -STOP %1
-        #    sudo sleep 30 &
-        #    sudo sleep 30
-        #    ^Z
-        #
-        # -g => select by sid
-        #open my $ps, "ps -g $SID -o ppid= -o pgid= -o pid= -o stat=|"
-        # --ppid => select by ppid
         $? = -1;
-        open my $ps, "ps --ppid $PPID -o ppid= -o pgid= -o pid= -o stat=|"
+        open my $ps, "ps -o ppid= -o pgid= -o pid= -o stat= @ps_filter |"
             or return;
         # Check the return code if ever it is already finished
         return if $? >= 256;
