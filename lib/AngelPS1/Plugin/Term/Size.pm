@@ -3,6 +3,8 @@ use warnings;
 
 package AngelPS1::Plugin::Term::Size;
 
+use AngelPS1; # $AngelPS1::TTYNAME
+
 our $VERSION = $AngelPS1::VERSION;
 
 use Exporter 5.57 ();
@@ -36,13 +38,12 @@ sub _update_from_ioctl
     ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
 }
 
-my $TTYNAME;
 sub _update_from_stty
 {
     my $line = $^O eq 'linux'
-        ? `stty -F "$TTYNAME" size`
+        ? `stty -F "/dev/$AngelPS1::TTYNAME" size`
         # darwin, *BSD have '-f', Solaris has neither
-        : `stty size <"$TTYNAME"`;
+        : `stty size <"/dev/$AngelPS1::TTYNAME"`;
     chomp($line);
     ($LINES, $COLUMNS) = split / /, $line;
 }
@@ -63,8 +64,6 @@ sub import
             # Terminal size change
             $SIG{WINCH} = \&_update_from_ioctl;
         } else {
-            require POSIX;
-            $TTYNAME = POSIX::ttyname(2); # STDERR
             $SIG{WINCH} = \&_update_from_stty;
         }
 
