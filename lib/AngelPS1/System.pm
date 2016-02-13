@@ -95,9 +95,9 @@ sub _gen_count_jobs_ps
         # Check the return code if ever it is already finished
         return if $? >= 256;
 
-        while (<$ps>) {
+        while (my $line = <$ps>) {
             #warn $_;
-            next if !/$regex/ || $1 == $PPID;
+            next if $line !~ /$regex/ || $1 == $PPID;
             if ($2 eq 'T') {
                 $suspended++;
             } else {
