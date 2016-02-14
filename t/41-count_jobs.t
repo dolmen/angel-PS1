@@ -8,7 +8,18 @@ use AngelPS1::System;
 
 use Sub::Util 1.40 ();   # subname
 use List::Util ();       # shuffle
+use Time::HiRes qw< gettimeofday tv_interval >;
 
+sub test_count_jobs
+{
+    my ($test_name, $count_jobs, $expected) = @_;
+    my $t0 = [gettimeofday];
+    my @counts = $count_jobs->();
+    my $elapsed = tv_interval($t0);
+
+    is_deeply(\@counts, $expected, $test_name);
+    note sprintf("      time: %.6f", $elapsed);
+}
 
 sub test_jobs
 {
@@ -19,7 +30,7 @@ sub test_jobs
 
     my $total = $suspended + $background;
 
-    is_deeply([ $_->[1]->() ], [ 0, 0 ], "$_->[0]: no jobs before starting")
+    test_count_jobs("$_->[0]: no jobs before starting", $_->[1], [0, 0])
 	for @count_jobs;
 
     note "Spawning jobs...";
@@ -50,9 +61,8 @@ sub test_jobs
     }
 
     system("ps --ppid $$ -o ppid,pgid,pid,stat,comm");
-    is_deeply(
-	[ $_->[1]->() ], [ $suspended, $background ],
-	"$_->[0]: Suspended: $suspended, Background: $background")
+    test_count_jobs("$_->[0]: Suspended: $suspended, Background: $background", $_->[1],
+	[$suspended, $background])
 	for @count_jobs;
 
     note "Killing jobs...";
@@ -62,7 +72,7 @@ sub test_jobs
     }
     wait for @childs;
 
-    is_deeply([ $_->[1]->() ], [ 0, 0 ], "$_->[0]: all childs cleaned.")
+    test_count_jobs("$_->[0]: all childs cleaned", $_->[1], [0, 0])
 	for @count_jobs;
     note "-------------------------------------------------------------------------------";
 }

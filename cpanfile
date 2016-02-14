@@ -28,8 +28,9 @@ on test => sub {
     recommends 'Test::MockTime';
     requires 'Term::Encoding';
     requires 'Env::PS1'; # examples/EnvPS1.PS1
-    requires 'Sub::Util' => '1.40'; # t/41-count_jobs.t
+    requires 'Sub::Util'  => '1.40'; # t/41-count_jobs.t
     requires 'List::Util' => '1.40'; # t/41-count_jobs.t
+    requires 'Time::HiRes';          # t/41-count-jobs.t
 };
 
 # Stuff for the maintainer to make releases (see 'dist' script)
