@@ -30,8 +30,10 @@ sub test_jobs
 
     my $total = $suspended + $background;
 
-    test_count_jobs("$_->[0]: no jobs before starting", $_->[1], [0, 0])
-	for @count_jobs;
+    subtest 'no jobs before starting' => sub {
+	test_count_jobs($_->[0], $_->[1], [0, 0])
+	    for @count_jobs;
+    };
 
     note "Spawning jobs...";
     my (@in, @childs);
@@ -61,9 +63,10 @@ sub test_jobs
     }
 
     system("ps --ppid $$ -o ppid,pgid,pid,stat,comm");
-    test_count_jobs("$_->[0]: Suspended: $suspended, Background: $background", $_->[1],
-	[$suspended, $background])
-	for @count_jobs;
+    subtest "Suspended: $suspended, Background: $background" => sub {
+	test_count_jobs($_->[0], $_->[1], [$suspended, $background])
+	    for @count_jobs;
+    };
 
     note "Killing jobs...";
     for (@childs) {
@@ -72,8 +75,10 @@ sub test_jobs
     }
     wait for @childs;
 
-    test_count_jobs("$_->[0]: all childs cleaned", $_->[1], [0, 0])
-	for @count_jobs;
+    subtest 'all childs cleaned' => sub {
+	test_count_jobs($_->[0], $_->[1], [0, 0])
+	    for @count_jobs;
+    };
     note "-------------------------------------------------------------------------------";
 }
 
