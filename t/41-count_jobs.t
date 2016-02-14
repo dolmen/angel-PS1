@@ -6,6 +6,9 @@ use Test::More;
 use AngelPS1;
 use AngelPS1::System;
 
+use Term::Chrome qw< Yellow Bold >;
+use AngelPS1::Plugin::Jobs qw< Jobs >;
+
 use Sub::Util 1.40 ();   # subname
 use List::Util ();       # shuffle
 use Time::HiRes qw< gettimeofday tv_interval >;
@@ -87,26 +90,39 @@ sub test_jobs
 
 AngelPS1::System->use;
 
-my @gen_count_jobs_impl = AngelPS1::System->_count_jobs_impl;
-
-
-cmp_ok(scalar @gen_count_jobs_impl, '>=', 1, 'Has available implementations');
-
 my @tests;
 
-my @count_jobs_impl;
-
-
-my $selected_count_jobs = do {
+my @prompt = do {
     # For this test our process is the one controlling the jobs
     # while in AngelPS1, it is the parent process
     local $AngelPS1::SHELL_PID = $$;
-    AngelPS1::System->gen_count_jobs()
+    # The Jobs plugin
+    ( Jobs )
 };
-if (ok($selected_count_jobs, "An implementation works")) {
-    push @count_jobs_impl, [ "Selected impl" => $selected_count_jobs ];
+if (ok(scalar @prompt, 'Jobs plugin has a working implementation')
+    && is(ref($prompt[0]), 'CODE', 'Jobs plugin returned a sub')) {
+    my $color = Yellow + Bold;
+    my %CHECKS = (
+	"0,0" => [ ],
+	"1,0" => [ $color => [ "1z" ] ],
+	"0,1" => [ $color => [ "1&" ] ],
+	"1,1" => [ $color => [ "1z" ], '/', $color => [ "1&" ] ],
+    );
+    push @tests, sub {
+	if (my $check = $CHECKS{"$_[0],$_[1]"}) {
+	    is_deeply([ $prompt[0]->() ], $check, "Jobs plugin");
+	} else {
+	    note "Jobs plugin: not tested";
+	}
+    }
 }
 
+
+my @gen_count_jobs_impl = AngelPS1::System->_count_jobs_impl;
+
+cmp_ok(scalar @gen_count_jobs_impl, '>=', 1, 'Has available implementations');
+
+my @count_jobs_impl;
 
 for my $impl (@gen_count_jobs_impl) {
 
@@ -144,6 +160,8 @@ if (@tests) {
 
     # Count just background jobs
     test_jobs 0, 1, @tests;
+
+    test_jobs 1, 1, @tests;
 
     note "Random test";
     test_jobs int(rand 10), int(rand 10), @tests;
