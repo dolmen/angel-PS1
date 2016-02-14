@@ -81,6 +81,18 @@ cmp_ok(scalar @gen_count_jobs_impl, '>=', 1, 'Has available implementations');
 
 my @count_jobs_impl;
 
+
+my $selected_count_jobs = do {
+    # For this test our process is the one controlling the jobs
+    # while in AngelPS1, it is the parent process
+    local $AngelPS1::SHELL_PID = $$;
+    AngelPS1::System->gen_count_jobs()
+};
+if (ok($selected_count_jobs, "An implementation works")) {
+    push @count_jobs_impl, [ "Selected impl" => $selected_count_jobs ];
+}
+
+
 for my $impl (@gen_count_jobs_impl) {
 
     my $impl_name = Sub::Util::subname($impl);
@@ -99,7 +111,7 @@ for my $impl (@gen_count_jobs_impl) {
 }
 
 
-if (ok(scalar @count_jobs_impl, "At least one implementation works")) {
+if (@count_jobs_impl) {
     note "\$\$: $$";
     note "tty: $AngelPS1::TTYNAME";
 
