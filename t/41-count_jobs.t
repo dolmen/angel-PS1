@@ -23,7 +23,7 @@ sub test_count_jobs
 
 sub test_jobs
 {
-    my ($suspended, $background, @count_jobs) = @_;
+    my ($suspended, $background, @tests) = @_;
 
     note "===============================================================================";
     note "Testing with $suspended suspended and $background background jobs...";
@@ -31,9 +31,10 @@ sub test_jobs
     my $total = $suspended + $background;
 
     subtest 'no jobs before starting' => sub {
-	test_count_jobs($_->[0], $_->[1], [0, 0])
-	    for @count_jobs;
+	$_->(0, 0) for @tests
     };
+
+    return if $total == 0;
 
     note "Spawning jobs...";
     my (@in, @childs);
@@ -64,8 +65,8 @@ sub test_jobs
 
     system("ps --ppid $$ -o ppid,pgid,pid,stat,comm");
     subtest "Suspended: $suspended, Background: $background" => sub {
-	test_count_jobs($_->[0], $_->[1], [$suspended, $background])
-	    for @count_jobs;
+	local $_;
+	$_->($suspended, $background) for @tests
     };
 
     note "Killing jobs...";
@@ -76,8 +77,7 @@ sub test_jobs
     wait for @childs;
 
     subtest 'all childs cleaned' => sub {
-	test_count_jobs($_->[0], $_->[1], [0, 0])
-	    for @count_jobs;
+	$_->(0, 0) for @tests
     };
     note "-------------------------------------------------------------------------------";
 }
@@ -92,7 +92,7 @@ my @gen_count_jobs_impl = AngelPS1::System->_count_jobs_impl;
 
 cmp_ok(scalar @gen_count_jobs_impl, '>=', 1, 'Has available implementations');
 
-
+my @tests;
 
 my @count_jobs_impl;
 
@@ -125,19 +125,28 @@ for my $impl (@gen_count_jobs_impl) {
     }
 }
 
-
 if (@count_jobs_impl) {
+    push @tests, sub {
+	local $_;
+	my $expected = [ @_ ];
+	test_count_jobs($_->[0], $_->[1], $expected)
+	    for @count_jobs_impl;
+    };
+}
+
+
+if (@tests) {
     note "\$\$: $$";
     note "tty: $AngelPS1::TTYNAME";
 
     # Count just suspended jobs
-    test_jobs 1, 0, @count_jobs_impl;
+    test_jobs 1, 0, @tests;
 
     # Count just background jobs
-    test_jobs 0, 1, @count_jobs_impl;
+    test_jobs 0, 1, @tests;
 
     note "Random test";
-    test_jobs int(rand 10), int(rand 10), @count_jobs_impl;
+    test_jobs int(rand 10), int(rand 10), @tests;
 }
 
 done_testing;
