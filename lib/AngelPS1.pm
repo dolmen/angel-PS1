@@ -1,5 +1,7 @@
 package AngelPS1;
 
+use POSIX ();
+
 our $VERSION = '0.95';
 
 # The process id of the shell
@@ -11,6 +13,9 @@ our $NAME = 'angel';
 
 # Verbosity level: boolean
 our $VERBOSE = 0;
+
+# Terminal's device name, without the '/dev/' prefix
+(our $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
 
 # Encoding name for the locale (LC_CTYPE)
 our $ENCODING;
