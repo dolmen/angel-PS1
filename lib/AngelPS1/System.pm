@@ -96,7 +96,7 @@ sub _gen_count_jobs_ps
             [ -t => $ttyname ],   # select by tty  (BSD, Linux)
             #[ -g => $sid ],      # select by sid  (Linux)
         ) {
-            warn "ps @$try >/dev/null 2>&1";
+            #warn "ps @$try >/dev/null 2>&1";
             system("ps @$try >/dev/null 2>&1") >> 8
                 and next;
             # Success
