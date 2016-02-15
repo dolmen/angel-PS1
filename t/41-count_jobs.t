@@ -118,13 +118,7 @@ if (ok(scalar @prompt, 'Jobs plugin has a working implementation')
 }
 
 
-my @gen_count_jobs_impl = AngelPS1::System->_count_jobs_impl;
-
-cmp_ok(scalar @gen_count_jobs_impl, '>=', 1, 'Has available implementations');
-
-my @count_jobs_impl;
-
-for my $impl (@gen_count_jobs_impl) {
+for my $impl (AngelPS1::System->_count_jobs_impl) {
 
     my $impl_name = Sub::Util::subname($impl);
 
@@ -137,17 +131,11 @@ for my $impl (@gen_count_jobs_impl) {
 	is_deeply([ $count_jobs->() ], [ 0, 0 ], "Dry run: no jobs")
 	    or next;
 
-	push @count_jobs_impl, [ $impl_name => $count_jobs ];
+	push @tests, sub {
+	    my $expected = [ @_ ];
+	    test_count_jobs($impl_name, $count_jobs, $expected)
+	};
     }
-}
-
-if (@count_jobs_impl) {
-    push @tests, sub {
-	local $_;
-	my $expected = [ @_ ];
-	test_count_jobs($_->[0], $_->[1], $expected)
-	    for @count_jobs_impl;
-    };
 }
 
 
