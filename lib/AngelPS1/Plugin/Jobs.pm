@@ -17,8 +17,11 @@ sub Jobs
 {
     my $count_jobs = AngelPS1::System->gen_count_jobs()
 	or return;
-    my $color_suspended  = $_[1] || (Yellow+Bold);
-    my $color_background = $_[2] || (Yellow+Bold);
+    # https://github.com/dolmen/angel-PS1/issues/18
+    #my $color_suspended  = $_[1] || (Yellow+Bold);
+    #my $color_background = $_[2] || (Yellow+Bold);
+    my $color_suspended  = defined($_[1]) ? $_[1] : Yellow+Bold;
+    my $color_background = defined($_[2]) ? $_[2] : Yellow+Bold;
 
     return sub {
 	my ($suspended, $background) = $count_jobs->();

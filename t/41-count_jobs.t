@@ -6,21 +6,38 @@ use Test::More;
 use AngelPS1;
 use AngelPS1::System;
 
+use Term::Chrome qw< Yellow Bold >;
+use AngelPS1::Plugin::Jobs qw< Jobs >;
+
 use Sub::Util 1.40 ();   # subname
 use List::Util ();       # shuffle
+use Time::HiRes qw< gettimeofday tv_interval >;
 
+sub test_count_jobs
+{
+    my ($test_name, $count_jobs, $expected) = @_;
+    my $t0 = [gettimeofday];
+    my @counts = $count_jobs->();
+    my $elapsed = tv_interval($t0);
+
+    is_deeply(\@counts, $expected, $test_name);
+    note sprintf("      time: %.6f", $elapsed);
+}
 
 sub test_jobs
 {
-    my ($suspended, $background, @count_jobs) = @_;
+    my ($suspended, $background, @tests) = @_;
 
     note "===============================================================================";
     note "Testing with $suspended suspended and $background background jobs...";
 
     my $total = $suspended + $background;
 
-    is_deeply([ $_->[1]->() ], [ 0, 0 ], "$_->[0]: no jobs before starting")
-	for @count_jobs;
+    subtest 'no jobs before starting' => sub {
+	$_->(0, 0) for @tests
+    };
+
+    return if $total == 0;
 
     note "Spawning jobs...";
     my (@in, @childs);
@@ -50,10 +67,10 @@ sub test_jobs
     }
 
     system("ps --ppid $$ -o ppid,pgid,pid,stat,comm");
-    is_deeply(
-	[ $_->[1]->() ], [ $suspended, $background ],
-	"$_->[0]: Suspended: $suspended, Background: $background")
-	for @count_jobs;
+    subtest "Suspended: $suspended, Background: $background" => sub {
+	local $_;
+	$_->($suspended, $background) for @tests
+    };
 
     note "Killing jobs...";
     for (@childs) {
@@ -62,8 +79,9 @@ sub test_jobs
     }
     wait for @childs;
 
-    is_deeply([ $_->[1]->() ], [ 0, 0 ], "$_->[0]: all childs cleaned.")
-	for @count_jobs;
+    subtest 'all childs cleaned' => sub {
+	$_->(0, 0) for @tests
+    };
     note "-------------------------------------------------------------------------------";
 }
 
@@ -72,28 +90,35 @@ sub test_jobs
 
 AngelPS1::System->use;
 
-my @gen_count_jobs_impl = AngelPS1::System->_count_jobs_impl;
+my @tests;
 
-
-cmp_ok(scalar @gen_count_jobs_impl, '>=', 1, 'Has available implementations');
-
-
-
-my @count_jobs_impl;
-
-
-my $selected_count_jobs = do {
+my @prompt = do {
     # For this test our process is the one controlling the jobs
     # while in AngelPS1, it is the parent process
     local $AngelPS1::SHELL_PID = $$;
-    AngelPS1::System->gen_count_jobs()
+    # The Jobs plugin
+    ( Jobs )
 };
-if (ok($selected_count_jobs, "An implementation works")) {
-    push @count_jobs_impl, [ "Selected impl" => $selected_count_jobs ];
+if (ok(scalar @prompt, 'Jobs plugin has a working implementation')
+    && is(ref($prompt[0]), 'CODE', 'Jobs plugin returned a sub')) {
+    my $color = Yellow + Bold;
+    my %CHECKS = (
+	"0,0" => [ ],
+	"1,0" => [ $color => [ "1z" ] ],
+	"0,1" => [ $color => [ "1&" ] ],
+	"1,1" => [ $color => [ "1z" ], '/', $color => [ "1&" ] ],
+    );
+    push @tests, sub {
+	if (my $check = $CHECKS{"$_[0],$_[1]"}) {
+	    is_deeply([ $prompt[0]->() ], $check, "Jobs plugin");
+	} else {
+	    note "Jobs plugin: not tested";
+	}
+    }
 }
 
 
-for my $impl (@gen_count_jobs_impl) {
+for my $impl (AngelPS1::System->_count_jobs_impl) {
 
     my $impl_name = Sub::Util::subname($impl);
 
@@ -106,23 +131,28 @@ for my $impl (@gen_count_jobs_impl) {
 	is_deeply([ $count_jobs->() ], [ 0, 0 ], "Dry run: no jobs")
 	    or next;
 
-	push @count_jobs_impl, [ $impl_name => $count_jobs ];
+	push @tests, sub {
+	    my $expected = [ @_ ];
+	    test_count_jobs($impl_name, $count_jobs, $expected)
+	};
     }
 }
 
 
-if (@count_jobs_impl) {
+if (@tests) {
     note "\$\$: $$";
     note "tty: $AngelPS1::TTYNAME";
 
     # Count just suspended jobs
-    test_jobs 1, 0, @count_jobs_impl;
+    test_jobs 1, 0, @tests;
 
     # Count just background jobs
-    test_jobs 0, 1, @count_jobs_impl;
+    test_jobs 0, 1, @tests;
+
+    test_jobs 1, 1, @tests;
 
     note "Random test";
-    test_jobs int(rand 10), int(rand 10), @count_jobs_impl;
+    test_jobs int(rand 10), int(rand 10), @tests;
 }
 
 done_testing;
