@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-package AngelPS1::Plugin::Core;
+package AngelPS1::Plugin::Layout;
 
 our $VERSION = $AngelPS1::VERSION;
 

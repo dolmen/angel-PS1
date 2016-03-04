@@ -4,7 +4,7 @@ use warnings FATAL => 'all';
 
 use Test::More tests => 10;
 
-use AngelPS1::Plugin::Core;
+use AngelPS1::Plugin::Layout;
 use AngelPS1::Compiler;
 use AngelPS1::Shell;
 

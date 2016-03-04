@@ -6,7 +6,7 @@ package AngelPS1::Prompt::Default;
 use AngelPS1;
 use AngelPS1::Shell qw< WorkingDir_Tilde UserPrivSymbol >;
 use AngelPS1::Chrome;
-use AngelPS1::Plugin::Core 'MarginRight';
+use AngelPS1::Plugin::Layout 'MarginRight';
 use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
