@@ -6,9 +6,10 @@ use strict;
 use warnings;
 
 use AngelPS1::Chrome;
+use AngelPS1::Shell qw<WorkingDir_Tilde UserPrivSymbol>;
 
 (
     Green, [ "Line1\n" ],
-    Blue, [ AngelPS1::Shell->WorkingDir_Tilde ],
-    AngelPS1::Shell->UserPrivSymbol, ' ',
+    Blue, [ WorkingDir_Tilde ],
+    UserPrivSymbol, ' ',
 )

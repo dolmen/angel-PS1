@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-#    Copyright © 2013,2014 Olivier Mengué
+#    Copyright © 2013-2016 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
 #
@@ -27,104 +27,36 @@ my %fatpacked;
 $fatpacked{"AngelPS1.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1';
   package AngelPS1;
   
-  our $VERSION = '0.95';
+  use POSIX ();
   
-  # The angel's name (which is used as the controller command)
+  our $VERSION = '0.96';
+  
+  our $SHELL_PID = getppid;
+  
   our $NAME = 'angel';
   
-  # Verbosity level: boolean
   our $VERBOSE = 0;
   
+  (our $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
+  
+  our $ENCODING;
+  
+  my $encoding;
+  
+  sub _str_allowed
+  {
+      my $str = shift;
+      $encoding ||= do {
+  	require Encode;
+  	Encode::find_encoding($ENCODING)
+      };
+      local $@;
+      eval { Encode::encode($encoding, $str, Encode::FB_CROAK()) };
+      # Return true if no exception was thrown
+      !$@
+  }
+  
   1;
-  __END__
-  
-  =encoding UTF-8
-  
-  =head1 NAME
-  
-  AngelPS1 - The Angel's Prompt
-  
-  =head1 SYNOPSIS
-  
-  Use C<L<angel-PS1>> in your shell:
-  
-      $ eval $(angel-PS1)
-  
-  Get the documentation:
-  
-      $ perldoc angel-PS1
-  
-  =head1 DESCRIPTION
-  
-  C<angel-PS1> is a prompt engine for your shell.
-  
-  The man page for L<angel-PS1> contains most of the high level documentation.
-  This page is the index for documentation to go further in the C<angel-PS1>
-  APIs to get the best of it!
-  
-  =head1 FAQ
-  
-  =head2 What is a I<shell prompt>?
-  
-  Look for I<C<PS1>> in your Bourne-like Unix shell (bash, zsh, ksh, dash...).
-  
-  =head2 How to write my own shell prompt using C<angel-PS1>?
-  
-  See L<AngelPS1::Prompt>.
-  
-  =head2 How can I share my prompt definition with other users?
-  
-  See L<AngelPS1::Prompt>.
-  
-  =head2 What is an C<angel-PS1> I<plugin>?
-  
-  A plugin for C<angel-PS1> is a kind of function library that can be re-used
-  and shared. A plugin exports bricks that can be used to a customized
-  C<angel-PS1> prompt.
-  
-  See for example L<AngelPS1::Plugin::Git>.
-  
-  
-  Each of theese functions must return a list value that can be inserted in a
-  prompt definition.
-  
-  =head2 How to write a plugin?
-  
-  A plugin is a classical Perl 5 package in a .pm file.
-  See L<AngelPS1::Plugin> for details.
-  
-  =head2 How do I share plugins?
-  
-  Distributing them through CPAN can be convenient for Perl developers.
-  
-  Distributing just the .pm file will target a larger audience...
-  
-  =head2 What about C<angel-PS1> internals?
-  
-  Those APIs are documented (if they are :) ) only for developpers contributing
-  to the core of L<angel-PS1>.
-  
-  See L<AngelPS1::Compiler> for how the prompt list in compiled into a prompt
-  string.
-  
-  See L<AngelPS1::Shell> for pluggable shell support.
-  
-  See L<AngelPS1::System> for pluggable operating support for querying the system
-  state in plugins.
-  
-  =head1 AUTHOR
-  
-  L<Olivier Mengué|mailto:dolmen@cpan.org>
-  
-  =head1 COPYRIGHT AND LICENSE
-  
-  `angel-PS1` itself is distributed under the GNU Affero General Public License
-  version 3 or later. See the F<COPYING> file in the distribution for details.
-  
-  `angel-PS1` plugins must be distributed under the
-  [Artistic License 2.0](http://opensource.org/licenses/Artistic-2.0).
-  This basically allows to reuse the code of plugins either to improve the
-  `angel-PS1` core or for any other usage in Perl programs, not just `angel-PS1`.
 ANGELPS1
 
 $fatpacked{"AngelPS1/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_CHROME';
@@ -133,304 +65,12 @@ $fatpacked{"AngelPS1/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   package AngelPS1::Chrome;
   
-  # Pre-declare packages
-  {
-      package # no index: private package
-          AngelPS1::Chrome::Color;
-  }
+  use Term::Chrome 1.011;
   
-  use Carp ();
+  *EXPORT = *Term::Chrome::EXPORT;
+  *import = *Term::Chrome::import;
   
-  our @CARP_NOT = qw<
-      AngelPS1::Chrome::Color
-  >;
-  
-  # Private constructor for AngelPS1::Chrome objects. Lexical, so cross-packages.
-  # Arguments:
-  # - class name
-  # - foreground color
-  # - background color
-  # - flags list
-  my $Chrome = sub (*$$;@)
-  {
-      my ($class, @self) = @_;
-  
-      my $fg = $self[0];
-      Carp::croak "invalid fg color $fg"
-          if defined($fg) && ($fg < 0 || $fg > 255);
-      my $bg = $self[1];
-      Carp::croak "invalid bg color $bg"
-          if defined($bg) && ($bg < 0 || $bg > 255);
-      # TODO check flags
-  
-      bless \@self, $class
-  };
-  
-  
-  # Cache for color objects
-  my %COLOR_CACHE;
-  
-  sub color ($)
-  {
-      my $color = shift;
-      die "invalid color" if ref $color;
-      #return $Chrome->(AngelPS1::Chrome::Color::, $color, undef);
-      $COLOR_CACHE{chr($color)} ||=
-          $Chrome->(AngelPS1::Chrome::Color::, $color, undef);
-  }
-  
-  
-  use Exporter 5.57 'import';  # perl 5.8.3
-  
-  #our @EXPORT_OK;
-  #BEGIN { our @EXPORT_OK = ('color'); }
-  
-  {
-      my $mk_flag = sub { $Chrome->(AngelPS1::Chrome::, undef, undef, $_[0]) };
-  
-      my %const = (
-          Reset      => $mk_flag->(''),
-          ResetFg    => $mk_flag->(39),
-          ResetBg    => $mk_flag->(49),
-          ResetFlags => $mk_flag->(22),
-          Standout   => $mk_flag->(7),
-          Underline  => $mk_flag->(4),
-          Reverse    => $mk_flag->(7),
-          Blink      => $mk_flag->(5),
-          Bold       => $mk_flag->(1),
-  
-          Black      => color 0,
-          Red        => color 1,
-          Green      => color 2,
-          Yellow     => color 3,
-          Blue       => color 4,
-          Magenta    => color 5,
-          Cyan       => color 6,
-          White      => color 7,
-  
-          # Larry Wall's favorite color
-          # The true 'chartreuse' color from X11 colors is #7fff00
-          # The xterm-256 color #118 is near: #87ff00
-          Chartreuse => color 118,
-      );
-  
-      our @EXPORT = ('color', keys %const);
-  
-      if ($^V lt v5.16.0) {
-          while (my ($name, $value) = each %const) {
-              no strict 'refs';
-              *$name = sub () { $value };
-          }
-      } else {
-          require constant;
-          constant->import(\%const);
-      }
-  }
-  
-  use overload
-      '""' => 'term',
-      '+'  => 'plus',
-      '${}' => 'deref',
-  ;
-  
-  sub term
-  {
-      my $self = shift;
-      my ($fg, $bg) = @{$self}[0, 1];
-      my $r = join(';', @{$self}[2 .. $#$self]);
-      if (defined($fg) || defined($bg)) {
-          $r .= ';' if @$self > 2;
-          if (defined $fg) {
-              $r .= $fg < 8 ? (30+$fg) : $fg < 16 ? "9$fg" : "38;5;$fg";
-              $r .= ';' if defined $bg;
-          }
-          $r .= $bg < 8 ? (40+$bg) : $bg < 16 ? "10$bg" : "48;5;$bg" if defined $bg;
-      }
-      "\e[${r}m"
-  }
-  
-  sub clone
-  {
-      bless [ @{$_[0]} ], __PACKAGE__
-  }
-  
-  sub plus
-  {
-      my ($self, $other, $swap) = @_;
-  
-      die 'invalid value for +' unless $other->isa(__PACKAGE__);
-  
-      my @new = @$self;
-      $new[0] = $other->[0] if defined $other->[0];
-      $new[1] = $other->[1] if defined $other->[1];
-      push @new, @{$other}[2 .. $#$other];
-  
-      bless \@new, __PACKAGE__
-  }
-  
-  sub deref
-  {
-      \("$_[0]")
-  }
-  
-  package # no index: private package
-      AngelPS1::Chrome::Color;
-  
-  our @ISA = (AngelPS1::Chrome::);
-  
-  use overload
-      '/'   => 'over',
-      # Even if overloading is set in the super class, we have to repeat it for old perls
-      (
-          $^V ge v5.18.0
-          ? ()
-          : (
-              '""'  => \&AngelPS1::Chrome::term,
-              '+'   => \&AngelPS1::Chrome::plus,
-              '${}' => \&AngelPS1::Chrome::deref,
-          )
-      ),
-  ;
-  
-  sub over
-  {
-      die 'invalid bg color for /' unless ref($_[1]) eq AngelPS1::Chrome::Color::;
-      $Chrome->(AngelPS1::Chrome::, $_[0]->[0], $_[1]->[0])
-  }
-  
-  1;
-  __END__
-  
-  =head1 NAME
-  
-  AngelPS1::Chrome - DSL for colors and other terminal chrome
-  
-  =head1 SYNOPSIS
-  
-      use AngelPS1::Chrome qw<Red Blue Bold Reset color>;
-  
-      # Base color constant and attribute
-      say Red, 'red text', Reset;
-  
-      # Composition, using operator overloading
-      say Red/Blue+Bold, 'red on blue', Reset;
-  
-      # Extended xterm-256 colors
-      say color(125) + Underline, 'Purple', Reset
-  
-      # Define your own constants
-      use constant Pink => color 213;
-  
-      # Use ${} around Chrome expression inside strings
-      say "normal ${ Red+Bold } RED ${ +Reset } normal";
-  
-  =head1 DESCRIPTION
-  
-  C<AngelPS1::Chrome> is a domain-specific language (DSL) for terminal decoration
-  (colors and other attributes).
-  
-  In the current implementation stringification to ANSI sequences for C<xterm>
-  and C<xterm-256> is hard-coded (which means it doesn't use the L<terminfo(5)>
-  database), but this gives optimized (short) strings.
-  
-  =head1 EXPORTS
-  
-  =head2 Functions
-  
-  C<color(I<0-255>)>
-  
-  Build a L<AngelPS1::Chrome> object with the given color number. You can use this
-  constructor to create your own set of color constants.
-  
-  For example, C<color(0)> gives the same result as C<Black> (but not the same
-  object).
-  
-  =head2 Colors
-  
-  =over 4
-  
-  =item *
-  
-  C<Black>
-  
-  =item *
-  
-  C<Red>
-  
-  =item *
-  
-  C<Green>
-  
-  =item *
-  
-  C<Yellow>
-  
-  =item *
-  
-  C<Blue>
-  
-  =item *
-  
-  C<Magenta>
-  
-  =item *
-  
-  C<Cyan>
-  
-  =item *
-  
-  C<White>
-  
-  =cut
-  
-  # Secret: Chartreuse
-  
-  =back
-  
-  =head2 Flags
-  
-  The exact rendering of each flag is dependent on how the terminal implements
-  them. For example C<Underline> and C<Blink> may do nothing.
-  
-  =over 4
-  
-  =item *
-  
-  C<Reset> : reset all colors and flags
-  
-  =item *
-  
-  C<Bold>
-  
-  =item *
-  
-  C<Underline>
-  
-  =item *
-  
-  C<Blink>
-  
-  =item *
-  
-  C<Reverse>
-  
-  =back
-  
-  =head1 SEE ALSO
-  
-  L<AngelPS1::Compiler>: the C<angel-PS1> compiler has special support for
-  C<AngelPS1::Chrome> values.
-  
-  =head1 TRIVIA
-  
-  Did you know that I<chartreuse> is one of the favorite color of Larry Wall?
-  
-  =head1 AUTHOR
-  
-  Olivier MenguE<eacute>, L<mailto:dolmen@cpan.org>
-  
-  =cut
-  # vim:set et ts=8 sw=4 sts=4:
+  1
 ANGELPS1_CHROME
 
 $fatpacked{"AngelPS1/Compiler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_COMPILER';
@@ -443,7 +83,7 @@ $fatpacked{"AngelPS1/Compiler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   our @EXPORT = qw< reduce expand ps1_is_static >;
   
   use AngelPS1::Shell ();
-  use AngelPS1::Chrome ();
+  use Term::Chrome 2.000 ();
   use Scalar::Util ();
   
   
@@ -473,17 +113,6 @@ $fatpacked{"AngelPS1/Compiler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   sub reduce;
   
-  # Reduce a @PS1 definition:
-  # - bare scalar are expanded to their escaped result
-  # - scalar refs are concatenated
-  # - AngelPS1::Chrome are expanded to their ANSI sequence representation
-  # - AngelPS1::Chrome followed by ARRAY are expanded to the ANSI sequence,
-  #   the recursive reduce of the flattened array, and a Chrome reset
-  # - undef are skipped
-  # - CODE refs are preserved as is (for multiple step compilation)
-  # In scalar context the result of that process is expected to be a single
-  # scalar ref (which implies that no CODE appeared in the original arguments)
-  # and that dereferenced scalar is returned.
   sub reduce
   {
       my @template = @_;
@@ -496,14 +125,17 @@ $fatpacked{"AngelPS1/Compiler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
                   $v = $$v;
               }
               # => replace by the colored expanded result
-              elsif (Scalar::Util::blessed($v) && $v->isa('AngelPS1::Chrome')) {
+              elsif (Scalar::Util::blessed($v) && $v->isa('Term::Chrome')) {
                   if (@template && ref($template[0]) eq 'ARRAY') {
-                      unshift @template,
-                          AngelPS1::Shell->ps1_invisible($v->term),
-                          # flatten the ARRAY
-                          @{ shift @template },
-                          # close the colored part with a Reset
-                          AngelPS1::Shell->ps1_invisible(AngelPS1::Chrome::Reset->term);
+                      my $arr = shift @template;
+                      if (@$arr) { # If non-empty
+                          unshift @template,
+                              AngelPS1::Shell->ps1_invisible($v->term),
+                              # flatten the ARRAY
+                              @$arr,
+                              # close the colored part with the reverse of $v
+                              AngelPS1::Shell->ps1_invisible((!$v)->term);
+                      }
                   } else {
                       # Expand the color
                       unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
@@ -551,7 +183,6 @@ $fatpacked{"AngelPS1/Compiler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_COMPILER
 
 $fatpacked{"AngelPS1/Plugin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN';
@@ -560,10 +191,8 @@ $fatpacked{"AngelPS1/Plugin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   package AngelPS1::Plugin;
   
-  #our $VERSION = $AngelPS1::VERSION;
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN
 
 $fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_BATTERY';
@@ -581,15 +210,14 @@ $fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   
   use AngelPS1::Shell;
   use AngelPS1::System;
-  use AngelPS1::Chrome qw<Red Green Bold color>;
+  use AngelPS1::Chrome qw<Red Green Blue Bold color>;
   
-  # Globals (to allow override)
   our $SYMBOL_CHARGING = '⏚';
   our $SYMBOL_DISCHARGING = '⌁';
   
   sub BatteryPercent
   {
-      my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
+      my $fetch_battery_gen = AngelPS1::System->can('gen_fetch_battery')
   	or return;
       my $fetch_battery = $fetch_battery_gen->()
           or return;
@@ -614,17 +242,18 @@ $fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   }
   
   use constant {
-      SYMBOL_GREEN => Green,
-      SYMBOL_RED   => Red,
-      #GAUGE_GREEN => Green / Green + Bold,  # Bold green over green
-      #GAUGE_RED   => Green / Red,
-      GAUGE_GREEN  => color(22) / color(235),  # Dark green over dark gray
-      GAUGE_RED    => color(22) / color(124),  # Dark green over dark red
+      SYMBOL_CHARGING         => Blue + Bold,
+      SYMBOL_DISCHARGING_HIGH => Green,
+      SYMBOL_DISCHARGING_LOW  => Red,
+      GAUGE_DISCHARGING_HIGH  => color(22) / color(235),  # Dark green over dark gray
+      GAUGE_DISCHARGING_LOW   => color(22) / color(124),  # Dark green over dark red
+      GAUGE_CHARGING_HIGH     => Blue / color(235) + Bold,  # Light blue over dark red
+      GAUGE_CHARGING_LOW      => Blue / color(124) + Bold,  # Light blue over dark red
   };
   
   sub BatteryGauge
   {
-      my $fetch_battery_gen = AngelPS1::System->can('fetch_battery')
+      my $fetch_battery_gen = AngelPS1::System->can('gen_fetch_battery')
   	or return;
       my $fetch_battery = $fetch_battery_gen->()
           or return;
@@ -634,16 +263,19 @@ $fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
       return sub {
   	my @status = $fetch_battery->();
   	return if !@status || $status[0] >= 0.80;
-  	my $green = $status[0] >= 0.3;
+          my $charging = $status[1];
+          #$charging = 1;
+  	my $high = $status[0] >= 0.3;
   	(
-  	    (
-  		$green
-  		? SYMBOL_GREEN
-  		: SYMBOL_RED
-  	    ),
-  		($status[1] ? $SYMBOL_CHARGING
-  			    : $SYMBOL_DISCHARGING),
-  	    ($green ? GAUGE_GREEN : GAUGE_RED),
+  	    ($charging ? (
+                              SYMBOL_CHARGING, $SYMBOL_CHARGING,
+                              $high ? GAUGE_CHARGING_HIGH : GAUGE_CHARGING_LOW,
+                           )
+  		       : (
+                              $high ? SYMBOL_DISCHARGING_HIGH : SYMBOL_DISCHARGING_LOW, $SYMBOL_DISCHARGING,
+                              $high ? GAUGE_DISCHARGING_HIGH : GAUGE_DISCHARGING_LOW,
+                           )
+              ),
   	    [
   		&AngelPS1::Plugin::Gauges::CharGauge($status[0])
   	    ],
@@ -652,43 +284,7 @@ $fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_BATTERY
-
-$fatpacked{"AngelPS1/Plugin/Core.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_CORE';
-  use strict;
-  use warnings;
-  
-  package AngelPS1::Plugin::Core;
-  
-  our $VERSION = $AngelPS1::VERSION;
-  
-  use Exporter 5.57 'import';
-  our @EXPORT = qw(MarginLeft);
-  
-  use AngelPS1::Compiler;
-  
-  
-  
-  sub MarginLeft ($;$)
-  {
-      my $code = pop;
-      if (!ref($code)) {
-          return length($code) ? " $code" : $code;
-      }
-      die 'MarginLeft: not a CODEREF' unless ref($code) eq 'CODE';
-      my @margin = @_;
-      @margin = (' ') unless @margin;
-      sub {
-          my @result = expand(@_, $code);
-          return unless @result;
-          (@margin, @result)
-      }
-  }
-  
-  '$';
-  # vim:set et ts=8 sw=4 sts=4:
-ANGELPS1_PLUGIN_CORE
 
 $fatpacked{"AngelPS1/Plugin/DateTime.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_DATETIME';
   use strict;
@@ -717,7 +313,6 @@ $fatpacked{"AngelPS1/Plugin/DateTime.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
   }
   
   '$'
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_DATETIME
 
 $fatpacked{"AngelPS1/Plugin/Gauges.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_GAUGES';
@@ -739,8 +334,6 @@ $fatpacked{"AngelPS1/Plugin/Gauges.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   >;
   
   
-  # First char is underscore for 0%
-  # TODO 100% as <space> in reverse video
   use constant GAUGE_VALUES => '_▁▂▃▄▅▆▇█';
   use constant GAUGE_COUNT => length(GAUGE_VALUES);
   
@@ -776,7 +369,6 @@ $fatpacked{"AngelPS1/Plugin/Gauges.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_GAUGES
 
 $fatpacked{"AngelPS1/Plugin/Git.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_GIT';
@@ -887,8 +479,100 @@ $fatpacked{"AngelPS1/Plugin/Git.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_GIT
+
+$fatpacked{"AngelPS1/Plugin/Jobs.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_JOBS';
+  use utf8;
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Plugin::Jobs;
+  
+  use AngelPS1;
+  our $VERSION = $AngelPS1::VERSION;
+  
+  use Exporter 5.57 'import';
+  our @EXPORT = qw<Jobs>;
+  
+  use AngelPS1::System;
+  use AngelPS1::Chrome qw< Bold Yellow >;
+  
+  sub Jobs
+  {
+      my $count_jobs = AngelPS1::System->gen_count_jobs()
+  	or return;
+      my $theme = $_[0] || {};
+      my $chrome_suspended_count = $theme->{suspended} || (Yellow+Bold);
+      my @symbol_suspended = ( ($theme->{suspended_symbol} || Yellow), [ 'z' ] );
+      my $chrome_background_count = $theme->{background} || (Yellow+Bold);
+      my @symbol_background = ( ($theme->{background_symbol} || Yellow), [ '&' ] );
+      my @separator = exists $theme->{separator}
+  		  ? ( $theme->{separator}, [ '/' ])
+  		  : ( '/' );
+  
+      return sub {
+  	my ($suspended, $background) = $count_jobs->();
+  	return if !defined($suspended) || $suspended+$background == 0;
+  	my @res;
+  	push @res, $chrome_suspended_count, [ $suspended ], @symbol_suspended
+  	    if $suspended;
+  	push @res, @separator if $suspended && $background;
+  	push @res, $chrome_background_count, [ $background ], @symbol_background
+  	    if $background;
+  	@res
+      }
+  }
+  
+  1;
+ANGELPS1_PLUGIN_JOBS
+
+$fatpacked{"AngelPS1/Plugin/Layout.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_LAYOUT';
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Plugin::Layout;
+  
+  our $VERSION = $AngelPS1::VERSION;
+  
+  use Exporter 5.57 'import';
+  our @EXPORT = qw(MarginLeft MarginRight);
+  
+  use AngelPS1::Compiler qw(expand);
+  
+  sub MarginLeft ($;$)
+  {
+      my $code = pop;
+      if (!ref($code)) {
+          return defined($code) && length($code) ? " $code" : ();
+      }
+      die 'MarginLeft: not a CODEREF' unless ref($code) eq 'CODE';
+      my @margin = @_;
+      @margin = (' ') unless @margin;
+      sub {
+          my @result = expand(@_, $code);
+          return unless @result;
+          (@margin, @result)
+      }
+  }
+  
+  sub MarginRight ($;$)
+  {
+      my $code = pop;
+      if (!ref($code)) {
+          return defined($code) && length($code) ? "$code " : ();
+      }
+      die 'MarginLeft: not a CODEREF' unless ref($code) eq 'CODE';
+      my @margin = @_;
+      @margin = (' ') unless @margin;
+      sub {
+          my @result = expand(@_, $code);
+          return unless @result;
+          (@result, @margin)
+      }
+  }
+  
+  '$';
+ANGELPS1_PLUGIN_LAYOUT
 
 $fatpacked{"AngelPS1/Plugin/LoadAvg.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_LOADAVG';
   use utf8;
@@ -902,17 +586,21 @@ $fatpacked{"AngelPS1/Plugin/LoadAvg.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   use Exporter 5.57 'import';
   our @EXPORT = qw<LoadAvgPercent>;
   
+  use AngelPS1;
   use AngelPS1::Shell;
   use AngelPS1::System;
   use AngelPS1::Chrome qw<Red Green Bold color>;
   
-  # Globals (to allow override)
-  our $SYMBOL_LOADAVG = '⏚';
+  our $SYMBOL_LOADAVG = '⌂';
   
   sub LoadAvgPercent
   {
-      my $loadavg_gen = AngelPS1::System->can('load_avg')
+      my $loadavg_gen = AngelPS1::System->can('gen_loadavg')
   	or return;
+  
+      # Plugin disabled if the encoding doesn't support the symbol
+      AngelPS1::_str_allowed($SYMBOL_LOADAVG) or return;
+  
       my $loadavg_func = $loadavg_gen->();
   
       return sub {
@@ -920,7 +608,7 @@ $fatpacked{"AngelPS1/Plugin/LoadAvg.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   	return if !defined($loadavg);
   	(
   	    (
-  		$loadavg > 0.80
+  		$loadavg < 0.80
   		? Green
   		: Red
   	    ),
@@ -934,7 +622,6 @@ $fatpacked{"AngelPS1/Plugin/LoadAvg.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_LOADAVG
 
 $fatpacked{"AngelPS1/Plugin/Term.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_TERM';
@@ -969,7 +656,6 @@ $fatpacked{"AngelPS1/Plugin/Term.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_TERM
 
 $fatpacked{"AngelPS1/Plugin/Term/Size.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_TERM_SIZE';
@@ -977,6 +663,8 @@ $fatpacked{"AngelPS1/Plugin/Term/Size.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   use warnings;
   
   package AngelPS1::Plugin::Term::Size;
+  
+  use AngelPS1; # $AngelPS1::TTYNAME
   
   our $VERSION = $AngelPS1::VERSION;
   
@@ -986,7 +674,6 @@ $fatpacked{"AngelPS1/Plugin/Term/Size.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   
   our ($LINES, $COLUMNS);
   
-  # Get the ioctl number
   my $TIOCGWINSZ =
       # Shortcut static table
       {
@@ -1011,19 +698,16 @@ $fatpacked{"AngelPS1/Plugin/Term/Size.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
       ($LINES, $COLUMNS) = unpack('S2', $_WINSZ);
   }
   
-  my $TTYNAME;
   sub _update_from_stty
   {
-      my $line = `stty -F $TTYNAME size`;
+      my $line = $^O eq 'linux'
+          ? `stty -F "/dev/$AngelPS1::TTYNAME" size`
+          # darwin, *BSD have '-f', Solaris has neither
+          : `stty size <"/dev/$AngelPS1::TTYNAME"`;
+      chomp($line);
       ($LINES, $COLUMNS) = split / /, $line;
   }
   
-  # TODO If sys/ioctl.ph is not available, try:
-  # - Term::Size
-  # - Term::ReadKey
-  # - stty size
-  # - hardcoded value of TIOCGWINSZ based on $^O
-  # See also perlfaq8: How do I get the screen size?
   
   
   sub import
@@ -1034,8 +718,6 @@ $fatpacked{"AngelPS1/Plugin/Term/Size.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
               # Terminal size change
               $SIG{WINCH} = \&_update_from_ioctl;
           } else {
-              require POSIX;
-              $TTYNAME = POSIX::ttyname(2); # STDERR
               $SIG{WINCH} = \&_update_from_stty;
           }
   
@@ -1047,7 +729,6 @@ $fatpacked{"AngelPS1/Plugin/Term/Size.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_TERM_SIZE
 
 $fatpacked{"AngelPS1/Plugin/Term/screen.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_TERM_SCREEN';
@@ -1078,12 +759,9 @@ $fatpacked{"AngelPS1/Plugin/Term/screen.pm"} = '#line '.(1+__LINE__).' "'.__FILE
       )
   }
   
-  # TODO add support for the 'search|name' feature of screen
-  # See "TITLES" section in screen(1)
   
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_TERM_SCREEN
 
 $fatpacked{"AngelPS1/Plugin/Term/tmux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_TERM_TMUX';
@@ -1101,7 +779,6 @@ $fatpacked{"AngelPS1/Plugin/Term/tmux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   
   use AngelPS1::Shell;
   
-  # This requires the 'allow-rename' option to be enabled
   sub TmuxWindow
   {
       return if !exists $ENV{'TMUX'}
@@ -1127,7 +804,6 @@ $fatpacked{"AngelPS1/Plugin/Term/tmux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_TERM_TMUX
 
 $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_VCS';
@@ -1139,7 +815,6 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   use Exporter 'import';
   our @EXPORT = qw<VCSInfo>;
   
-  # cygwin has this issue: it doesn't emulate hard links count to directories
   use constant NO_DIR_STAT => (stat '..')[3] < 3;
   
   sub _find_vcs_dir
@@ -1208,8 +883,6 @@ $fatpacked{"AngelPS1/Plugin/VCS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   1;
-  __END__
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PLUGIN_VCS
 
 $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PROMPT_DEFAULT';
@@ -1218,25 +891,26 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   
   package AngelPS1::Prompt::Default;
   
-  use AngelPS1::Shell ();
+  use AngelPS1;
+  use AngelPS1::Shell qw< WorkingDir_Tilde UserPrivSymbol >;
   use AngelPS1::Chrome;
-  use AngelPS1::Plugin::Core 'MarginLeft';
+  use AngelPS1::Plugin::Layout 'MarginRight';
   use AngelPS1::Plugin::DateTime;
   use AngelPS1::Plugin::Term;
   use AngelPS1::Plugin::Term::Size;
   use AngelPS1::Plugin::VCS;
   use AngelPS1::Plugin::Battery 'BatteryGauge';
+  use AngelPS1::Plugin::LoadAvg 'LoadAvgPercent';
+  use AngelPS1::Plugin::Jobs 'Jobs';
   
   use POSIX ();
-  
-  (my $TTYNAME = POSIX::ttyname(0)) =~ s{^/dev/}{};
   
   return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
                 && AngelPS1::Shell->can('UserPrivSymbol');
   
-  # The prompt is the list returned as the last statement
   (
       (
+          # fish has its own special handling through the fish_title function
           AngelPS1::Shell->name eq 'fish'
           ? ()
           : TermTitle(
@@ -1244,31 +918,71 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
               ? (
                   AngelPS1::Shell->name,
                   ' ',
-                  $TTYNAME,
+                  $AngelPS1::TTYNAME,
                   ' (',
                   # Columns and lines are dynamic!
                   sub { "${COLUMNS}x${LINES}) " },
               ) : ()),
-              AngelPS1::Shell->WorkingDir_Tilde,
+              WorkingDir_Tilde,
           )
       ),
-      # fish has its own special handling through the fish_title function
-      Blue, [ Time ],
-      MarginLeft(' ', BatteryGauge),
-      ' ',
+  
+      # Disabled
+      #Blue, [ Time ], ' ',
+  
+      MarginRight(' ', BatteryGauge),
+      MarginRight(' ', LoadAvgPercent),
+      MarginRight(' ', Jobs),
+  
       # User name
       $< ? (scalar getpwuid $<) : (),
-      sub { ((-w $_[0]->{PWD} ? Green : Red), [ ':' ]) },
-      AngelPS1::Shell->WorkingDir_Tilde,
+      sub { -w $_[0]->{PWD} ? Green : Red }, [ ':' ],
+      WorkingDir_Tilde,
       ' ',
       VCSInfo,
       sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (Red, [ $err ], ' ') },
       # User mark: root => #    else  $
-      ($< ? (Bold, [ AngelPS1::Shell->UserPrivSymbol ]) : (Red + Bold, [ '#' ])),
+      ($< ? (Bold, [ UserPrivSymbol ]) : (Red + Bold, [ '#' ])),
       ' ',
   )
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_PROMPT_DEFAULT
+
+$fatpacked{"AngelPS1/Prompt/liquid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PROMPT_LIQUID';
+  use strict;
+  use warnings;
+  
+  package AngelPS1::Prompt::liquid;
+  
+  sub _shell_unescape ($)
+  {
+      my $txt = shift;
+  
+      # This is a very simplistic implementation that
+      # should be enough for liquidprompt configs
+          $txt =~ s/^'(.*)'$/$1/
+      or ($txt =~ s/^"(.*)"$/$1/ and $txt =~ s/\\./\\/g);
+  
+      $txt
+  }
+  
+  sub read_rc
+  {
+      my $file = shift;
+      open my $f, '<:encoding(UTF-8)', $file or die "Can't open $file: $!\n";
+      my %conf =
+          map { m/LP_(.*?)=(.*?)\s*$/ ? ($1 => _shell_unescape $2) : () }
+          grep /LP_.*=/,
+          grep !/^\s*(?:#|$)/,
+          <$f>;
+      close $f;
+      \%conf
+  }
+  
+  my $conf = read_rc "$ENV{HOME}/.liquidpromptrc";
+  print STDERR "$_=$conf->{$_}\n" for keys %$conf;
+  
+  do 'AngelPS1/Prompt/Default.pm';
+ANGELPS1_PROMPT_LIQUID
 
 $fatpacked{"AngelPS1/Shell.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL';
   use strict;
@@ -1286,17 +1000,32 @@ $fatpacked{"AngelPS1/Shell.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
   my $name;
   
-  #
-  # Call: AngelPS1::Shell->name
-  #
   sub name
   {
       $name
   }
   
-  #
-  # Call: AngelPS1::Shell->use('bash')
-  #
+  sub import
+  {
+      return unless @_ > 1;
+  
+      no strict 'refs';
+      shift;
+      my $pkg = (caller)[0];
+      my @subs = @_;
+      foreach my $s (@subs) {
+          my $proto;
+          $s =~ s/(\(.*\))\z// and $proto = $1;
+  
+          if (defined $name && ! AngelPS1::Shell->can($s) ) {
+              require Carp;
+              Carp::croak("can't import '$s'");
+          }
+  
+          *{"$pkg\::$s"} = sub { AngelPS1::Shell->$s(@_) };
+      }
+  }
+  
   sub use
   {
       my ($class, $shell) = @_;
@@ -1319,10 +1048,11 @@ $fatpacked{"AngelPS1/Shell.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
   sub detect
   {
+      require AngelPS1;
       require AngelPS1::Util;
       # Extract the name of $PPID
   
-      my $ppid = getppid;
+      my $ppid = $AngelPS1::SHELL_PID;
       my $shell;
   
       GET_CMD: {
@@ -1339,14 +1069,16 @@ $fatpacked{"AngelPS1/Shell.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       }
       $shell = AngelPS1::Util::one_line($shell);
   
+      # Keep only the basename
+      $shell =~ s{^.*/}{};
+  
       # Login shells may begin with a '-': '-bash'
       $shell =~ s/^-//;
   
-      return $shell
+      $shell
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL
 
 $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_POSIX';
@@ -1388,8 +1120,6 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
       ''
   }
   
-  # The shell keyword used to declare a local variable
-  # (ksh doesn't have 'local')
   sub shell_local
   {
       'local'
@@ -1403,11 +1133,13 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   
       my $function_name = $class->ps1_function_name($NAME);
       my $time_debug = $DEBUG->{'time'} ? $class->ps1_time_debug : '';
+      my $argv = join(' ', map { (my $x=$_) =~ s/'/'\\''/g; qq<'$x'> } @AngelPS1::ARGV_BACKUP);
       my $local = $class->shell_local;
   
       # The shell code will be evaluated with eval as a single line
       # so statements must be properly terminated with ';'
       # No shell comments allowed
+      # No unquoted wildcards (*, ?, []) allowed. See GH #17.
       <<EOF;
   [ -n "\$APS1_NAME" ] && \$APS1_NAME leave;
   APS1_PS1="\$PS1";
@@ -1424,6 +1156,8 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   $NAME()
   {
       case "\$1" in
+      reload)
+          eval \$($0 $argv) ;;
       leave|quit|go-away)
           PS1="\$APS1_PS1" ;
           kill \$APS1_PID 2>/dev/null ;
@@ -1434,8 +1168,8 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
           PS1="\$APS1_PS1" ;;
       unmute|on)
           PS1='\$($time_debug$function_name)' ;;
-      *)
-          echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
+      ''*)
+          echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
           return 1 ;;
       esac ;
   } ;
@@ -1472,7 +1206,6 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_POSIX
 
 $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_BASH';
@@ -1514,7 +1247,6 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n}
   }
   
-  # Returns the code to send to the shell
   sub shell_code_dynamic
   {
       my ($class, %options) = @_;
@@ -1523,10 +1255,15 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
       my $shell_debug = $DEBUG->{'in'} ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
       my $time_debug = $DEBUG->{'time'} ? q|time | : '';
+      my $script = eval { require FindBin; $FindBin::Bin.'/'.$FindBin::Script } || $0;
+      my $reload = join(' ', map { (my $x=$_) =~ s/'/'\\''/g; qq<'$x'> }
+                             $^X, $script, @AngelPS1::ARGV_BACKUP);
   
       # The shell code will be evaluated with eval as a single line
       # so statements must be properly terminated with ';'
       # No shell comments allowed
+      # No unquoted wildcards (*, ?) allowed (see GH #17). That's why we
+      # use the ''*)  trick in the 'case' block of the angel function.
       <<EOF;
   [[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave;
   APS1_PS1="\$PS1";
@@ -1545,6 +1282,8 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   $NAME()
   {
       case "\$1" in
+      reload)
+          eval \$($reload) ;;
       leave|quit|go-away)
           PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
           PS1="\$APS1_PS1" ;
@@ -1558,8 +1297,8 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
           PS1="\$APS1_PS1" ;;
       unmute|on)
           PROMPT_COMMAND=-angel-PS1 ;;
-      *)
-          echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
+      ''*)
+          echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
           return 1 ;;
       esac ;
   } ;
@@ -1590,7 +1329,6 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_BASH
 
 $fatpacked{"AngelPS1/Shell/fish.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_FISH';
@@ -1711,7 +1449,6 @@ $fatpacked{"AngelPS1/Shell/fish.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_FISH
 
 $fatpacked{"AngelPS1/Shell/ksh93.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_KSH93';
@@ -1731,18 +1468,13 @@ $fatpacked{"AngelPS1/Shell/ksh93.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   }
   
   
-  # ksh93 doesn't have 'local'
   sub shell_local
   {
       'typeset'
   }
   
-  # Contrary to mksh documentation, ks93 (at least as packaged on
-  # Ubuntu as version 93u-1) does not support the "\001\r" trick
-  # So we do not overload ps1_invisible
   
   
-  # Called from AngelPS1::Shell::POSIX->shell_code_dynamic
   sub ps1_time_debug
   {
       # Note that "time -- " doesn't work (/usr/bin/time is used in that case)
@@ -1759,7 +1491,6 @@ $fatpacked{"AngelPS1/Shell/ksh93.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_KSH93
 
 $fatpacked{"AngelPS1/Shell/mksh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_MKSH';
@@ -1843,7 +1574,6 @@ $fatpacked{"AngelPS1/Shell/mksh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_MKSH
 
 $fatpacked{"AngelPS1/Shell/tcsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_TCSH';
@@ -1895,18 +1625,22 @@ $fatpacked{"AngelPS1/Shell/tcsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       # - http://www.grymoire.com/Unix/CshTop10.txt
       # - http://www.faqs.org/faqs/unix-faq/shell/csh-whynot/
   
+      # Note that because of bug http://bugs.gw.com/view.php?id=259
+      # we can not use if/else/endif in aps1_precmd because that
+      # pollutes the history, so we can't do check of existence of
+      # $IN (see previous implementation in the history)
+  
       my $shell_code = <<EOF;
   if ( \${?aps1_name} ) then
       eval \$aps1_name leave
   endif
   set aps1_prompt = \$prompt:q
-  set aps1_precmd = 'if ( -p $IN ) then\\
-      echo -n "?=\$?:q\\0PWD=\$PWD:q" > $IN\\
+  set aps1_precmd = 'set aps1_err = \$?\\
+  if ( -p $IN ) then\\
+      echo -n "?=\$aps1_err:q\\0PWD=\$PWD:q" > $IN\\
       eval "`cat $OUT`"\\
-  else\\
-      $NAME leave\\
   endif'
-  alias precmd \$aps1_precmd:q
+  alias precmd 'eval \$aps1_precmd:q'
   alias $NAME 'switch ( \\!* )\\
       case leave:\\
       case quit:\\
@@ -1934,8 +1668,6 @@ $fatpacked{"AngelPS1/Shell/tcsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   set aps1_name = '$NAME'
   set aps1_pid = '$PID'
   EOF
-  # For debugging
-  #alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd; unalias precmd $NAME $NAME-kill; :'
   
       # Inside backquotes (`) output \n are replaced with spaces by tcsh
       # So switch/if can not work.
@@ -1975,7 +1707,6 @@ $fatpacked{"AngelPS1/Shell/tcsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_TCSH
 
 $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL_ZSH';
@@ -2027,7 +1758,6 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; [[ -n "\$prompt_theme" ]] && prompt off ; set -o promptpercent; set -o nopromptbang; set -o nopromptsubst; PS1=$PS1\n}
   }
   
-  # Returns the code to send to the shell
   sub shell_code_dynamic
   {
       my ($class, %options) = @_;
@@ -2035,6 +1765,7 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
           @options{qw<debug name in out pid env>};
   
       my $shell_debug = $DEBUG->{'in'} ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
+      my $argv = join(' ', map { (my $x=$_) =~ s/'/'\\''/g; qq<'$x'> } @AngelPS1::ARGV_BACKUP);
   
       # The shell code will be evaluated with eval as a single line
       # so statements must be properly terminated with ';'
@@ -2055,12 +1786,15 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   set -o promptpercent ;
   set -o nopromptbang ;
   set -o nopromptsubst ;
+  autoload -Uz add-zsh-hook ;
   add-zsh-hook precmd -angel-PS1 ;
   APS1_NAME=$NAME ;
   APS1_PID=$PID ;
   $NAME()
   {
       case "\$1" in
+      reload)
+          eval \$($0 $argv) ;;
       leave|quit|go-away)
           PS1="\$APS1_PS1" ;
           eval \$APS1_prompt ;
@@ -2071,11 +1805,12 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
           add-zsh-hook -d zshexit -angel-PS1-exit ;
           unset -f -- $NAME -angel-PS1 -angel-PS1-exit ;;
       mute|off)
+          add-zsh-hook -d precmd -angel-PS1 ;
           PS1="\$APS1_PS1" ;;
       unmute|on)
-          ;;
-      *)
-          echo 'usage: $NAME [quit|mute|off|unmute|on]' >&2 ;
+          add-zsh-hook precmd -angel-PS1 ;;
+      ''*)
+          echo 'usage: $NAME [reload|quit|mute|off|unmute|on]' >&2 ;
           return 1 ;;
       esac ;
   } ;
@@ -2108,7 +1843,6 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SHELL_ZSH
 
 $fatpacked{"AngelPS1/System.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SYSTEM';
@@ -2143,9 +1877,146 @@ $fatpacked{"AngelPS1/System.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   *import = *use;
   
+  
+  sub gen_count_jobs
+  {
+      my $self = shift;
+      require AngelPS1;
+      my $PPID = shift || $AngelPS1::SHELL_PID;
+      my $TTY  = shift || $AngelPS1::TTYNAME;
+  
+      # Try all implementations available on this system
+      for my $gen_impl ($self->_count_jobs_impl) {
+          # Call the generator to get an implementation
+          my $sub = $self->$gen_impl($PPID, $TTY)
+              or next;
+          # Try it once
+          my @result = $sub->();
+          # Every check ok? We got the one!
+          return $sub if @result;
+      }
+  
+      # None works :(
+      #warn "No count_jobs implementation!";
+      undef
+  }
+  
+  sub _count_jobs_impl
+  {
+      my $self = shift;
+      # _gen_count_jobs can be implemented by an OS specific module
+      # _gen_count_jobs_ps is the default, portable (?) implementation
+      map { $self->can($_) || () } qw< _gen_count_jobs _gen_count_jobs_ps >
+  }
+  
+  sub _gen_count_jobs_ps
+  {
+      my (undef, $PPID, $ttyname) = @_;
+      #die unless $PPID;
+      #die unless $ttyname;
+  
+      # We use a ps filter to avoid processing the whole table ourself
+      # The filter must not hide process owned by other users.
+      # This is the trickiest part because ps flags are not portable.
+      my @ps_filter;
+      TRY: {
+          #chomp(my $sid = `ps -o sid= $$`);
+          for my $try (
+              [ '--ppid' => $PPID ],  # select by ppid (Linux)
+              [ -t => $ttyname ],   # select by tty  (BSD, Linux)
+              #[ -g => $sid ],      # select by sid  (Linux)
+          ) {
+              #warn "ps @$try >/dev/null 2>&1";
+              system("ps @$try >/dev/null 2>&1") >> 8
+                  and next;
+              # Success
+              @ps_filter = @$try;
+              last TRY
+          }
+          # All tries failed :(
+          return
+      }
+  
+      my $regex = qr/^ *$PPID +([0-9]+) +(?:\1) +(.)/;
+      sub {
+          my ($suspended, $background) = (0, 0);
+  
+          $? = -1;
+          open my $ps, "ps -o ppid= -o pgid= -o pid= -o stat= @ps_filter |"
+              or return;
+          # Check the return code if ever it is already finished
+          return if $? >= 256;
+  
+          while (my $line = <$ps>) {
+              #warn $_;
+              next if $line !~ /$regex/ || $1 == $PPID;
+              if ($2 eq 'T') {
+                  $suspended++;
+              } else {
+                  $background++;
+              }
+          }
+          close $ps;
+          ($suspended, $background)
+      }
+  }
+  
+  
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SYSTEM
+
+$fatpacked{"AngelPS1/System/darwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SYSTEM_DARWIN';
+  use strict;
+  use warnings;
+  
+  package AngelPS1::System::darwin;
+  
+  sub nproc
+  {
+      chomp(my $ncpu = `sysctl -n hw.ncpu`);
+      $ncpu
+  }
+  
+  sub gen_loadavg
+  {
+      sub {
+          my $uptime = `uptime`;
+          $uptime =~ /load averages: ([0-9]+\.[0-9]+) /;
+          $1
+      }
+  }
+  
+  sub gen_fetch_battery
+  {
+      # Count lines of pmset -g batt
+      my $lines_count =( )= `pmset -g batt`;
+      return if $?;
+  
+      # "Now drawing from 'AC Power'" and no battery info
+      return if $lines_count == 1;
+  
+      # FIXME handle "Battery Warning: Early"
+      if ($lines_count > 2) {
+          warn "only one battery supported. Patch welcome!"
+      }
+  
+      return sub {
+          my $pmset_batt = `pmset -g batt`;
+  
+          # 37%; AC attached; not charging
+          # 8%; charging; 2:46 remaining
+          # 9%; discharging; (no estimate)
+          # 7%; discharging; 0:13 remaining
+          $pmset_batt =~ m/\t([0-9]+)%;.* (dis)?charging/;
+          my $level = $1 / 100;
+          my $charging = ! defined $2;
+  
+          return ($level, $charging);
+      }
+  }
+  
+  '$';
+ANGELPS1_SYSTEM_DARWIN
 
 $fatpacked{"AngelPS1/System/linux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SYSTEM_LINUX';
   use strict;
@@ -2164,12 +2035,14 @@ $fatpacked{"AngelPS1/System/linux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
       $nproc
   }
   
-  sub loadavg
+  sub gen_loadavg
   {
-      open my $proc_loadavg, '<', '/proc/loadavg' or die;
-      my $loadavg = readline $proc_loadavg;
-      substr($loadavg, index($loadavg, ' '), length $loadavg, '');
-      $loadavg
+      sub {
+          open my $proc_loadavg, '<', '/proc/loadavg' or die;
+          my $loadavg = readline $proc_loadavg;
+          substr($loadavg, index($loadavg, ' '), length $loadavg, '');
+          $loadavg
+      }
   }
   
   sub _slurp_line
@@ -2181,10 +2054,7 @@ $fatpacked{"AngelPS1/System/linux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
       $line
   }
   
-  # If batteries found, returns a closure that returns 2 values:
-  # - the battery level as a float between 0 and 1
-  # - a boolean; 1 if charging, else discharging
-  sub fetch_battery
+  sub gen_fetch_battery
   {
       # List devices
       opendir my $power_devices, '/sys/class/power_supply'
@@ -2201,6 +2071,14 @@ $fatpacked{"AngelPS1/System/linux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
       my $bat = shift @batteries;
   
       # Sub that will query the battery status
+      if (-f "$bat/capacity") {
+          return sub {
+              defined(my $capacity = _slurp_line "$bat/capacity") or return;
+              defined(my $status = _slurp_line "$bat/status") or return;
+              # 'Charging', 'Discharging', 'Full'
+              return ($capacity / 100, $status ne 'Discharging');
+          }
+      }
       return sub {
           defined(my $charge_full = _slurp_line "$bat/charge_full") or return;
           defined(my $charge_now = _slurp_line "$bat/charge_now") or return;
@@ -2210,8 +2088,51 @@ $fatpacked{"AngelPS1/System/linux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
       }
   }
   
+  sub _gen_count_jobs {
+      my $PPID = $_[1];
+  
+      return unless -r "/proc/$PPID/stat";
+  
+      sub {
+          opendir my $proc_dir, '/proc' or die "/proc: $!";
+  
+          my ($suspended, $background) = (0, 0);
+  
+          for my $pid ((readdir $proc_dir)) {
+              next if $pid !~ /^[1-9]/;
+              # Skip ourself
+              next if $pid == $$;
+              -r "/proc/$pid/stat" or next;
+              open my $f, '<:raw', "/proc/$pid/stat" or next;
+              # TODO rewrite read with sysread
+              # FIXME read the whole file not just the first line
+              # because $comm may contain "\n"
+              my $stat = <$f>;
+              close $f;
+              my ($comm, $state, $ppid, $pgrp, $sid) = $stat =~ /\((.*)\) (.) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) / or die $stat;
+              # Only childs of the shell
+              next if $ppid ne $PPID;
+              #printf "# %5d %5d %5d %5d %s %s\n", $pid, $ppid, $pgrp, $sid, $state, $comm;
+              die $stat unless defined $pgrp;
+              # Only process group leaders
+              next if $pgrp ne $pid;
+              if ($state eq 'T') {
+                  $suspended++
+              } else {
+                  $background++;
+              }
+              #printf "%4d %s %s\n", $pid, $state, $comm;
+          }
+  
+          close $proc_dir;
+  
+          return ($suspended, $background)
+      }
+  }
+  
+  
+  
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_SYSTEM_LINUX
 
 $fatpacked{"AngelPS1/TermInfo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_TERMINFO';
@@ -2260,13 +2181,8 @@ $fatpacked{"AngelPS1/TermInfo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   sub setaf ($) { terminfo [ qw(setaf AF) ], $_[0] }
   
-  # our ($BLACK, $RED, $GREEN, $YELLOW, $BLUE, $MAGENTA, $CYAN, $GRAY) =
-  #    map { setaf $_ } 0..7;
-  # our $BOLD = terminfo [ qw(bold md) ];
-  # our $NO_COLOR = terminfo [ qw(sgr0 me) ];
   
   1;
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_TERMINFO
 
 $fatpacked{"AngelPS1/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_UTIL';
@@ -2333,8 +2249,307 @@ $fatpacked{"AngelPS1/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'A
   }
   
   '$';
-  # vim:set et ts=8 sw=4 sts=4:
 ANGELPS1_UTIL
+
+$fatpacked{"Term/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TERM_CHROME';
+  use strict;
+  use warnings;
+  
+  package Term::Chrome;
+  # ABSTRACT: DSL for colors and other terminal chrome
+  our $VERSION = '2.00';
+  
+  # Pre-declare packages
+  {
+      package # no index: private package
+          Term::Chrome::Color;
+  }
+  
+  
+  use Exporter 5.57 'import';  # perl 5.8.3
+  # @EXPORT is defined at the end
+  
+  use Carp ();
+  use Scalar::Util ();
+  our @CARP_NOT = qw< Term::Chrome::Color >;
+  
+  # Private constructor for Term::Chrome objects. Lexical, so cross-packages.
+  # Arguments:
+  # - class name
+  # - foreground color
+  # - background color
+  # - flags list
+  my $new = sub
+  {
+      my ($class, @self) = @_;
+  
+      my $fg = $self[0];
+      Carp::croak "invalid fg color $fg"
+          if defined($fg) && ($fg < 0 || $fg > 255);
+      my $bg = $self[1];
+      Carp::croak "invalid bg color $bg"
+          if defined($bg) && ($bg < 0 || $bg > 255);
+      # TODO check flags
+  
+      bless \@self, $class
+  };
+  
+  
+  # Cache for color objects
+  my %COLOR_CACHE;
+  
+  sub color ($)
+  {
+      my $color = shift;
+      die "invalid color" if ref $color;
+      my $c = chr $color;
+      # We can not use '$COLOR_CACHE{$c} ||= ...' because this requires overloading
+      # We can not use 'no overloading' because this requires perl 5.10
+      exists $COLOR_CACHE{$c}
+      ?  $COLOR_CACHE{$c}
+      : ($COLOR_CACHE{$c} = Term::Chrome::Color->$new($color, undef))
+  }
+  
+  
+  use overload
+      '""' => 'term',
+      '+'  => '_plus',
+      '${}' => '_deref',
+      '&{}' => '_chromizer',
+      '.'   => '_concat',
+      '!'   => '_reverse',
+      'bool' => sub () { 1 },
+      fallback => 0,
+  ;
+  
+  sub term
+  {
+      my $self = shift;
+      my ($fg, $bg) = @{$self}[0, 1];
+      my $r = join(';', @{$self}[2 .. $#$self]);
+      if (defined($fg) || defined($bg)) {
+          $r .= ';' if @$self > 2;
+          if (defined $fg) {
+              # LeoNerd says that this should be ----------> "38:5:$fg"
+              # according to the spec but gnome-terminal doesn't support that
+              $r .= $fg < 8 ? (30+$fg) : $fg < 16 ? "9$fg" : "38;5;$fg";
+              $r .= ';' if defined $bg;
+          }
+          #                                      -------> "48:5:$bg"
+          $r .= $bg < 8 ? (40+$bg) : $bg < 16 ? "10$bg" : "48;5;$bg" if defined $bg;
+      } else {
+          return '' unless @$self > 2
+      }
+      "\e[${r}m"
+  }
+  
+  
+  sub _plus
+  {
+      my ($self, $other, $swap) = @_;
+  
+      return $self unless defined $other;
+  
+      die 'invalid value for +' unless $other->isa(__PACKAGE__);
+  
+      my @new = @$self;
+      $new[0] = $other->[0] if defined $other->[0];
+      $new[1] = $other->[1] if defined $other->[1];
+      push @new, @{$other}[2 .. $#$other];
+  
+      bless \@new
+  }
+  
+  sub _reverse
+  {
+      my $self = shift;
+      my @new = (undef, undef);
+      push @new, 39 if $self->[0]; # ResetFg
+      push @new, 49 if $self->[1]; # ResetBg
+      # Reset/ResetFlags/ResetFg/ResetBg are removed
+      # Other flags are reversed
+      push @new, map { (!$_ || $_ == 22 || $_ > 30) ? () : ($_ > 20 ? $_-20 : $_+20) } @{$self}[2..$#$self];
+      bless \@new, 'Term::Chrome::Flag'
+  }
+  
+  sub _deref
+  {
+      \("$_[0]")
+  }
+  
+  sub _concat
+  {
+      $_[2] ? $_[1].$_[0]->term
+            : $_[0]->term.$_[1]
+  }
+  
+  
+  sub _chromizer
+  {
+      my $self = shift;
+      my $begin = $self->term;
+      my $end = $self->_reverse->term;
+      sub {
+          unless (defined $_[0]) {
+              Carp::carp "missing argument in Term::Chrome chromizer";
+              return
+          }
+          $begin . $_[0] . $end
+      }
+  }
+  
+  sub fg
+  {
+      my $c = $_[0]->[0];
+      defined($c) ? color($c) : undef
+  }
+  
+  sub bg
+  {
+      my $c = $_[0]->[1];
+      defined($c) ? color($c) : undef
+  }
+  
+  sub flags
+  {
+      my $self = shift;
+      return undef unless @$self > 2;
+      __PACKAGE__->$new(undef, undef, @{$self}[2..$#$self])
+  }
+  
+  package # no index: private package
+      Term::Chrome::Color;
+  
+  our @ISA = qw< Term::Chrome >;
+  
+  use overload
+      '/'   => '_over',
+      # Even if overloading is set in the super class, we have to repeat it for old perls
+      (
+          $^V ge v5.18.0
+          ? ()
+          : (
+              '""'  => \&Term::Chrome::term,
+              '+'   => \&Term::Chrome::_plus,
+              '${}' => \&Term::Chrome::_deref,
+              '.'   => \&Term::Chrome::_concat,
+              '!'   => \&Term::Chrome::_reverse,
+              'bool' => sub () { 1 },
+          )
+      ),
+      fallback => 0,
+  ;
+  
+  sub _over
+  {
+      die 'invalid bg color for /' unless ref($_[1]) eq __PACKAGE__;
+      Term::Chrome->$new($_[0]->[0], $_[1]->[0])
+  }
+  
+  package # no index: private package
+      Term::Chrome::Flag;
+  
+  our @ISA = qw< Term::Chrome >;
+  
+  use overload
+      '+'   => '_plus',
+      '!'   => '_reverse',
+      # Even if overloading is set in the super class, we have to repeat it for old perls
+      (
+          $^V ge v5.18.0
+          ? ()
+          : (
+              '""'  => \&Term::Chrome::term,
+              '${}' => \&Term::Chrome::_deref,
+              '.'   => \&Term::Chrome::_concat,
+              'bool' => sub () { 1 },
+          )
+      ),
+      fallback => 0,
+  ;
+  
+  sub _reverse
+  {
+      my $self = shift;
+      bless [
+          undef, undef,
+          # Reset/ResetFlags/ResetFg/ResetBg are removed
+          map { (!$_ || $_ == 22 || $_ > 30) ? () : ($_ > 20 ? $_-20 : $_+20) } @{$self}[2..$#$self]
+      ]
+  }
+  
+  sub _plus
+  {
+      my ($self, $other, $swap) = @_;
+  
+      return $self unless defined $other;
+  
+      Carp::croak(q{Can't combine Term::Chrome with }.$other)
+          unless Scalar::Util::blessed $other;
+  
+      if ($other->isa(__PACKAGE__)) {
+          # Reset
+          return $other if !$other->[2];
+          # ResetFlags
+          return $other if $other->[2] == 22;
+          # Concat flags
+          __PACKAGE__->$new(@$self, @{$other}[2..$#$other])
+      } elsif ($other->isa(Term::Chrome::)) {
+          $other->_plus($self, '')
+      } else {
+          Carp::croak(q{Can't combine Term::Chrome with }.ref($other))
+      }
+  }
+  
+  
+  package
+      Term::Chrome;
+  
+  # Build the constants and the @EXPORT list
+  #
+  # This block must be after "use overload" (for both Term::Chrome
+  # and Term::Chrome::Color) because overload must be set before blessing
+  # due to a bug in perl < 5.18
+  # (according to a comment in Types::Serialiser source)
+  
+  my $mk_flag = sub { Term::Chrome::Flag->$new(undef, undef, $_[0]) };
+  
+  my %const = (
+      Reset      => $mk_flag->(''),
+      ResetFg    => $mk_flag->(39),
+      ResetBg    => $mk_flag->(49),
+      ResetFlags => $mk_flag->(22),
+      Standout   => $mk_flag->(7),
+      Underline  => $mk_flag->(4),
+      Reverse    => $mk_flag->(7),
+      Blink      => $mk_flag->(5),
+      Bold       => $mk_flag->(1),
+  
+      Black      => color 0,
+      Red        => color 1,
+      Green      => color 2,
+      Yellow     => color 3,
+      Blue       => color 4,
+      Magenta    => color 5,
+      Cyan       => color 6,
+      White      => color 7,
+  
+      # Larry Wall's favorite color
+      # The true 'chartreuse' color from X11 colors is #7fff00
+      # The xterm-256 color #118 is near: #87ff00
+      Chartreuse => color 118,
+  );
+  
+  our @EXPORT = ('color', keys %const);
+  
+  # In 17fd029f we avoided to use constant.pm on perl < 5.16
+  # This does not seem necessary anymore.
+  require constant;
+  constant->import(\%const);
+  
+  1;
+  # vim:set et ts=8 sw=4 sts=4:
+TERM_CHROME
 
 s/^  //mg for values %fatpacked;
 
@@ -2344,15 +2559,17 @@ no strict 'refs';
 
 if ($] < 5.008) {
   *{"${class}::INC"} = sub {
-     if (my $fat = $_[0]{$_[1]}) {
-       return sub {
-         return 0 unless length $fat;
-         $fat =~ s/^([^\n]*\n?)//;
-         $_ = $1;
-         return 1;
-       };
-     }
-     return;
+    if (my $fat = $_[0]{$_[1]}) {
+      my $pos = 0;
+      my $last = length $fat;
+      return (sub {
+        return 0 if $pos == $last;
+        my $next = (1 + index $fat, "\n", $pos) || $last;
+        $_ .= substr $fat, $pos, $next - $pos;
+        $pos = $next;
+        return 1;
+      });
+    }
   };
 }
 
@@ -2372,7 +2589,7 @@ unshift @INC, bless \%fatpacked, $class;
 
 use utf8;
 
-#    Copyright © 2013,2014 Olivier Mengué
+#    Copyright © 2013-2016 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
 #
@@ -2436,6 +2653,9 @@ if ($ENCODING) {
     binmode(STDOUT, ":encoding($ENCODING)");
     binmode(STDERR, ":encoding($ENCODING)");
 }
+
+# Preserve a copy of @ARGV
+our @ARGV_BACKUP = @ARGV;
 
 our $APP = !defined scalar caller;  # Running as command or include
 $main::VERSION = our $VERSION if $APP;
@@ -2513,8 +2733,9 @@ GetOptions(
 lib->import(@INCLUDES);
 undef @INCLUDES;
 
+$shell = AngelPS1::Shell->detect unless defined $shell;
 # Dynamically load our shell plugin
-AngelPS1::Shell->use(defined($shell) ? $shell : AngelPS1::Shell->detect);
+AngelPS1::Shell->use($shell);
 
 # The angel name must be a valid shell function identifier
 # Note that '-' is allowed, even as a first char
@@ -2587,12 +2808,13 @@ if ($RUN_TEST || -t STDOUT) {
     print "angel-PS1 $VERSION\n";
 
     my $script = index($0, '/') >= 0 ? $0 : "\$(which $FindBin::Script)";
-    print "Copyright (C) 2013,2014  Olivier Mengué\n",
+    print "Copyright (C) 2013-2016  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
           "This is free software, and you are welcome to redistribute it\n",
           "under certain conditions;\n",
           "Run \"sed -n '2,19{s/.//;p}' $script | iconv -f UTF-8\" for details.\n\n";
-    print STDERR "usage: eval `$0`\n\nSee 'perldoc angel-PS1' for detailed help.\n";
+    print STDERR "usage: eval ".($shell eq 'fish' ? "($0)" : "`$0`")
+               . "\n\nSee 'perldoc angel-PS1' for detailed help.\n";
 
     #print 'Running as an app: ', $APP, "\n";
     #print "\$Bin: $FindBin::Bin\n";
@@ -2672,9 +2894,16 @@ open STDIN, '+<', '/dev/null';
 close STDOUT;
 open STDOUT, '>', '/dev/null';
 
-
+# Signals handling
+# Reference: http://www.linusakesson.net/programming/tty/
+#
 # Ignore ^C sent to the terminal
 $SIG{INT} = 'IGNORE';
+# Let us keep writing to the terminal while in the background
+# This is the default when 'stty -tostop'
+$SIG{TTOU} = 'IGNORE';
+# SIGWINCH is also handled in AngelPS1::Plugn::Term::Size
+#
 # Clean exits that will call our END block
 $SIG{HUP} = $SIG{TERM} = sub { exit 0 };
 
@@ -2718,12 +2947,14 @@ sub main_loop
         $_ = File::Spec->rel2abs($_, $cwd);
     }
 
+    require Errno;
+
     for (;;) {
         # Move to a safe directory to avoid blocking fs unmount
         chdir '/';
 
         unless (open $FIFO, $open_in, $FIFO_IN) {
-            warn "Can't open $FIFO_IN: $!\n";
+            warn "Can't open $FIFO_IN (", 0+$!, "): $!\n" if $! != Errno::EINTR();
             redo if -e $FIFO_IN && -p _;
             last;
         }
@@ -2829,12 +3060,12 @@ if C<--config I<$CONFIG>> option is given, the F<I<$CONFIG>> file
 
 =item *
 
-the C<AngelPS1::Prompt::I<$NAME>> perl module:
-F<AngelPS1/Prompt/I<$NAME>.pm>
+the C<AngelPS1::Prompt::I<$ANGEL>> perl module:
+F<AngelPS1/Prompt/I<$ANGEL>.pm>
 
 =item *
 
-the F<I<$NAME>.PS1> file
+the F<I<$ANGEL>.PS1> file
 
 =back
 
