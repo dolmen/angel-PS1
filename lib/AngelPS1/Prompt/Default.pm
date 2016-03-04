@@ -49,7 +49,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
 
     # User name
     $< ? (scalar getpwuid $<) : (),
-    sub { ((-w $_[0]->{PWD} ? Green : Red), [ ':' ]) },
+    sub { -w $_[0]->{PWD} ? Green : Red }, [ ':' ],
     WorkingDir_Tilde,
     ' ',
     VCSInfo,
