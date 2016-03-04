@@ -32,8 +32,16 @@ echo ; stty echo
 echo "'$PS1'"
 # == Load angel-PS1 with default prompt =====
 eval $(./angel-PS1)
+# == Let's play with jobs
+sleep 1 &
+sleep 1 &
+kill -STOP %2
+kill %1
+fg %2
+# == Go back temporarly to the non-angel PS1
 angel off
 angel on
+# == Unload
 angel quit
 #
 # == Load angel-PS1 with Powerline-basic.PS1
