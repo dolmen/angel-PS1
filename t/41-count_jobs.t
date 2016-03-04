@@ -6,7 +6,7 @@ use Test::More;
 use AngelPS1;
 use AngelPS1::System;
 
-use Term::Chrome qw< Yellow Bold >;
+use Term::Chrome qw< Blue Red Bold >;
 use AngelPS1::Plugin::Jobs qw< Jobs >;
 
 use Sub::Util 1.40 ();   # subname
@@ -92,25 +92,42 @@ AngelPS1::System->use;
 
 my @tests;
 
+my $chrome_suspended = Blue + Bold;
+my $chrome_background = Red + Bold;
+my $theme = {
+    suspended => $chrome_suspended,
+    suspended_symbol => $chrome_suspended,
+    background => $chrome_background,
+    background_symbol => $chrome_background,
+};
+
 my @prompt = do {
     # For this test our process is the one controlling the jobs
     # while in AngelPS1, it is the parent process
     local $AngelPS1::SHELL_PID = $$;
     # The Jobs plugin
-    ( Jobs )
+    ( Jobs($theme) )
 };
 if (ok(scalar @prompt, 'Jobs plugin has a working implementation')
     && is(ref($prompt[0]), 'CODE', 'Jobs plugin returned a sub')) {
-    my $color = Yellow + Bold;
     my %CHECKS = (
 	"0,0" => [ ],
-	"1,0" => [ $color => [ "1z" ] ],
-	"0,1" => [ $color => [ "1&" ] ],
-	"1,1" => [ $color => [ "1z" ], '/', $color => [ "1&" ] ],
+	"1,0" => [ $chrome_suspended => [ '1' ], $chrome_suspended => [ 'z' ] ],
+	"0,1" => [ $chrome_background => [ '1' ], $chrome_background => [ '&' ] ],
+	"1,1" => [
+	    $chrome_suspended => [ '1' ], $chrome_suspended => [ 'z' ],
+	    '/',
+	    $chrome_background => [ '1' ], $chrome_background => [ '&' ],
+	],
     );
     push @tests, sub {
 	if (my $check = $CHECKS{"$_[0],$_[1]"}) {
-	    is_deeply([ $prompt[0]->() ], $check, "Jobs plugin");
+	    my @res = $prompt[0]->();
+	    unless (is_deeply(\@res, $check, "Jobs plugin")) {
+		#if (eval { require JSON::MaybeXS; 1 }) {
+		    diag "Got: ", explain(\@res);
+		    #}
+	    }
 	} else {
 	    note "Jobs plugin: not tested";
 	}
