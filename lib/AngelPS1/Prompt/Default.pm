@@ -6,7 +6,7 @@ package AngelPS1::Prompt::Default;
 use AngelPS1;
 use AngelPS1::Shell qw< WorkingDir_Tilde UserPrivSymbol >;
 use AngelPS1::Chrome;
-use AngelPS1::Plugin::Core 'MarginLeft';
+use AngelPS1::Plugin::Core 'MarginRight';
 use AngelPS1::Plugin::DateTime;
 use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
@@ -41,12 +41,12 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
     ),
 
     # Disabled
-    #Blue, [ Time ],
+    #Blue, [ Time ], ' ',
 
-    MarginLeft(' ', BatteryGauge),
-    MarginLeft(' ', LoadAvgPercent),
-    MarginLeft(' ', Jobs),
-    ' ',
+    MarginRight(' ', BatteryGauge),
+    MarginRight(' ', LoadAvgPercent),
+    MarginRight(' ', Jobs),
+
     # User name
     $< ? (scalar getpwuid $<) : (),
     sub { ((-w $_[0]->{PWD} ? Green : Red), [ ':' ]) },
