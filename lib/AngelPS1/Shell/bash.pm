@@ -45,7 +45,9 @@ sub shell_code_dynamic
 
     my $shell_debug = $DEBUG->{'in'} ? q|printf 'DEBUG> PS1=%q\\n' "$PS1" ; | : '';
     my $time_debug = $DEBUG->{'time'} ? q|time | : '';
-    my $argv = join(' ', map { (my $x=$_) =~ s/'/'\\''/g; qq<'$x'> } @AngelPS1::ARGV_BACKUP);
+    my $script = eval { require FindBin; $FindBin::Bin.'/'.$FindBin::Script } || $0;
+    my $reload = join(' ', map { (my $x=$_) =~ s/'/'\\''/g; qq<'$x'> }
+                           $^X, $script, @AngelPS1::ARGV_BACKUP);
 
     # The shell code will be evaluated with eval as a single line
     # so statements must be properly terminated with ';'
@@ -71,7 +73,7 @@ $NAME()
 {
     case "\$1" in
     reload)
-        eval \$($0 $argv) ;;
+        eval \$($reload) ;;
     leave|quit|go-away)
         PROMPT_COMMAND="\$APS1_PROMPT_COMMAND" ;
         PS1="\$APS1_PS1" ;
