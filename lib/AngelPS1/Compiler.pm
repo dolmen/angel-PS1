@@ -7,7 +7,7 @@ use Exporter 'import';
 our @EXPORT = qw< reduce expand ps1_is_static >;
 
 use AngelPS1::Shell ();
-use Term::Chrome ();
+use Term::Chrome 2.000 ();
 use Scalar::Util ();
 
 
@@ -40,9 +40,10 @@ sub reduce;
 # Reduce a @PS1 definition:
 # - bare scalar are expanded to their escaped result
 # - scalar refs are concatenated
-# - AngelPS1::Chrome are expanded to their ANSI sequence representation
-# - AngelPS1::Chrome followed by ARRAY are expanded to the ANSI sequence,
-#   the recursive reduce of the flattened array, and a Chrome reset
+# - Term::Chrome are expanded to their ANSI sequence representation
+# - Term::Chrome followed by ARRAY are expanded to the ANSI sequence,
+#   the recursive reduce of the flattened array, and the ANSI sequence of
+#   the reverse Chrome
 # - undef are skipped
 # - CODE refs are preserved as is (for multiple step compilation)
 # In scalar context the result of that process is expected to be a single
@@ -66,8 +67,8 @@ sub reduce
                         AngelPS1::Shell->ps1_invisible($v->term),
                         # flatten the ARRAY
                         @{ shift @template },
-                        # close the colored part with a Reset
-                        AngelPS1::Shell->ps1_invisible(Term::Chrome::Reset->term);
+                        # close the colored part with the reverse of $v
+                        AngelPS1::Shell->ps1_invisible((!$v)->term);
                 } else {
                     # Expand the color
                     unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
