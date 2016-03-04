@@ -9,7 +9,7 @@
 
 
 # External modules that will be fatpacked
-requires 'Term::Chrome' => '1.011';
+requires 'Term::Chrome' => '2.000';
 # Core modules:
 requires 'Pod::Usage';
 requires 'Getopt::Long';
