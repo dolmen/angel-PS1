@@ -63,12 +63,15 @@ sub reduce
             # => replace by the colored expanded result
             elsif (Scalar::Util::blessed($v) && $v->isa('Term::Chrome')) {
                 if (@template && ref($template[0]) eq 'ARRAY') {
-                    unshift @template,
-                        AngelPS1::Shell->ps1_invisible($v->term),
-                        # flatten the ARRAY
-                        @{ shift @template },
-                        # close the colored part with the reverse of $v
-                        AngelPS1::Shell->ps1_invisible((!$v)->term);
+                    my $arr = shift @template;
+                    if (@$arr) { # If non-empty
+                        unshift @template,
+                            AngelPS1::Shell->ps1_invisible($v->term),
+                            # flatten the ARRAY
+                            @$arr,
+                            # close the colored part with the reverse of $v
+                            AngelPS1::Shell->ps1_invisible((!$v)->term);
+                    }
                 } else {
                     # Expand the color
                     unshift @template, AngelPS1::Shell->ps1_invisible($v->term);
