@@ -52,7 +52,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
     sub { -w $_[0]->{PWD} ? Green : Red }, [ ':' ],
     WorkingDir_Tilde,
     ' ',
-    VCSInfo,
+    MarginRight(VCSInfo),
     sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (Red, [ $err ], ' ') },
     # User mark: root => #    else  $
     ($< ? (Bold, [ UserPrivSymbol ]) : (Red + Bold, [ '#' ])),

@@ -100,7 +100,7 @@ sub GitInfo
 
         # TODO Git mark
 
-        @out, ' '
+        @out
     }
 }
 
