@@ -16,6 +16,7 @@ use AngelPS1::Chrome qw<Red Green Bold color>;
 
 # Globals (to allow override)
 our $SYMBOL_LOADAVG = '⌂';
+our $LOAD_THRESHOLD = 0.60;
 
 sub LoadAvgPercent
 {
@@ -29,7 +30,7 @@ sub LoadAvgPercent
 
     return sub {
 	my $loadavg = $loadavg_func->();
-	return if !defined($loadavg);
+	return if !defined($loadavg) || $loadavg < $LOAD_THRESHOLD;
 	(
 	    (
 		$loadavg < 0.80
