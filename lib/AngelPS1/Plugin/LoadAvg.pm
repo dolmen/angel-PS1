@@ -27,10 +27,13 @@ sub LoadAvgPercent
     AngelPS1::_str_allowed($SYMBOL_LOADAVG) or return;
 
     my $loadavg_func = $loadavg_gen->();
+    my $nproc = AngelPS1::System->nproc();
 
     return sub {
 	my $loadavg = $loadavg_func->();
-	return if !defined($loadavg) || $loadavg < $LOAD_THRESHOLD;
+	return if !defined($loadavg);
+	$loadavg /= $nproc;
+	return if $loadavg < $LOAD_THRESHOLD;
 	(
 	    (
 		$loadavg < 0.80
