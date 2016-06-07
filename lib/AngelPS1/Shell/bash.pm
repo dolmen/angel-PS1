@@ -33,7 +33,7 @@ sub ps1_finalize
 sub shell_code_static
 {
     my ($class, $PS1, %options) = @_;
-    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n}
+    qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; shopt -s promptvars; PS1='$PS1'\n}
 }
 
 # Returns the code to send to the shell
@@ -66,6 +66,7 @@ APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
     read PS1 < '$OUT' || $NAME leave ;
     $shell_debug
 } ;
+shopt -s promptvars ;
 PROMPT_COMMAND='${time_debug}-angel-PS1' ;
 APS1_NAME=$NAME ;
 APS1_PID=$PID ;
