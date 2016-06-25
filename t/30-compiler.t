@@ -5,6 +5,7 @@ use warnings FATAL => 'all';
 use Test::More;
 
 use AngelPS1::Compiler;
+use Term::Chrome qw< Red >;
 
 ok(ps1_is_static([ \'xxxx$ ' ]), 'ps1_is_static');
 ok(!ps1_is_static([ sub { } ]), '!ps1_is_static');
@@ -26,6 +27,16 @@ is(scalar reduce(expand({}, \'x', sub { () })), 'x');
 is(scalar reduce(expand({}, \'x', sub { sub { () } }, \'y')), 'xy');
 
 is(scalar reduce(expand({}, sub { \'x' })), 'x');
+
+
+AngelPS1::Shell->use('dash');
+is(scalar reduce(Red, [ 'OK' ]), &{+Red}("OK"), 'reduce: Red [ "OK" ]');
+is(scalar reduce(Red, [ ]), '', 'reduce: Red []');
+
+is(scalar reduce(expand({}, Red, [ 'OK' ])), &{+Red}("OK"), 'reduce+expand: Red [ "OK" ]');
+is(scalar reduce(expand({}, Red, [ sub { 'OK' } ])), &{+Red}("OK"), 'reduce+expand: Red [ sub { "OK" } ]');
+is(scalar reduce(expand({}, Red, [ sub { () } ])), '', 'reduce+expand: Red [ sub { () } ]');
+
 
 done_testing
 __END__
