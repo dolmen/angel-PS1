@@ -12,7 +12,7 @@ BEGIN {
     Test::MockTime->import('set_fixed_time');
 }
 
-use AngelPS1::Plugin::DateTime;
+use AngelPS1::Plugin::DateTime qw< StrFTime Time >;
 
 
 plan tests => 4;
