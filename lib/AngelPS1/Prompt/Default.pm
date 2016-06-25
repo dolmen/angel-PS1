@@ -7,7 +7,7 @@ use AngelPS1;
 use AngelPS1::Shell qw< WorkingDir_Tilde UserPrivSymbol >;
 use AngelPS1::Chrome;
 use AngelPS1::Plugin::Layout 'MarginRight';
-use AngelPS1::Plugin::DateTime;
+use AngelPS1::Plugin::DateTime 'Clock';
 use AngelPS1::Plugin::Term;
 use AngelPS1::Plugin::Term::Size;
 use AngelPS1::Plugin::VCS;
@@ -42,6 +42,7 @@ return () unless AngelPS1::Shell->can('WorkingDir_Tilde')
 
     # Disabled
     #Blue, [ Time ], ' ',
+    Blue, [ Clock ], ' ',
 
     MarginRight(' ', BatteryGauge),
     MarginRight(' ', LoadAvgPercent),
