@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: record with asciinema
+
 if [[ ! -x angel-PS1 ]]; then
 	echo "./angel-PS1 not found!"
 	exit 1
