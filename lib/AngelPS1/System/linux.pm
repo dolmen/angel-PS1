@@ -88,7 +88,9 @@ sub _gen_count_jobs {
 
         READDIR:
         for my $pid ((readdir $proc_dir)) {
-            next if $pid !~ /^[1-9]/;
+            # Optimised check for $pid =~ /^[1-9]/
+            # FIXME benchmark!
+            next if $pid ge ':' || $pid lt '1';
             # Skip ourself
             next if $pid == $$;
             -r "/proc/$pid/stat" or next;
