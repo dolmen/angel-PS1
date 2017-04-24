@@ -86,18 +86,22 @@ sub _gen_count_jobs {
 
         my ($suspended, $background) = (0, 0);
 
+        READDIR:
         for my $pid ((readdir $proc_dir)) {
             next if $pid !~ /^[1-9]/;
             # Skip ourself
             next if $pid == $$;
             -r "/proc/$pid/stat" or next;
             open my $f, '<:raw', "/proc/$pid/stat" or next;
-            # TODO rewrite read with sysread
-            # FIXME read the whole file not just the first line
-            # because $comm may contain "\n"
-            my $stat = <$f>;
+            # Note: $comm may contain "\n"
+            my $stat = '';
+            READSTAT: {
+                my $n = sysread $f, $stat, 4096, length $stat;
+                next READDIR if !defined($n) || length($stat) == 0;
+                next READSTAT if $n == 4096;
+            };
             close $f;
-            my ($comm, $state, $ppid, $pgrp, $sid) = $stat =~ /\((.*)\) (.) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) / or die $stat;
+            my ($comm, $state, $ppid, $pgrp, $sid) = $stat =~ /\((.*)\) (.) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) /s or die $stat;
             # Only childs of the shell
             next if $ppid ne $PPID;
             #printf "# %5d %5d %5d %5d %s %s\n", $pid, $ppid, $pgrp, $sid, $state, $comm;
