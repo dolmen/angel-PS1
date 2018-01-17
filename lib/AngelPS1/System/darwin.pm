@@ -11,9 +11,11 @@ sub nproc
 
 sub gen_loadavg
 {
+    # For testing:
+    # perl -Ilib -MAngelPS1::System::darwin -E 'say AngelPS1::System::darwin::gen_loadavg->()'
     sub {
-        my $uptime = `uptime`;
-        $uptime =~ /load averages: ([0-9]+\.[0-9]+) /;
+        my $uptime = `LANG=C sysctl vm.loadavg`;
+        $uptime =~ /vm.loadavg: \{ ([0-9]+\.[0-9]+) /;
         $1
     }
 }
