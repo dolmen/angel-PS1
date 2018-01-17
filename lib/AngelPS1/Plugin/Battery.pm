@@ -17,6 +17,11 @@ use AngelPS1::Chrome qw<Red Green Blue Bold color>;
 # Globals (to allow override)
 our $SYMBOL_CHARGING = '⏚';
 our $SYMBOL_DISCHARGING = '⌁';
+# Fix rendering issue in iTerm: add space after those special chars
+if ($^O eq 'darwin' && $ENV{'TERM_PROGRAM'} eq 'iTerm.app') {
+    $_ .= ' ' for $SYMBOL_CHARGING, $SYMBOL_DISCHARGING;
+}
+
 
 sub BatteryPercent
 {
