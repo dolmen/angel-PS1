@@ -66,7 +66,11 @@ sub test_jobs
 	kill STOP => $child if 'T' eq shift(@states);
     }
 
-    system("ps --ppid $$ -o ppid,pgid,pid,stat,comm");
+    if ($^O eq 'linux') {
+    	system("ps --ppid $$ -o ppid,pgid,pid,stat,comm");
+    } else {
+    	system("ps -o ppid,pgid,pid,stat,comm | grep -E '^ *($$|PPID) '");
+    }
     subtest "Suspended: $suspended, Background: $background" => sub {
 	local $_;
 	$_->($suspended, $background) for @tests
