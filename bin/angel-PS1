@@ -171,6 +171,8 @@ my @PS1;
         push @configs, "AngelPS1/Prompt/$NAME.pm", "$NAME.PS1", 'AngelPS1/Prompt/Default.pm';
     }
 
+    local @INC = ('.', @INC);
+
     undef $CONFIG;
     foreach my $config (@configs) {
         undef $!;
