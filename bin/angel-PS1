@@ -30,6 +30,7 @@ package AngelPS1;
 
 use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 use POSIX ();
+use File::Temp ();
 use Encode ();
 use FindBin;
 
@@ -267,7 +268,7 @@ if (ps1_is_static(\@PS1)
 
 
 # Build the FIFO paths
-my $FIFO_PATH = POSIX::tmpnam().".$NAME-$$";
+my $FIFO_PATH = File::Temp::tmpnam().".$NAME-$$";
 my $FIFO_IN = "$FIFO_PATH.in";
 my $FIFO_OUT = "$FIFO_PATH.out";
 

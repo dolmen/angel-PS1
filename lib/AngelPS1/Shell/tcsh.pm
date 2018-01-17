@@ -95,8 +95,8 @@ EOF
     # Inside backquotes (`) output \n are replaced with spaces by tcsh
     # So switch/if can not work.
     # Workaround: save the shell code to a file, and source it.
-    require POSIX;
-    my $file = POSIX::tmpnam()."$$.tcsh";
+    require File::Temp;
+    my $file = File::Temp::tmpnam()."$$.tcsh";
     # TODO encoding, as the angel name may not be ascii
     open my $f, '>', $file;
     print $f $shell_code;
