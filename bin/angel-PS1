@@ -375,10 +375,10 @@ sub main_loop
         }
         $_ = do { local $/; <$FIFO> };
         close $FIFO;
-        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG{'in'};
+        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\x{1}/ /g; $tmp } if $DEBUG{'in'};
 
         #my @shell_keys;
-        foreach (split /\0/) {
+        foreach (split /\x{1}/) {
             ($k, $v) = m/^(.*?)=(.*)/s;
             #push @shell_keys, $k;
             $prompt_state{$k} = $v;

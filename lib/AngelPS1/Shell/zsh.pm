@@ -68,7 +68,7 @@ APS1_PS1="\$PS1";
 {
     local err=\$?;
     [[ -e '$IN' ]] || { $NAME leave ; return ; };
-    printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { $NAME leave ; return ; };
+    printf '%s\\1%s' "?=\$err" "PWD=\$PWD" > '$IN' || { $NAME leave ; return ; };
     read -rd\001 PS1 < '$OUT' || $NAME leave ;
     $shell_debug
 } ;

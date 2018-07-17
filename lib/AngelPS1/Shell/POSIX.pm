@@ -65,7 +65,7 @@ $function_name()
 {
     $local err=\$?;
     if [ ! -e '$IN' ]; then eval "echo '\$APS1_PS1'"; $NAME leave ; return ; fi ;
-    if ! printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN'; then eval "echo '\$APS1_PS1'"; $NAME leave ; return ; fi ;
+    if ! printf '%s\\1%s' "?=\$err" "PWD=\$PWD" > '$IN'; then eval "echo '\$APS1_PS1'"; $NAME leave ; return ; fi ;
     if ! cat $OUT; then $NAME leave; fi ;
 } ;
 PS1='\$($time_debug$function_name)' ;

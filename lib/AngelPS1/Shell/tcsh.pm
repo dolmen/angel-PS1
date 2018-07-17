@@ -58,7 +58,7 @@ endif
 set aps1_prompt = \$prompt:q
 set aps1_precmd = 'set aps1_err = \$?\\
 if ( -p $IN ) then\\
-    echo -n "?=\$aps1_err:q\\0PWD=\$PWD:q" > $IN\\
+    echo -n "?=\$aps1_err:q\1PWD=\$PWD:q" > $IN\\
     eval "`cat $OUT`"\\
 endif'
 alias precmd 'eval \$aps1_precmd:q'

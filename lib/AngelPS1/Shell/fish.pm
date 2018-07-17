@@ -42,7 +42,7 @@ set -g aps1_prompt_orig (functions fish_prompt | sed 's/#[^'\\''"]*\$//;s/\$/;/'
 function fish_prompt;
     set _err \$status;
     if test ! -e '$IN'; $NAME leave; fish_prompt; return; end;
-    /usr/bin/printf '%s\\0%s' "?=\$_err" "PWD=\$PWD" > '$IN';
+    /usr/bin/printf '%s\\1%s' "?=\$_err" "PWD=\$PWD" > '$IN';
     cat '$OUT';
 end;
 set -g aps1_prompt (functions fish_prompt | sed '1s/fish_prompt/fish_prompt;/');

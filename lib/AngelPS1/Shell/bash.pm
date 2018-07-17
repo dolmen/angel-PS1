@@ -61,7 +61,7 @@ APS1_PROMPT_COMMAND="\$PROMPT_COMMAND";
 -angel-PS1()
 {
     local err=\$?;
-    if [[ ! -e '$IN' ]] || ! printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || ! read PS1 < '$OUT'; then $NAME leave ; return ; fi;
+    if [[ ! -e '$IN' ]] || ! printf '%s\\1%s' "?=\$err" "PWD=\$PWD" > '$IN' || ! read PS1 < '$OUT'; then $NAME leave ; return ; fi;
     $shell_debug
 } ;
 shopt -s promptvars ;
