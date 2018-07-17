@@ -8,6 +8,7 @@ my %ALIASES = (
     ksh   => 'ksh93',
     # Not tested
     ksh88 => 'POSIX',
+    csh   => 'tcsh',
 );
 
 
