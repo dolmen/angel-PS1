@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-#    Copyright © 2013-2016 Olivier Mengué
+#    Copyright © 2013-2018 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
 #
@@ -29,7 +29,7 @@ $fatpacked{"AngelPS1.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELP
   
   use POSIX ();
   
-  our $VERSION = '0.96';
+  our $VERSION = '0.97';
   
   our $SHELL_PID = getppid;
   
@@ -214,6 +214,10 @@ $fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   
   our $SYMBOL_CHARGING = '⏚';
   our $SYMBOL_DISCHARGING = '⌁';
+  if ($^O eq 'darwin' && $ENV{'TERM_PROGRAM'} eq 'iTerm.app') {
+      $_ .= ' ' for $SYMBOL_CHARGING, $SYMBOL_DISCHARGING;
+  }
+  
   
   sub BatteryPercent
   {
@@ -287,13 +291,16 @@ $fatpacked{"AngelPS1/Plugin/Battery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
 ANGELPS1_PLUGIN_BATTERY
 
 $fatpacked{"AngelPS1/Plugin/DateTime.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_PLUGIN_DATETIME';
+  use utf8;
   use strict;
   use warnings;
   
   package AngelPS1::Plugin::DateTime;
   
+  use AngelPS1 ();
+  
   use Exporter 'import';
-  our @EXPORT = qw< Time StrFTime >;
+  our @EXPORT_OK = qw< Time StrFTime Clock >;
   
   sub Time ()
   {
@@ -310,6 +317,18 @@ $fatpacked{"AngelPS1/Plugin/DateTime.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
   
       require POSIX;
       sub { POSIX::strftime($format, localtime) }
+  }
+  
+  my $CLOCK_FACES = '🕐 🕜 🕑 🕝 🕒 🕞 🕓 🕟 🕔 🕠 🕕 🕡 🕖 🕢 🕗 🕣 🕘 🕤 🕙 🕥 🕚 🕦 🕛 🕧 ';
+  
+  sub Clock
+  {
+      return if ! AngelPS1::_str_allowed($CLOCK_FACES);
+  
+      sub {
+          my ($min, $hour) = (localtime)[1,2];
+          substr($CLOCK_FACES, 2*(($hour*60+$min-45)/30%24), 1)
+      }
   }
   
   '$'
@@ -474,7 +493,7 @@ $fatpacked{"AngelPS1/Plugin/Git.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
           # TODO Git mark
   
-          @out, ' '
+          @out
       }
   }
   
@@ -592,6 +611,7 @@ $fatpacked{"AngelPS1/Plugin/LoadAvg.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   use AngelPS1::Chrome qw<Red Green Bold color>;
   
   our $SYMBOL_LOADAVG = '⌂';
+  our $LOAD_THRESHOLD = 0.60;
   
   sub LoadAvgPercent
   {
@@ -602,10 +622,13 @@ $fatpacked{"AngelPS1/Plugin/LoadAvg.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
       AngelPS1::_str_allowed($SYMBOL_LOADAVG) or return;
   
       my $loadavg_func = $loadavg_gen->();
+      my $nproc = AngelPS1::System->nproc();
   
       return sub {
   	my $loadavg = $loadavg_func->();
   	return if !defined($loadavg);
+  	$loadavg /= $nproc;
+  	return if $loadavg < $LOAD_THRESHOLD;
   	(
   	    (
   		$loadavg < 0.80
@@ -895,7 +918,7 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   use AngelPS1::Shell qw< WorkingDir_Tilde UserPrivSymbol >;
   use AngelPS1::Chrome;
   use AngelPS1::Plugin::Layout 'MarginRight';
-  use AngelPS1::Plugin::DateTime;
+  use AngelPS1::Plugin::DateTime 'Clock';
   use AngelPS1::Plugin::Term;
   use AngelPS1::Plugin::Term::Size;
   use AngelPS1::Plugin::VCS;
@@ -929,6 +952,7 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   
       # Disabled
       #Blue, [ Time ], ' ',
+      Blue, [ Clock ], ' ',
   
       MarginRight(' ', BatteryGauge),
       MarginRight(' ', LoadAvgPercent),
@@ -939,7 +963,7 @@ $fatpacked{"AngelPS1/Prompt/Default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
       sub { -w $_[0]->{PWD} ? Green : Red }, [ ':' ],
       WorkingDir_Tilde,
       ' ',
-      VCSInfo,
+      MarginRight(VCSInfo),
       sub { my $err = $_[0]->{'?'}; $err == 0 ? () : (Red, [ $err ], ' ') },
       # User mark: root => #    else  $
       ($< ? (Bold, [ UserPrivSymbol ]) : (Red + Bold, [ '#' ])),
@@ -953,7 +977,11 @@ $fatpacked{"AngelPS1/Prompt/liquid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
   package AngelPS1::Prompt::liquid;
   
-  sub _shell_unescape ($)
+  use AngelPS1::Chrome;
+  use AngelPS1::Plugin::Layout qw< MarginRight MarginLeft >;
+  use AngelPS1::Shell qw< WorkingDir_Tilde UserPrivSymbol >;
+  
+  sub _shell_unquote ($)
   {
       my $txt = shift;
   
@@ -965,23 +993,165 @@ $fatpacked{"AngelPS1/Prompt/liquid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       $txt
   }
   
+  my %COLOR_TRANSLATION = (
+      BLACK       => Black,
+      BOLD_GRAY   => Black + Bold,
+      WHITE       => White,
+      BOLD_WHITE  => White + Bold,
+      RED         => Red,
+      BOLD_RED    => Red + Bold,
+      WARN_RED    => Black / Red,
+      CRIT_RED    => White / Red + Bold,
+      DANGER_RED  => Yellow / Red + Bold,
+      GREEN       => Green,
+      BOLD_GREEN  => Green + Bold,
+      YELLOW      => Yellow,
+      BOLD_YELLOW => Yellow + Bold,
+      BLUE        => Blue,
+      BOLD_BLUE   => Blue + Bold,
+      PURPLE      => Magenta,
+      PINK        => Magenta + Bold, # Not BOLD_PURPLE
+      CYAN        => Cyan,
+      BOLD_CYAN   => Cyan + Bold,
+      # Special: not really colors
+      NO_COL      => Reset,
+      BOLD        => Bold,
+  );
+  my $COLORS_RE = join('|', keys %COLOR_TRANSLATION);
+  
+  
+  sub _translate_color ($)
+  {
+      my $txt = _shell_unquote(shift);
+      my $color;
+      while ($txt =~ /\$($COLORS_RE|{($COLORS_RE)})/g) {
+          my $c = $COLOR_TRANSLATION{$1} || $COLOR_TRANSLATION{$2};
+          if (!defined $c) {
+              warn "Unknown color ".($2 || $1)."\n";
+          }
+          $color = defined($color) ? ($color + $c) : $c;
+      }
+      $color
+  }
+  
   sub read_rc
   {
       my $file = shift;
       open my $f, '<:encoding(UTF-8)', $file or die "Can't open $file: $!\n";
       my %conf =
-          map { m/LP_(.*?)=(.*?)\s*$/ ? ($1 => _shell_unescape $2) : () }
-          grep /LP_.*=/,
+          map { m/LP_([^= ]*)=(.*?)\s*(?:#.*)?$/
+              ? do {
+                  my ($name, $value) = ($1, _shell_unquote $2);
+                  $value = _translate_color($value) if $name =~ /^COLOR_/;
+                  ($name => $value)
+                }
+              : ()
+              }
           grep !/^\s*(?:#|$)/,
           <$f>;
       close $f;
       \%conf
   }
   
-  my $conf = read_rc "$ENV{HOME}/.liquidpromptrc";
-  print STDERR "$_=$conf->{$_}\n" for keys %$conf;
+  my $conf = read_rc("$ENV{HOME}/.liquidpromptrc");
+  my $theme = read_rc("$ENV{HOME}/Code/liquidprompt/liquid.theme");
   
-  do 'AngelPS1/Prompt/Default.pm';
+  warn "Ignoring LP_PS1" if length $conf->{PS1};
+  
+  delete $theme->{COLORMAP};
+  
+  
+  sub Colored
+  {
+      my $name = shift;
+      if (@_ && defined $theme->{"COLOR_$name"}) {
+          ($theme->{"COLOR_$name"}, [ @_ ])
+      } else {
+          @_
+      }
+  }
+  
+  if ($ENV{APS1_DEBUG_LIQUID}) {
+      print STDERR "$_=$conf->{$_}\n"
+          for sort keys %$conf;
+      print STDERR "== Theme ===========================================\n";
+      print STDERR "$_=".do{($theme->{$_} // '') =~ s/\e(\[.*m)/\e$1\\e$1\e[m/gr }."\n"
+          for sort keys %$theme;
+  }
+  
+  my @PS1_DEF = (
+      PS1_PREFIX => '',
+      TIME => sub {
+          # TODO LP_TIME_ANALOG
+          require AngelPS1::Plugin::DateTime;
+          (Colored(TIME => AngelPS1::Plugin::DateTime::Time()), ' ')
+      },
+      BATT => sub {
+          require AngelPS1::Plugin::Battery;
+          MarginRight(AngelPS1::Plugin::Battery::BatteryGauge())
+      },
+      LOAD => sub {
+          require AngelPS1::Plugin::LoadAvg;
+          MarginRight(AngelPS1::Plugin::LoadAvg::LoadAvgPercent())
+      },
+      TEMP => sub {
+          # TODO
+          ()
+      },
+      JOBS => sub {
+          require AngelPS1::Plugin::Jobs;
+          MarginRight(AngelPS1::Plugin::Jobs::Jobs())
+      },
+  
+      [
+          $theme->{MARK_BRACKET_OPEN} // (),
+          # User name
+          $< ? (scalar getpwuid $<) : (),
+          sub { -w $_[0]->{PWD} ? Green : Red }, [ ':' ],
+          Colored(PATH => WorkingDir_Tilde),
+          $theme->{MARK_BRACKET_CLOSE} // (),
+          ' ',
+      ],
+  
+      GIT => sub {
+          require AngelPS1::Plugin::Git;
+          MarginRight(AngelPS1::Plugin::Git::GitInfo())
+      },
+  
+      [
+          ($< ? Colored(MARK => UserPrivSymbol)
+              : Colored(MARK_ROOT => '#' )),
+          ' ',
+      ],
+  );
+  
+  
+  my @PS1;
+  my $i=0;
+  while ($i < @PS1_DEF) {
+      my $o = $PS1_DEF[$i];
+      my $r = ref $o;
+      if (!$r) {
+          $i++;
+          if ($conf->{"ENABLE_$o"}) {
+              my $impl = $PS1_DEF[$i];
+              if (!ref $impl) {
+                  push @PS1, $conf->{$o} // ''
+              } else {
+                  push @PS1, eval { $impl->() };
+                  warn $@ if $@
+              }
+              #} else {
+              #    warn "$o disabled";
+          }
+      } elsif ($r eq 'ARRAY') {
+          push @PS1, @$o;
+      }
+      $i++
+  }
+  undef $!;
+  no warnings 'void';
+  ( @PS1 )
 ANGELPS1_PROMPT_LIQUID
 
 $fatpacked{"AngelPS1/Shell.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_SHELL';
@@ -995,6 +1165,7 @@ $fatpacked{"AngelPS1/Shell.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       ksh   => 'ksh93',
       # Not tested
       ksh88 => 'POSIX',
+      csh   => 'tcsh',
   );
   
   
@@ -1146,9 +1317,9 @@ $fatpacked{"AngelPS1/Shell/POSIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   $function_name()
   {
       $local err=\$?;
-      [ -e '$IN' ] || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
-      printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { eval "echo '\$APS1_PS1'"; $NAME leave ; return ; };
-      cat $OUT || $NAME leave ;
+      if [ ! -e '$IN' ]; then eval "echo '\$APS1_PS1'"; $NAME leave ; return ; fi ;
+      if ! printf '%s\\1%s' "?=\$err" "PWD=\$PWD" > '$IN'; then eval "echo '\$APS1_PS1'"; $NAME leave ; return ; fi ;
+      if ! cat $OUT; then $NAME leave; fi ;
   } ;
   PS1='\$($time_debug$function_name)' ;
   APS1_NAME=$NAME ;
@@ -1244,7 +1415,7 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   sub shell_code_static
   {
       my ($class, $PS1, %options) = @_;
-      qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; PS1='$PS1'\n}
+      qq{[[ -n "\$APS1_NAME" ]] && \$APS1_NAME leave; shopt -s promptvars; PS1='$PS1'\n}
   }
   
   sub shell_code_dynamic
@@ -1271,11 +1442,10 @@ $fatpacked{"AngelPS1/Shell/bash.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   -angel-PS1()
   {
       local err=\$?;
-      [[ -e '$IN' ]] || { $NAME leave ; return ; };
-      printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { $NAME leave ; return ; };
-      read PS1 < '$OUT' || $NAME leave ;
+      if [[ ! -e '$IN' ]] || ! printf '%s\\1%s' "?=\$err" "PWD=\$PWD" > '$IN' || ! read PS1 < '$OUT'; then $NAME leave ; return ; fi;
       $shell_debug
   } ;
+  shopt -s promptvars ;
   PROMPT_COMMAND='${time_debug}-angel-PS1' ;
   APS1_NAME=$NAME ;
   APS1_PID=$PID ;
@@ -1376,7 +1546,7 @@ $fatpacked{"AngelPS1/Shell/fish.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   function fish_prompt;
       set _err \$status;
       if test ! -e '$IN'; $NAME leave; fish_prompt; return; end;
-      /usr/bin/printf '%s\\0%s' "?=\$_err" "PWD=\$PWD" > '$IN';
+      /usr/bin/printf '%s\\1%s' "?=\$_err" "PWD=\$PWD" > '$IN';
       cat '$OUT';
   end;
   set -g aps1_prompt (functions fish_prompt | sed '1s/fish_prompt/fish_prompt;/');
@@ -1637,7 +1807,7 @@ $fatpacked{"AngelPS1/Shell/tcsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   set aps1_prompt = \$prompt:q
   set aps1_precmd = 'set aps1_err = \$?\\
   if ( -p $IN ) then\\
-      echo -n "?=\$aps1_err:q\\0PWD=\$PWD:q" > $IN\\
+      echo -n "?=\$aps1_err:q\1PWD=\$PWD:q" > $IN\\
       eval "`cat $OUT`"\\
   endif'
   alias precmd 'eval \$aps1_precmd:q'
@@ -1672,8 +1842,8 @@ $fatpacked{"AngelPS1/Shell/tcsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       # Inside backquotes (`) output \n are replaced with spaces by tcsh
       # So switch/if can not work.
       # Workaround: save the shell code to a file, and source it.
-      require POSIX;
-      my $file = POSIX::tmpnam()."$$.tcsh";
+      require File::Temp;
+      my $file = File::Temp::tmpnam()."$$.tcsh";
       # TODO encoding, as the angel name may not be ascii
       open my $f, '>', $file;
       print $f $shell_code;
@@ -1779,7 +1949,7 @@ $fatpacked{"AngelPS1/Shell/zsh.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   {
       local err=\$?;
       [[ -e '$IN' ]] || { $NAME leave ; return ; };
-      printf '%s\\0%s' "?=\$err" "PWD=\$PWD" > '$IN' || { $NAME leave ; return ; };
+      printf '%s\\1%s' "?=\$err" "PWD=\$PWD" > '$IN' || { $NAME leave ; return ; };
       read -rd\001 PS1 < '$OUT' || $NAME leave ;
       $shell_debug
   } ;
@@ -1979,9 +2149,11 @@ $fatpacked{"AngelPS1/System/darwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
   sub gen_loadavg
   {
+      # For testing:
+      # perl -Ilib -MAngelPS1::System::darwin -E 'say AngelPS1::System::darwin::gen_loadavg->()'
       sub {
-          my $uptime = `uptime`;
-          $uptime =~ /load averages: ([0-9]+\.[0-9]+) /;
+          my $uptime = `LANG=C sysctl vm.loadavg`;
+          $uptime =~ /vm.loadavg: \{ ([0-9]+\.[0-9]+) /;
           $1
       }
   }
@@ -2098,18 +2270,24 @@ $fatpacked{"AngelPS1/System/linux.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
   
           my ($suspended, $background) = (0, 0);
   
+          READDIR:
           for my $pid ((readdir $proc_dir)) {
-              next if $pid !~ /^[1-9]/;
+              # Optimised check for $pid =~ /^[1-9]/
+              # FIXME benchmark!
+              next if $pid ge ':' || $pid lt '1';
               # Skip ourself
               next if $pid == $$;
               -r "/proc/$pid/stat" or next;
               open my $f, '<:raw', "/proc/$pid/stat" or next;
-              # TODO rewrite read with sysread
-              # FIXME read the whole file not just the first line
-              # because $comm may contain "\n"
-              my $stat = <$f>;
+              # Note: $comm may contain "\n"
+              my $stat = '';
+              READSTAT: {
+                  my $n = sysread $f, $stat, 4096, length $stat;
+                  next READDIR if !defined($n) || length($stat) == 0;
+                  next READSTAT if $n == 4096;
+              };
               close $f;
-              my ($comm, $state, $ppid, $pgrp, $sid) = $stat =~ /\((.*)\) (.) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) / or die $stat;
+              my ($comm, $state, $ppid, $pgrp, $sid) = $stat =~ /\((.*)\) (.) (-?[0-9]+) (-?[0-9]+) (-?[0-9]+) /s or die $stat;
               # Only childs of the shell
               next if $ppid ne $PPID;
               #printf "# %5d %5d %5d %5d %s %s\n", $pid, $ppid, $pgrp, $sid, $state, $comm;
@@ -2251,13 +2429,32 @@ $fatpacked{"AngelPS1/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'A
   '$';
 ANGELPS1_UTIL
 
+$fatpacked{"AngelPS1/Util/Perl5.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'ANGELPS1_UTIL_PERL5';
+  package AngelPS1::Util::Perl5;
+  
+  use Exporter 'import';
+  our @EXPORT = qw< pack_perl5_version >;
+  
+  sub pack_perl5_version
+  {
+      my $v = shift;
+      # Replace "5." with '⁵'
+      substr($v, 0, 2, "\N{U+2075}");
+      # Replace minor with subscript digit
+      substr($v, -2, 2, chr(0x2080+substr($v, -1)));
+      $v
+  }
+  
+  1;
+ANGELPS1_UTIL_PERL5
+
 $fatpacked{"Term/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TERM_CHROME';
   use strict;
   use warnings;
   
   package Term::Chrome;
   # ABSTRACT: DSL for colors and other terminal chrome
-  our $VERSION = '2.00';
+  our $VERSION = '2.01';
   
   # Pre-declare packages
   {
@@ -2360,6 +2557,30 @@ $fatpacked{"Term/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TER
       bless \@new
   }
   
+  my %reverse = (
+      # Unfortunately there isn't a perfect mapping
+      # Reference:
+      # https://www.ecma-international.org/publications/files/ECMA-ST/Ecma-048.pdf page 75
+      1 => 22,
+      2 => 22,
+      3 => 23,
+      4 => 24,   # Underlined
+      5 => 25,
+      6 => 25,
+      7 => 27,
+      8 => 28,
+      9 => 29,
+      21 => 24,  # Double underline
+  
+      22 => 1,
+      23 => 3,
+      24 => 4,
+      25 => 5,
+      27 => 7,
+      28 => 8,
+      29 => 9,
+  );
+  
   sub _reverse
   {
       my $self = shift;
@@ -2368,7 +2589,7 @@ $fatpacked{"Term/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TER
       push @new, 49 if $self->[1]; # ResetBg
       # Reset/ResetFlags/ResetFg/ResetBg are removed
       # Other flags are reversed
-      push @new, map { (!$_ || $_ == 22 || $_ > 30) ? () : ($_ > 20 ? $_-20 : $_+20) } @{$self}[2..$#$self];
+      push @new, map { (!$_ || $_ > 30 || !exists $reverse{$_}) ? () : $reverse{$_} } @{$self}[2..$#$self];
       bless \@new, 'Term::Chrome::Flag'
   }
   
@@ -2474,7 +2695,7 @@ $fatpacked{"Term/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TER
       bless [
           undef, undef,
           # Reset/ResetFlags/ResetFg/ResetBg are removed
-          map { (!$_ || $_ == 22 || $_ > 30) ? () : ($_ > 20 ? $_-20 : $_+20) } @{$self}[2..$#$self]
+          map { (!$_ || $_ > 30 || !exists $reverse{$_}) ? () : $reverse{$_} } @{$self}[2..$#$self]
       ]
   }
   
@@ -2491,7 +2712,7 @@ $fatpacked{"Term/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TER
           # Reset
           return $other if !$other->[2];
           # ResetFlags
-          return $other if $other->[2] == 22;
+          return $other if $#$other == 8 || ($self->[2] && $self->[2] < 30 && $other->[2] == $reverse{$self->[2]});
           # Concat flags
           __PACKAGE__->$new(@$self, @{$other}[2..$#$other])
       } elsif ($other->isa(Term::Chrome::)) {
@@ -2512,13 +2733,13 @@ $fatpacked{"Term/Chrome.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TER
   # due to a bug in perl < 5.18
   # (according to a comment in Types::Serialiser source)
   
-  my $mk_flag = sub { Term::Chrome::Flag->$new(undef, undef, $_[0]) };
+  my $mk_flag = sub { Term::Chrome::Flag->$new(undef, undef, @_) };
   
   my %const = (
       Reset      => $mk_flag->(''),
       ResetFg    => $mk_flag->(39),
       ResetBg    => $mk_flag->(49),
-      ResetFlags => $mk_flag->(22),
+      ResetFlags => $mk_flag->(22, 23, 24, 25, 27, 28),
       Standout   => $mk_flag->(7),
       Underline  => $mk_flag->(4),
       Reverse    => $mk_flag->(7),
@@ -2589,7 +2810,7 @@ unshift @INC, bless \%fatpacked, $class;
 
 use utf8;
 
-#    Copyright © 2013-2016 Olivier Mengué
+#    Copyright © 2013-2018 Olivier Mengué
 #    Original source code is available at https://github.com/dolmen/angel-PS1
 #
 #
@@ -2618,6 +2839,7 @@ package AngelPS1;
 
 use Getopt::Long qw(:config posix_default no_ignore_case auto_help);
 use POSIX ();
+use File::Temp ();
 use Encode ();
 use FindBin;
 
@@ -2759,6 +2981,8 @@ my @PS1;
         push @configs, "AngelPS1/Prompt/$NAME.pm", "$NAME.PS1", 'AngelPS1/Prompt/Default.pm';
     }
 
+    local @INC = ('.', @INC);
+
     undef $CONFIG;
     foreach my $config (@configs) {
         undef $!;
@@ -2808,7 +3032,7 @@ if ($RUN_TEST || -t STDOUT) {
     print "angel-PS1 $VERSION\n";
 
     my $script = index($0, '/') >= 0 ? $0 : "\$(which $FindBin::Script)";
-    print "Copyright (C) 2013-2016  Olivier Mengué\n",
+    print "Copyright (C) 2013-2018  Olivier Mengué\n",
           "This program comes with ABSOLUTELY NO WARRANTY;\n",
           "This is free software, and you are welcome to redistribute it\n",
           "under certain conditions;\n",
@@ -2853,7 +3077,7 @@ if (ps1_is_static(\@PS1)
 
 
 # Build the FIFO paths
-my $FIFO_PATH = POSIX::tmpnam().".$NAME-$$";
+my $FIFO_PATH = File::Temp::tmpnam().".$NAME-$$";
 my $FIFO_IN = "$FIFO_PATH.in";
 my $FIFO_OUT = "$FIFO_PATH.out";
 
@@ -2960,10 +3184,10 @@ sub main_loop
         }
         $_ = do { local $/; <$FIFO> };
         close $FIFO;
-        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\0/ /g; $tmp } if $DEBUG{'in'};
+        printf STDERR "DEBUG< %s\n", do { (my $tmp = $_) =~ s/\x{1}/ /g; $tmp } if $DEBUG{'in'};
 
         #my @shell_keys;
-        foreach (split /\0/) {
+        foreach (split /\x{1}/) {
             ($k, $v) = m/^(.*?)=(.*)/s;
             #push @shell_keys, $k;
             $prompt_state{$k} = $v;

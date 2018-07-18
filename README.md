@@ -47,11 +47,11 @@ settings:
 
     eval (./angel-PS1)
 
-**Note:** this project is still very young and is constantly evolving. Use at
-your own risks.
+**Note:** this project is still very young. Use at
+your own risks in `~/.bashrc`/`.zshrc`/`.tcshrc`...
 
 
-You can also try other examples from the repository:
+You can also try other example themes from the repository:
 
     git clone https://github.com/dolmen/angel-PS1.git
     cd angel-PS1
@@ -79,6 +79,9 @@ Sorry, the documentation is quite light at the moment.
 #### Experimental
 
 - `tcsh`: see [issue #1](https://github.com/dolmen/angel-PS1/issues/1) (major issue)
+- `csh`:
+   - on Darwin (OS X), shell detection doesn't work unless the shell is
+     started as a login shell (csh -l)
 
 ### Features
 
@@ -118,7 +121,7 @@ Follow <a href="https://twitter.com/nglPS1">@nglPS1</a> on Twitter.
 
 ### Copyright & license
 
-Copyright 2013-2016 Olivier Mengué.
+Copyright 2013-2018 Olivier Mengué.
 
 `angel-PS1` itself is distributed under the GNU Affero General Public License
 version 3 or later. See [COPYING](COPYING) for details.

@@ -15,6 +15,16 @@ Setup your work environment
     $ git clone -b devel -o upstream git://github.com/dolmen/angel-PS1.git
     $ cd angel-PS1
 
+    # Install a Perl development environment
+    $ git clone https://github.com/tokuhirom/plenv.git ~/.plenv
+    # See ~/.plenv/README.md for persistent install
+    $ eval "$(~/.plenv/bin/plenv init -)"
+    $ git clone https://github.com/tokuhirom/Perl-Build.git ~/.plenv/plugins/perl-build/
+    $ plenv install 5.20.3
+    $ plenv global 5.20.3
+    $ plenv install-cpanm
+    $ plenv rehash
+
     # Install the develop dependencies from Perl's CPAN
     $ cpanm Module::CPANfile
     $ cpanfile-dump --develop | cpanm
