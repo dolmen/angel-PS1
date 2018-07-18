@@ -2,7 +2,7 @@ package AngelPS1;
 
 use POSIX ();
 
-our $VERSION = '0.96';
+our $VERSION = '0.97';
 
 # The process id of the shell
 # (this module must be loaded before forking)
