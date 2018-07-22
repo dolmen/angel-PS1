@@ -33,7 +33,7 @@ sub ps1_finalize
     # so '\n' will be lost in our current implementation
     # TODO: try to replace with '\\n'
     warn "Prompt has '\\n' This is not supported by angel-PS1!" if $prompt =~ /\n/;
-    qq{set prompt = '$prompt'};
+    qq{'$prompt'};
 }
 
 sub shell_code_dynamic
@@ -59,7 +59,7 @@ set aps1_prompt = $prompt:q
 set aps1_precmd = 'set aps1_err = $?\
 if ( -p ##IN## ) then\
     echo -n "?=$aps1_err:q##1##PWD=$PWD:q" > ##IN##\
-    eval "`cat ##OUT##`"\
+    eval "set prompt = `cat ##OUT##`"\
 endif'
 alias precmd 'eval $aps1_precmd:q'
 alias ##NAME## 'switch ( \!* )\
