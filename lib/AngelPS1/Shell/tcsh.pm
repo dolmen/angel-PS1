@@ -78,7 +78,7 @@ alias ##NAME## 'switch ( \!* )\
         breaksw\
     case on:\
     case unmute:\
-        alias precmd \$aps1_precmd:q\
+        alias precmd '\''eval $aps1_precmd:q'\''\
         :\
         breaksw\
     default:\
