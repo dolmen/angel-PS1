@@ -51,44 +51,50 @@ sub shell_code_dynamic
     # pollutes the history, so we can't do check of existence of
     # $IN (see previous implementation in the history)
 
-    my $shell_code = <<EOF;
-if ( \${?aps1_name} ) then
-    eval \$aps1_name leave
+    my $shell_code = <<'EOF';
+if ( ${?aps1_name} ) then
+    eval $aps1_name leave
 endif
-set aps1_prompt = \$prompt:q
-set aps1_precmd = 'set aps1_err = \$?\\
-if ( -p $IN ) then\\
-    echo -n "?=\$aps1_err:q\1PWD=\$PWD:q" > $IN\\
-    eval "`cat $OUT`"\\
+set aps1_prompt = $prompt:q
+set aps1_precmd = 'set aps1_err = $?\
+if ( -p ##IN## ) then\
+    echo -n "?=$aps1_err:q##1##PWD=$PWD:q" > ##IN##\
+    eval "`cat ##OUT##`"\
 endif'
-alias precmd 'eval \$aps1_precmd:q'
-alias $NAME 'switch ( \\!* )\\
-    case leave:\\
-    case quit:\\
-        set prompt = "\$aps1_prompt:q"\\
-        kill \$aps1_pid\\
-        rm -f -- $IN $OUT\\
-        unset aps1_prompt aps1_pid aps1_name aps1_precmd\\
-        unalias precmd $NAME\\
-        breaksw\\
-    case off:\\
-    case mute:\\
-        unalias precmd\\
-        set prompt = \$aps1_prompt:q\\
-        breaksw\\
-    case on:\\
-    case unmute:\\
-        alias precmd \$aps1_precmd:q\\
-        :\\
-        breaksw\\
-    default:\\
-        echo "$NAME: unknown option"\\
-        echo "usage: $NAME [quit|mute|off|unmute|on]"\\
-        breaksw\\
+alias precmd 'eval $aps1_precmd:q'
+alias ##NAME## 'switch ( \!* )\
+    case leave:\
+    case quit:\
+        set prompt = "$aps1_prompt:q"\
+        kill $aps1_pid\
+        rm -f -- ##IN## ##OUT##\
+        unset aps1_prompt aps1_pid aps1_name aps1_precmd\
+        unalias precmd ##NAME##\
+        breaksw\
+    case off:\
+    case mute:\
+        unalias precmd\
+        set prompt = $aps1_prompt:q\
+        breaksw\
+    case on:\
+    case unmute:\
+        alias precmd \$aps1_precmd:q\
+        :\
+        breaksw\
+    default:\
+        echo "##NAME##: unknown option"\
+        echo "usage: ##NAME## [quit|mute|off|unmute|on]"\
+        breaksw\
 endsw'
-set aps1_name = '$NAME'
-set aps1_pid = '$PID'
+set aps1_name = '##NAME##'
+set aps1_pid = '##PID##'
 EOF
+
+    $shell_code =~ s/##1##/\001/g;
+    $shell_code =~ s/##IN##/$IN/g;
+    $shell_code =~ s/##OUT##/$OUT/g;
+    $shell_code =~ s/##NAME##/$NAME/g;
+    $shell_code =~ s/##PID##/$PID/g;
 # For debugging
 #alias $NAME-kill 'set prompt = \$aps1_prompt:q; kill \$aps1_pid >/dev/null; unset aps1_prompt aps1_pid aps1_name aps1_precmd; unalias precmd $NAME $NAME-kill; :'
 
