@@ -90,7 +90,7 @@ set aps1_name = '##NAME##'
 set aps1_pid = '##PID##'
 EOF
 
-    $shell_code =~ s/##1##/\001/g;
+    $shell_code =~ s/##1##/\001/g; # Separator for the environment line
     $shell_code =~ s/##IN##/$IN/g;
     $shell_code =~ s/##OUT##/$OUT/g;
     $shell_code =~ s/##NAME##/$NAME/g;
