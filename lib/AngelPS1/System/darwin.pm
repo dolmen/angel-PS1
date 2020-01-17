@@ -43,14 +43,14 @@ sub gen_fetch_battery
     return sub {
         my $pmset_batt = `pmset -g batt`;
 
+        # 100%; charged;
         # 37%; AC attached; not charging
         # 8%; charging; 2:46 remaining
         # 9%; discharging; (no estimate)
         # 7%; discharging; 0:13 remaining
-        $pmset_batt =~ m/\t([0-9]+)%;.* (dis)?charging/;
+        $pmset_batt =~ m/\t([0-9]+)%;.* (dis)?charg(ing|ed)/;
         my $level = $1 / 100;
         my $charging = ! defined $2;
-
         return ($level, $charging);
     }
 }
